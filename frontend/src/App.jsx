@@ -13,7 +13,6 @@ function App() {
   const [inputMessage, setInputMessage] = useState('')
   const [isTyping, setIsTyping] = useState(false)
 
-
   const messagesEndRef = useRef(null)
 
   const scrollToBottom = () => {
@@ -24,41 +23,57 @@ function App() {
     scrollToBottom()
   }, [messages])
 
-
-
   const handleLogoClick = () => {
     window.location.reload()
   }
 
   const handleSendMessage = async () => {
-    if (inputMessage.trim() === '') return
+    if (inputMessage.trim() === '') return;
 
     const userMessage = {
       id: messages.length + 1,
       text: inputMessage,
       sender: 'user',
       timestamp: new Date()
-    }
+    };
 
-    setMessages(prev => [...prev, userMessage])
-    setInputMessage('')
-    setIsTyping(true)
+    setMessages(prev => [...prev, userMessage]);
+    setInputMessage('');
+    setIsTyping(true);
 
-    // LLM API bağlantısı buraya gelecek
-    setTimeout(() => {
-      // TODO: LLM API çağrısı burada yapılacak
-      // const response = await callLLMAPI(inputMessage);
-      
+    try {
+      // FastAPI backend çağrısı
+      const response = await fetch("http://127.0.0.1:8000/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: inputMessage,
+          user_id: "user123" // istediğin kullanıcı ID
+        })
+      });
+
+      const data = await response.json();
+
       const botMessage = {
         id: messages.length + 2,
-        text: "💬 [Bot cevabı buraya yüklenecek…]",
+        text: data.response, // FastAPI’den gelen cevap
+        sender: 'bot',
+        timestamp: new Date(data.timestamp)
+      };
+
+      setMessages(prev => [...prev, botMessage]);
+    } catch (err) {
+      console.error("API çağrısı başarısız:", err);
+      const botMessage = {
+        id: messages.length + 2,
+        text: "⚠️ Bot cevap veremedi.",
         sender: 'bot',
         timestamp: new Date()
-      }
-
-      setMessages(prev => [...prev, botMessage])
-      setIsTyping(false)
-    }, 1200)
+      };
+      setMessages(prev => [...prev, botMessage]);
+    } finally {
+      setIsTyping(false);
+    }
   }
 
   const handleKeyPress = (e) => {
