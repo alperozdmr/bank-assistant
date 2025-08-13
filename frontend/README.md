@@ -1,12 +1,43 @@
-# React + Vite
+# Chatbot - Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Kurulum
 
-Currently, two official plugins are available:
+Projeyi yerel makinenizde çalıştırmak için aşağıdaki adımları izleyin.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### Ön Gereksinimler
 
-## Expanding the ESLint configuration
+* [Node.js](https://nodejs.org/) (versiyon 18.x veya üstü tavsiye edilir)
+* [npm](https://www.npmjs.com/) (Node.js ile birlikte otomatik olarak kurulur)
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Adımlar
+
+1.  **Depoyu Klonlayın:**
+    Öncelikle bu depoyu bilgisayarınıza klonlayın.
+
+    ```bash
+    git clone [deponun-url-adresi]
+    ```
+
+2.  **Proje Dizinine Girin:**
+    Klonladığınız proje dizinine gidin.
+
+    ```bash
+    cd [proje-klasorunun-adi]
+    ```
+
+3.  **Gerekli Paketleri Yükleyin:**
+    Projenin ihtiyaç duyduğu tüm bağımlılıkları ve paketleri `npm` kullanarak yükleyin.
+
+    ```bash
+    npm install
+    ```
+
+    Bu komut, `package.json` dosyasında listelenen tüm paketleri `node_modules` klasörüne yükleyecektir.
+
+## Çalıştırma
+
+Kurulum adımlarını tamamladıktan sonra, geliştirme sunucusunu başlatmak için aşağıdaki komutu çalıştırın.
+
+```bash
+npm run dev
+```
