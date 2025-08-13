@@ -1,9 +1,1 @@
 ınterchat backend
-
-
-deneme.123
-
-
-deneme commit
-
-deneme
