@@ -1,6 +1,7 @@
-import urllib.request
 import json
 import time
+import urllib.request
+
 
 def test_qwen_api():
     QWEN_ENDPOINT_URL = "https://api-qwen-31-load-predictor-tmp-automation-test-3.apps.datascience.prod2.deniz.denizbank.com/v1/chat/completions"
@@ -9,9 +10,7 @@ def test_qwen_api():
     # Konsoldan prompt al
     test_message = input("💬 Sorunuzu girin: ")
 
-    headers = {
-        "Content-Type": "application/json"
-    }
+    headers = {"Content-Type": "application/json"}
 
     payload = {
         "model": MODEL_NAME,
@@ -19,7 +18,7 @@ def test_qwen_api():
         "chat_template_kwargs": {"enable_thinking": True},
         "temperature": 0.7,
         "top_p": 0.95,
-        "max_tokens": 1024
+        "max_tokens": 1024,
     }
 
     print("\n📡 API test is starting...\n")
@@ -28,7 +27,9 @@ def test_qwen_api():
         start_time = time.time()
 
         data = json.dumps(payload).encode("utf-8")
-        request = urllib.request.Request(QWEN_ENDPOINT_URL, data=data, headers=headers, method="POST")
+        request = urllib.request.Request(
+            QWEN_ENDPOINT_URL, data=data, headers=headers, method="POST"
+        )
 
         with urllib.request.urlopen(request) as response:
             end_time = time.time()
@@ -52,14 +53,11 @@ def test_qwen_api():
                 print(f"❌ Bağlantı başarısız. Status code: {status_code}")
                 print("Response Text:", response_body)
 
-
-
-
-
     except Exception as e:
         print("🚨 API çağrısı sırasında hata oluştu:", e)
+
 
 if __name__ == "__main__":
     while True:
         test_qwen_api()
-        print("\n" + "-"*50 + "\n")
+        print("\n" + "-" * 50 + "\n")

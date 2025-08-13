@@ -1,14 +1,12 @@
+import uuid
+from datetime import datetime
+from typing import Optional
+
 from fastapi import FastAPI
 from pydantic import BaseModel
-from typing import Optional
-from datetime import datetime
-import uuid
 
-app = FastAPI(
-    title="InterChat API",
-    description="InterChat- Modül 1",
-    version="1.0.0"
-)
+app = FastAPI(title="InterChat API", description="InterChat- Modül 1", version="1.0.0")
+
 
 # Request Model
 class ChatRequest(BaseModel):
@@ -16,20 +14,24 @@ class ChatRequest(BaseModel):
     session_id: Optional[str] = None
     user_id: str
 
-# Response Model  
+
+# Response Model
 class ChatResponse(BaseModel):
     session_id: str
     message_id: str
     response: str
     timestamp: datetime
 
+
 @app.get("/")
 async def root():
     return {"message": "InterChat API - InterChat Chatbot"}
 
+
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "app": "InterChat", "module": "1"}
+
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat_endpoint(request: ChatRequest):
@@ -37,19 +39,19 @@ async def chat_endpoint(request: ChatRequest):
     Temel chat endpoint'i
     Şimdilik basit bir echo response döndürüyor
     """
-    
+
     # Session ID oluştur veya mevcut olanı kullan
     session_id = request.session_id or str(uuid.uuid4())
-    
+
     # Message ID oluştur
     message_id = str(uuid.uuid4())
-    
+
     # Şimdilik basit bir yanıt (daha sonra LLM ile değiştireceğiz)
     bot_response = f"Merhaba! Mesajınızı aldım: '{request.message}'"
-    
+
     return ChatResponse(
         session_id=session_id,
         message_id=message_id,
         response=bot_response,
-        timestamp=datetime.now()
+        timestamp=datetime.now(),
     )

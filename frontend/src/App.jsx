@@ -86,9 +86,9 @@ function App() {
 
 
   const formatTime = (timestamp) => {
-    return timestamp.toLocaleTimeString('tr-TR', { 
-      hour: '2-digit', 
-      minute: '2-digit' 
+    return timestamp.toLocaleTimeString('tr-TR', {
+      hour: '2-digit',
+      minute: '2-digit'
     })
   }
 
@@ -113,7 +113,7 @@ function App() {
         <div className="messages-container">
           {messages.map((message, idx) => (
             <Fragment key={`m-${message.id}`}>
-              <div 
+              <div
                 className={`message ${message.sender === 'user' ? 'user-message' : 'bot-message'}`}
               >
                 <div className="message-content">
@@ -130,7 +130,7 @@ function App() {
 
             </Fragment>
           ))}
-          
+
           {isTyping && (
             <div className="message bot-message">
               <div className="message-content">
@@ -145,7 +145,7 @@ function App() {
               </div>
             </div>
           )}
-          
+
           <div ref={messagesEndRef} />
       </div>
 
@@ -160,7 +160,7 @@ function App() {
               rows="1"
               className="message-input"
             />
-            <button 
+            <button
               onClick={handleSendMessage}
               disabled={inputMessage.trim() === ''}
               className="send-button"
