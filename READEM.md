@@ -19,3 +19,40 @@ pre-commit install
 
 ### Pre-commit Kütüphanesini çalıştırmak için
 pre-commit run --all-files
+
+###MINIMAL AGENT VE ACCOUNT_BALANCE TOOLUNUN KULLANIMI### 
+.env dosyaları mevcut ise mevcut olanı çekip kullanıyoruz. Değilse kodu çalıştırmadan eklemek gerekiyor. 
+1) terminali kullanarak projenin klasöründe backende girin
+    cd <repo-dizini>/backend
+2) MAC için
+    python3 -m venv .venv
+    source .venv/bin/activate
+    python -m pip install --upgrade pip
+    # mock için zorunlu değil ama isterseniz:
+    pip install python-dotenv
+2) WIN için
+    py -3 -m venv .venv
+    .\.venv\Scripts\Activate.ps1
+    python -m pip install --upgrade pip
+    pip install python-dotenv
+3) MOCK MODE, MAC için
+    export INTER_API_MOCK=1
+3) MOCK MODE, WIN için
+    $env:INTER_API_MOCK = "1"
+4) KODU DOĞRUDAN ÇALIŞTIRMA
+    python -m tools.account_balance --iban TR220013400001795306300001
+    # veya üçlü:
+    python -m tools.account_balance --suffix 351 --branch 9142 --customer 17953063
+4) MINIMAL AGENT (interaktif)
+    python -m agent.agent
+    IBAN TR220013400001795306300001 bakiyem?
+## GERÇEK APILERLE KULLANIMA GEÇME (vdi gerekli)
+1) MAC: unset INTER_API_MOCK
+   WIN: Remove-Item Env:INTER_API_MOCK
+2) ENV KURULUMU
+    export INTER_API_BASE_URL="https://devfortunav3.intertech.com.tr/Intertech.Fortuna.WebApi.Services"
+    export INTER_API_APP_KEY="(app key)"
+    export INTER_API_CHANNEL="STARTECH"
+    export INTER_API_SESSION_LANGUAGE="TR"
+3) GERÇEK TEST
+    python -m tools.account_balance --iban TR220013400001795306300001   
