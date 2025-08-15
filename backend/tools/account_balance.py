@@ -1,15 +1,21 @@
 from __future__ import annotations
-import os, json, time, uuid
-from typing import Optional, Dict, Any, Tuple
+
+import json
+import os
+import time
+import uuid
+from typing import Any, Dict, Optional, Tuple
 
 # .env varsa otomatik okur
 try:
     from dotenv import load_dotenv  # type:ignore
+
     load_dotenv()
 except Exception:
     pass
 
-import urllib.request, urllib.error
+import urllib.error
+import urllib.request
 
 TIMEOUT_SECONDS: float = 3.0
 RETRY_BACKOFF_SECONDS: float = 0.2
@@ -27,20 +33,31 @@ class InterApiClient:
     def __init__(self) -> None:
         self.base_url = (os.getenv("INTER_API_BASE_URL") or "").strip().rstrip("/")
         self.app_key = (os.getenv("INTER_API_APP_KEY") or "").strip()
-        self.channel = (os.getenv("INTER_API_CHANNEL") or "STARTECH").strip() or "STARTECH"
-        self.session_lang = (os.getenv("INTER_API_SESSION_LANGUAGE") or "TR").strip() or "TR"
+        self.channel = (
+            os.getenv("INTER_API_CHANNEL") or "STARTECH"
+        ).strip() or "STARTECH"
+        self.session_lang = (
+            os.getenv("INTER_API_SESSION_LANGUAGE") or "TR"
+        ).strip() or "TR"
         if not self.base_url or not self.app_key:
             raise RuntimeError("INTER_API_BASE_URL ve INTER_API_APP_KEY zorunlu.")
 
     def _http_headers(self) -> Dict[str, str]:
-        return {"Accept": "application/json", "Content-Type": "application/json; charset=utf-8"}
+        return {
+            "Accept": "application/json",
+            "Content-Type": "application/json; charset=utf-8",
+        }
 
-    def _http_post(self, url: str, payload: Dict[str, Any], timeout: float = TIMEOUT_SECONDS) -> Tuple[int, Dict[str, Any]]:
+    def _http_post(
+        self, url: str, payload: Dict[str, Any], timeout: float = TIMEOUT_SECONDS
+    ) -> Tuple[int, Dict[str, Any]]:
         if os.getenv("INTER_DEBUG") == "1":
             print("URL :", url)
             print("PAYL:", json.dumps(payload, ensure_ascii=False))
         data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
-        req = urllib.request.Request(url, data=data, headers=self._http_headers(), method="POST")
+        req = urllib.request.Request(
+            url, data=data, headers=self._http_headers(), method="POST"
+        )
         try:
             with urllib.request.urlopen(req, timeout=timeout) as resp:
                 status = resp.getcode()
@@ -72,7 +89,7 @@ class InterApiClient:
         customer_no: Optional[int] = None,
         iban: Optional[str] = None,
     ) -> Dict[str, Any]:
-        """IBAN varsa IBANI, yoksa üçlüyü kullanır. INTER_API_MOCK=1 modunda ise sahte yanıt döner."""""
+        """IBAN varsa IBANI, yoksa üçlüyü kullanır. INTER_API_MOCK=1 modunda ise sahte yanıt döner.""" ""
         # MOCK MODE TANIMI
         if os.getenv("INTER_API_MOCK") == "1":
             return {
@@ -95,8 +112,12 @@ class InterApiClient:
             payload = self._build_payload_iban(iban)
         else:
             if account_suffix is None or branch_code is None or customer_no is None:
-                raise ValueError("Üçlü mod için account_suffix, branch_code, customer_no girilmesi zorunlu. Alternatif: iban girin.")
-            payload = self._build_payload_account(account_suffix, branch_code, customer_no)
+                raise ValueError(
+                    "Üçlü mod için account_suffix, branch_code, customer_no girilmesi zorunlu. Alternatif: iban girin."
+                )
+            payload = self._build_payload_account(
+                account_suffix, branch_code, customer_no
+            )
 
         url = f"{self.base_url}{GET_ACCOUNT_DETAIL_PATH}"
         status, data = self._retry_once(self._http_post, url, payload, TIMEOUT_SECONDS)
@@ -113,25 +134,27 @@ class InterApiClient:
             "SessionLanguage": self.session_lang,
         }
 
-    def _build_payload_account(self, account_suffix: int, branch_code: int, customer_no: int) -> Dict[str, Any]:
+    def _build_payload_account(
+        self, account_suffix: int, branch_code: int, customer_no: int
+    ) -> Dict[str, Any]:
         return {
             "Header": self._header_block(),
-            "Parameters": [{
-                "IBANNo": "",
-                "AccountInfo": {
-                    "AccountSuffix": int(account_suffix),
-                    "BranchCode": int(branch_code),
-                    "CustomerNo": int(customer_no),
+            "Parameters": [
+                {
+                    "IBANNo": "",
+                    "AccountInfo": {
+                        "AccountSuffix": int(account_suffix),
+                        "BranchCode": int(branch_code),
+                        "CustomerNo": int(customer_no),
+                    },
                 }
-            }],
+            ],
         }
 
     def _build_payload_iban(self, iban: str) -> Dict[str, Any]:
         return {
             "Header": self._header_block(),
-            "Parameters": [{
-                "IBANNo": iban
-            }],
+            "Parameters": [{"IBANNo": iban}],
         }
 
 
@@ -162,7 +185,11 @@ def pick_display_balance(raw: Dict[str, Any]) -> Dict[str, Any]:
 def compose_balance_reply(raw: Dict[str, Any]) -> str:
     sel = pick_display_balance(raw)
     acc = sel.get("account", {})
-    label = acc.get("IBANNo") or f"{acc.get('BranchCode')}-{acc.get('AccountSuffix')}" or "Hesap"
+    label = (
+        acc.get("IBANNo")
+        or f"{acc.get('BranchCode')}-{acc.get('AccountSuffix')}"
+        or "Hesap"
+    )
     amount = sel.get("amount")
     cur = sel.get("currency") or "TRY"
     if isinstance(amount, (int, float)):
@@ -173,7 +200,10 @@ def compose_balance_reply(raw: Dict[str, Any]) -> str:
 if __name__ == "__main__":
     # CLI
     import argparse
-    parser = argparse.ArgumentParser(description="GetAccountDetail - Minimal Account Balance Tool")
+
+    parser = argparse.ArgumentParser(
+        description="GetAccountDetail - Minimal Account Balance Tool"
+    )
     parser.add_argument("--iban", type=str, help="IBANNo")
     parser.add_argument("--suffix", type=int, help="AccountSuffix")
     parser.add_argument("--branch", type=int, help="BranchCode")

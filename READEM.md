@@ -20,8 +20,8 @@ pre-commit install
 ### Pre-commit Kütüphanesini çalıştırmak için
 pre-commit run --all-files
 
-###MINIMAL AGENT VE ACCOUNT_BALANCE TOOLUNUN KULLANIMI### 
-.env dosyaları mevcut ise mevcut olanı çekip kullanıyoruz. Değilse kodu çalıştırmadan eklemek gerekiyor. 
+###MINIMAL AGENT VE ACCOUNT_BALANCE TOOLUNUN KULLANIMI###
+.env dosyaları mevcut ise mevcut olanı çekip kullanıyoruz. Değilse kodu çalıştırmadan eklemek gerekiyor.
 1) terminali kullanarak projenin klasöründe backende girin
     cd <repo-dizini>/backend
 2) MAC için
@@ -55,4 +55,4 @@ pre-commit run --all-files
     export INTER_API_CHANNEL="STARTECH"
     export INTER_API_SESSION_LANGUAGE="TR"
 3) GERÇEK TEST
-    python -m tools.account_balance --iban TR220013400001795306300001   
+    python -m tools.account_balance --iban TR220013400001795306300001
