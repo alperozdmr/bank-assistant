@@ -64,3 +64,15 @@ pre-commit run --all-files
 çalışması için önce UI çalıştığı portu mainy.py içinde xxxx yazan yere yazıp sonra
 uvicorn main:app --reload
 bu commendi çalıştırın ama /app klasörünün içinde çalıştırmanız lazım
+
+## Agent MCP server entegrasyonu tamamlandı test için:
+önce server'ı çalıştırın
+sonra backend klasöründe .env'leri aktive edin:
+source .venv/bin/activate
+daha sonra aşağıdaki komut ile agent'ı test edebilirsiniz:
+##########
+export USE_MCP=1
+export MCP_SSE_URL="http://127.0.0.1:8081/sse"
+export MCP_BALANCE_TOOL="get_balance"
+python -m agent.agent
+##########
