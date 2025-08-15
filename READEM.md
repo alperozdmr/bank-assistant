@@ -56,3 +56,11 @@ pre-commit run --all-files
     export INTER_API_SESSION_LANGUAGE="TR"
 3) GERÇEK TEST
     python -m tools.account_balance --iban TR220013400001795306300001
+
+
+
+
+### FastAPI
+çalışması için önce UI çalıştığı portu mainy.py içinde xxxx yazan yere yazıp sonra
+uvicorn main:app --reload
+bu commendi çalıştırın ama /app klasörünün içinde çalıştırmanız lazım
