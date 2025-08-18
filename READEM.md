@@ -94,3 +94,34 @@ python -m agent.agent
 ##########
 
 Not: eğer sorun çıkarsa server.py'ın 10. satırındaki db_path'i kendi bilgisayarınızdaki dummy_bank.db'nin directory'sine göre ayarlayın
+
+## WİNDOWS İÇİN
+PowerShell (Önerilen)
+# 2) .venv oluştur ve aç
+cd <proje_kök_klasörü>
+py -3.11 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+# Eğer "running scripts is disabled" hatası alırsan:
+# Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+
+# 3) paketleri yükle
+python -m pip install -U pip fastmcp python-dotenv
+
+# 4) MCP server klasörüne gir ve server'ı başlat
+cd .\mcp_server\
+# (İstersen burada ayrı bir venv de oluşturabilirsin)
+# py -3.11 -m venv .venv; .\.venv\Scripts\Activate.ps1
+python .\server.py
+
+
+Yeni bir PowerShell penceresi açın (server açık kalsın):
+
+# 5) backend klasörüne dön ve venv'i aktive et
+cd ..\backend\
+.\.venv\Scripts\Activate.ps1
+
+# Ortam değişkenlerini ayarla ve agent'ı çalıştır
+$env:USE_MCP = "1"
+$env:MCP_SSE_URL = "http://127.0.0.1:8081/sse"
+$env:MCP_BALANCE_TOOL = "get_balance"
+python -m agent.agent
