@@ -93,7 +93,7 @@ def login(request: LoginRequest):
         success=True,
         customer_no=request.customer_no,
         token=access_token,
-        message="Login successful",
+        message="Giriş başarılı.",
     )
 
 
@@ -102,4 +102,4 @@ def login(request: LoginRequest):
 def logout():
     # Bu endpoint'te sadece token’ın client tarafında silinmesi beklenir.
     # Server tarafında herhangi bir şey yapılması gerekmez, çünkü JWT stateless'tir.
-    return {"message": "Logout successful"}
+    return {"message": "Çıkış başarılı."}
