@@ -20,6 +20,13 @@ pre-commit install
 ### Pre-commit Kütüphanesini çalıştırmak için
 pre-commit run --all-files
 
+
+### FastAPI
+çalışması için önce UI çalıştığı portu mainy.py içinde xxxx yazan yere yazıp sonra
+uvicorn main:app --reload
+bu commendi çalıştırın ama /app klasörünün içinde çalıştırmanız lazım
+
+
 ###MINIMAL AGENT VE ACCOUNT_BALANCE TOOLUNUN KULLANIMI###
 .env dosyaları mevcut ise mevcut olanı çekip kullanıyoruz. Değilse kodu çalıştırmadan eklemek gerekiyor.
 1) terminali kullanarak projenin klasöründe backende girin
@@ -58,14 +65,15 @@ pre-commit run --all-files
     python -m tools.account_balance --iban TR220013400001795306300001
 
 
-
-
-### FastAPI
-çalışması için önce UI çalıştığı portu mainy.py içinde xxxx yazan yere yazıp sonra
-uvicorn main:app --reload
-bu commendi çalıştırın ama /app klasörünün içinde çalıştırmanız lazım
-
 ## Agent MCP server entegrasyonu tamamlandı test için:
+
+## ENVIRONMENT'SİZ ÇALIŞTIRMAK İÇİN SADECE BUNLAR
+$env:USE_MCP = "1"
+$env:MCP_SSE_URL = "http://127.0.0.1:8081/sse"
+$env:MCP_BALANCE_TOOL = "get_balance"
+python -m agent.agent
+
+### MAC İÇİN ENVIRONMENT KURULUMU
 1) backend folderına girin
 cd "/backend" 
 ### sizin directory'niz ne ise
@@ -95,7 +103,7 @@ python -m agent.agent
 
 Not: eğer sorun çıkarsa server.py'ın 10. satırındaki db_path'i kendi bilgisayarınızdaki dummy_bank.db'nin directory'sine göre ayarlayın
 
-## WİNDOWS İÇİN
+## WİNDOWS İÇİN ENVIRONMENT KURULUMU
 PowerShell (Önerilen)
 # 2) .venv oluştur ve aç
 cd <proje_kök_klasörü>
@@ -103,23 +111,18 @@ py -3.11 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 # Eğer "running scripts is disabled" hatası alırsan:
 # Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-
 # 3) paketleri yükle
 python -m pip install -U pip fastmcp python-dotenv
-
 # 4) MCP server klasörüne gir ve server'ı başlat
 cd .\mcp_server\
 # (İstersen burada ayrı bir venv de oluşturabilirsin)
 # py -3.11 -m venv .venv; .\.venv\Scripts\Activate.ps1
 python .\server.py
 
-
 Yeni bir PowerShell penceresi açın (server açık kalsın):
-
 # 5) backend klasörüne dön ve venv'i aktive et
 cd ..\backend\
 .\.venv\Scripts\Activate.ps1
-
 # Ortam değişkenlerini ayarla ve agent'ı çalıştır
 $env:USE_MCP = "1"
 $env:MCP_SSE_URL = "http://127.0.0.1:8081/sse"
