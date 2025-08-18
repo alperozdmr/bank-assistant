@@ -1,26 +1,195 @@
 import { useState, useRef, useEffect, Fragment } from 'react'
 import './App.css'
+import Login from './Login'
 
 function App() {
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      text: "Merhaba! Ben InterChat, bankacılık işlemleriniz için buradayım. Size nasıl yardımcı olabilirim?",
-      sender: 'bot',
-      timestamp: new Date()
-    }
-  ])
+  // Login state
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [userInfo, setUserInfo] = useState(null)
 
+  // Sohbet geçmişi için state yapısı
+  const [chatHistory, setChatHistory] = useState({})
+  const [currentChatId, setCurrentChatId] = useState(null)
+  const [chatList, setChatList] = useState([])
+  const [showSidebar, setShowSidebar] = useState(false)
+
+  // Mevcut sohbet mesajları
+  const [messages, setMessages] = useState([])
   const [inputMessage, setInputMessage] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const [showQuickActions, setShowQuickActions] = useState(true)
   const [showQuickActionsModal, setShowQuickActionsModal] = useState(false)
+  const [showLogoutModal, setShowLogoutModal] = useState(false)
   const [isDarkTheme, setIsDarkTheme] = useState(false)
   const messagesEndRef = useRef(null)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
+
+  // Yeni sohbet oluştur
+  const createNewChat = () => {
+    // Eğer zaten yeni bir sohbet varsa ve hiç mesaj yazılmamışsa, o sohbete geç
+    const existingNewChat = chatList.find(chat => chat.isNew && chat.messages.length <= 1)
+    if (existingNewChat) {
+      setCurrentChatId(existingNewChat.id)
+      setMessages(existingNewChat.messages)
+      setShowQuickActions(true)
+      setShowSidebar(false)
+      return
+    }
+
+    const newChatId = `chat-${Date.now()}`
+    const welcomeMessage = {
+      id: 1,
+      text: "Merhaba! Ben InterChat, bankacılık işlemleriniz için buradayım. Size nasıl yardımcı olabilirim?",
+      sender: 'bot',
+      timestamp: new Date()
+    }
+
+    const newChat = {
+      id: newChatId,
+      title: 'Yeni Sohbet',
+      messages: [welcomeMessage],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      isNew: true // Yeni sohbet olduğunu belirtmek için flag ekle
+    }
+
+    // Sadece state'e ekle, localStorage'a kaydetme
+    setChatHistory(prev => ({
+      ...prev,
+      [newChatId]: newChat
+    }))
+
+    setChatList(prev => [newChat, ...prev])
+    setCurrentChatId(newChatId)
+    setMessages([welcomeMessage])
+    setShowQuickActions(true)
+    setShowSidebar(false)
+  }
+
+  // LocalStorage'dan auth ve sohbet geçmişini yükle
+  useEffect(() => {
+    // Oturumu geri yükle
+    try {
+      const savedAuth = localStorage.getItem('interAuth')
+      if (savedAuth) {
+        const parsed = JSON.parse(savedAuth)
+        if (parsed?.token && parsed?.userId) {
+          setIsLoggedIn(true)
+          setUserInfo(parsed)
+        }
+      }
+    } catch (e) {
+      console.error('Auth localStorage okuma hatası:', e)
+    }
+
+    const savedChatHistory = localStorage.getItem('interChatHistory')
+    const savedChatList = localStorage.getItem('interChatList')
+    const savedCurrentChatId = localStorage.getItem('interCurrentChatId')
+    const savedTheme = localStorage.getItem('interChatTheme')
+
+    if (savedChatHistory) {
+      const parsedHistory = JSON.parse(savedChatHistory)
+      // Timestamp'leri Date objelerine dönüştür
+      Object.keys(parsedHistory).forEach(chatId => {
+        const chat = parsedHistory[chatId]
+        chat.createdAt = new Date(chat.createdAt)
+        chat.updatedAt = new Date(chat.updatedAt)
+        chat.isNew = false // Kaydedilmiş sohbetler için isNew = false
+        if (chat.messages) {
+          chat.messages.forEach(message => {
+            message.timestamp = new Date(message.timestamp)
+          })
+        }
+      })
+      setChatHistory(parsedHistory)
+    }
+
+    if (savedChatList) {
+      const parsedList = JSON.parse(savedChatList)
+      // Timestamp'leri Date objelerine dönüştür
+      parsedList.forEach(chat => {
+        chat.createdAt = new Date(chat.createdAt)
+        chat.updatedAt = new Date(chat.updatedAt)
+        chat.isNew = false // Kaydedilmiş sohbetler için isNew = false
+      })
+      setChatList(parsedList)
+    }
+
+    if (savedCurrentChatId) {
+      setCurrentChatId(savedCurrentChatId)
+    }
+    if (savedTheme) {
+      setIsDarkTheme(JSON.parse(savedTheme))
+    }
+
+    // Eğer hiç sohbet yoksa, yeni bir sohbet başlat
+    if (!savedChatList || JSON.parse(savedChatList).length === 0) {
+      const newChatId = `chat-${Date.now()}`
+      const welcomeMessage = {
+        id: 1,
+        text: "Merhaba! Ben InterChat, bankacılık işlemleriniz için buradayım. Size nasıl yardımcı olabilirim?",
+        sender: 'bot',
+        timestamp: new Date()
+      }
+
+      const newChat = {
+        id: newChatId,
+        title: 'Yeni Sohbet',
+        messages: [welcomeMessage],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        isNew: true // Yeni sohbet olduğunu belirtmek için flag ekle
+      }
+
+      setChatHistory({ [newChatId]: newChat })
+      setChatList([newChat])
+      setCurrentChatId(newChatId)
+      setMessages([welcomeMessage])
+      setShowQuickActions(true)
+    }
+  }, [])
+
+  // Mevcut sohbetin mesajlarını yükle
+  useEffect(() => {
+    if (currentChatId && chatHistory[currentChatId]) {
+      setMessages(chatHistory[currentChatId].messages || [])
+      setShowQuickActions(chatHistory[currentChatId].messages?.length <= 1)
+    }
+  }, [currentChatId, chatHistory])
+
+  // Sohbet geçmişini localStorage'a kaydet
+  useEffect(() => {
+    if (Object.keys(chatHistory).length > 0) {
+      try {
+        localStorage.setItem('interChatHistory', JSON.stringify(chatHistory))
+      } catch (e) {
+        console.error('ChatHistory localStorage kaydı başarısız:', e)
+      }
+    }
+  }, [chatHistory])
+
+  useEffect(() => {
+    if (chatList.length > 0) {
+      try {
+        localStorage.setItem('interChatList', JSON.stringify(chatList))
+      } catch (e) {
+        console.error('ChatList localStorage kaydı başarısız:', e)
+      }
+    }
+  }, [chatList])
+
+  useEffect(() => {
+    if (currentChatId) {
+      localStorage.setItem('interCurrentChatId', currentChatId)
+    }
+  }, [currentChatId])
+
+  useEffect(() => {
+    localStorage.setItem('interChatTheme', JSON.stringify(isDarkTheme))
+  }, [isDarkTheme])
 
   useEffect(() => {
     scrollToBottom()
@@ -35,12 +204,172 @@ function App() {
     }
   }, [isDarkTheme])
 
+  // Sohbet sil
+  const deleteChat = (chatId) => {
+    if (chatList.length <= 1) return // Son sohbeti silmeyi engelle
+
+    // Yeni sohbetleri silmeyi engelle
+    const chatToDelete = chatHistory[chatId]
+    if (chatToDelete && chatToDelete.isNew) {
+      return
+    }
+
+    setChatHistory(prev => {
+      const newHistory = { ...prev }
+      delete newHistory[chatId]
+      return newHistory
+    })
+
+    setChatList(prev => prev.filter(chat => chat.id !== chatId))
+
+    if (currentChatId === chatId) {
+      const remainingChats = chatList.filter(chat => chat.id !== chatId)
+      if (remainingChats.length > 0) {
+        switchToChat(remainingChats[0].id)
+      }
+    }
+  }
+
+  // Sohbet değiştir
+  const switchToChat = (chatId) => {
+    setCurrentChatId(chatId)
+    setShowSidebar(false)
+  }
+
+  // Sohbet başlığını güncelle
+  const updateChatTitle = (chatId, newTitle) => {
+    setChatHistory(prev => ({
+      ...prev,
+      [chatId]: {
+        ...prev[chatId],
+        title: newTitle,
+        updatedAt: new Date()
+      }
+    }))
+
+    setChatList(prev => prev.map(chat =>
+      chat.id === chatId
+        ? { ...chat, title: newTitle, updatedAt: new Date() }
+        : chat
+    ))
+  }
+
   const toggleTheme = () => {
     setIsDarkTheme(!isDarkTheme)
   }
 
   const handleLogoClick = () => {
     window.location.reload()
+  }
+
+  const handleLogin = (credentials) => {
+    setIsLoggedIn(true)
+    setUserInfo(credentials)
+
+    try {
+      localStorage.setItem('interAuth', JSON.stringify(credentials))
+    } catch (e) {
+      console.error('Auth localStorage kaydı başarısız:', e)
+    }
+
+    // LocalStorage'dan mevcut sohbet geçmişini al
+    const savedChatHistory = localStorage.getItem('interChatHistory')
+    const savedChatList = localStorage.getItem('interChatList')
+
+    // Yeni sohbet oluştur
+    const newChatId = `chat-${Date.now()}`
+    const welcomeMessage = {
+      id: 1,
+      text: "Merhaba! Ben InterChat, bankacılık işlemleriniz için buradayım. Size nasıl yardımcı olabilirim?",
+      sender: 'bot',
+      timestamp: new Date()
+    }
+
+    const newChat = {
+      id: newChatId,
+      title: 'Yeni Sohbet',
+      messages: [welcomeMessage],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      isNew: true // Yeni sohbet olduğunu belirtmek için flag ekle
+    }
+
+    // Mevcut sohbet geçmişini yükle ve yeni sohbeti ekle
+    if (savedChatHistory && savedChatList) {
+      const parsedHistory = JSON.parse(savedChatHistory)
+      const parsedList = JSON.parse(savedChatList)
+
+      // Timestamp'leri Date objelerine dönüştür
+      Object.keys(parsedHistory).forEach(chatId => {
+        const chat = parsedHistory[chatId]
+        chat.createdAt = new Date(chat.createdAt)
+        chat.updatedAt = new Date(chat.updatedAt)
+        chat.isNew = false // Kaydedilmiş sohbetler için isNew = false
+        if (chat.messages) {
+          chat.messages.forEach(message => {
+            message.timestamp = new Date(message.timestamp)
+          })
+        }
+      })
+
+      parsedList.forEach(chat => {
+        chat.createdAt = new Date(chat.createdAt)
+        chat.updatedAt = new Date(chat.updatedAt)
+        chat.isNew = false // Kaydedilmiş sohbetler için isNew = false
+      })
+
+      // Yeni sohbeti mevcut geçmişe ekle
+      const updatedHistory = { ...parsedHistory, [newChatId]: newChat }
+      const updatedList = [newChat, ...parsedList]
+
+      setChatHistory(updatedHistory)
+      setChatList(updatedList)
+      setCurrentChatId(newChatId)
+      setMessages([welcomeMessage])
+      setShowQuickActions(true)
+    } else {
+      // İlk giriş - sadece yeni sohbet
+      setChatHistory({ [newChatId]: newChat })
+      setChatList([newChat])
+      setCurrentChatId(newChatId)
+      setMessages([welcomeMessage])
+      setShowQuickActions(true)
+    }
+  }
+
+  const handleLogout = () => {
+    setShowLogoutModal(true)
+  }
+
+  const confirmLogout = async () => {
+    try {
+      if (userInfo?.token) {
+        await fetch('http://127.0.0.1:8000/auth/logout', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${userInfo.token}` }
+        })
+      }
+    } catch (e) {
+      console.error('Logout hatası:', e)
+    } finally {
+      try {
+        localStorage.removeItem('interAuth')
+      } catch (e) {
+        console.error('Auth localStorage silme hatası:', e)
+      }
+      setIsLoggedIn(false)
+      setUserInfo(null)
+      // Sadece state'i temizle, localStorage'ı silme
+      setChatHistory({})
+      setChatList([])
+      setCurrentChatId(null)
+      setMessages([])
+      setShowLogoutModal(false)
+    }
+  }
+
+  const cancelLogout = () => {
+    setShowLogoutModal(false)
   }
 
   const handleSendMessage = async () => {
@@ -53,10 +382,56 @@ function App() {
       timestamp: new Date()
     }
 
-    setMessages(prev => [...prev, userMessage])
+    const updatedMessages = [...messages, userMessage]
+    const messageText = inputMessage
+
+    // Hemen kullanıcı mesajını göster
+    setMessages(updatedMessages)
     setInputMessage('')
-    setIsTyping(true)
     setShowQuickActions(false)
+
+    // Sohbet başlığını ilk mesajdan otomatik oluştur
+    if (messages.length === 1) { // İlk kullanıcı mesajı
+      const title = messageText.length > 30
+        ? messageText.substring(0, 30) + '...'
+        : messageText
+      updateChatTitle(currentChatId, title)
+
+      // İlk kullanıcı mesajı gönderildiğinde isNew flag'ini false yap
+      setChatHistory(prev => ({
+        ...prev,
+        [currentChatId]: {
+          ...prev[currentChatId],
+          isNew: false
+        }
+      }))
+
+      setChatList(prev => prev.map(chat =>
+        chat.id === currentChatId
+          ? { ...chat, isNew: false }
+          : chat
+      ))
+    }
+
+    // Sohbet geçmişini kullanıcı mesajıyla güncelle
+    setChatHistory(prev => ({
+      ...prev,
+      [currentChatId]: {
+        ...prev[currentChatId],
+        messages: updatedMessages,
+        updatedAt: new Date()
+      }
+    }))
+
+    // Sohbet listesini güncelle
+    setChatList(prev => prev.map(chat =>
+      chat.id === currentChatId
+        ? { ...chat, updatedAt: new Date() }
+        : chat
+    ).sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)))
+
+    setIsTyping(true)
+    let finalMessages = updatedMessages
 
     try {
       // FastAPI backend çağrısı
@@ -81,7 +456,9 @@ function App() {
         timestamp: new Date(data.timestamp)
       }
 
-      setMessages(prev => [...prev, botMessage])
+      finalMessages = [...updatedMessages, botMessage]
+      setMessages(finalMessages)
+
     } catch (err) {
       console.error("API çağrısı başarısız:", err)
       const botMessage = {
@@ -90,10 +467,30 @@ function App() {
         sender: 'bot',
         timestamp: new Date()
       }
-      setMessages(prev => [...prev, botMessage])
+
+      finalMessages = [...updatedMessages, botMessage]
+      setMessages(finalMessages)
+
     } finally {
       setIsTyping(false)
     }
+
+    // Sohbet geçmişini bot mesajıyla güncelle
+    setChatHistory(prev => ({
+      ...prev,
+      [currentChatId]: {
+        ...prev[currentChatId],
+        messages: finalMessages,
+        updatedAt: new Date()
+      }
+    }))
+
+    // Sohbet listesini güncelle
+    setChatList(prev => prev.map(chat =>
+      chat.id === currentChatId
+        ? { ...chat, updatedAt: new Date() }
+        : chat
+    ).sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)))
   }
 
   const handleKeyPress = (e) => {
@@ -117,10 +514,52 @@ function App() {
       timestamp: new Date()
     }
 
-    setMessages(prev => [...prev, userMessage])
+    const updatedMessages = [...messages, userMessage]
+
+    // Hemen kullanıcı mesajını göster
+    setMessages(updatedMessages)
     setShowQuickActions(false)
     setShowQuickActionsModal(false)
+
+    // Sohbet başlığını hızlı eylemden güncelle
+    if (messages.length === 1) {
+      updateChatTitle(currentChatId, userMessage.text.length > 30 ? userMessage.text.substring(0, 30) + '...' : userMessage.text)
+
+      // İlk kullanıcı mesajı gönderildiğinde isNew flag'ini false yap
+      setChatHistory(prev => ({
+        ...prev,
+        [currentChatId]: {
+          ...prev[currentChatId],
+          isNew: false
+        }
+      }))
+
+      setChatList(prev => prev.map(chat =>
+        chat.id === currentChatId
+          ? { ...chat, isNew: false }
+          : chat
+      ))
+    }
+
+    // Sohbet geçmişini kullanıcı mesajıyla güncelle
+    setChatHistory(prev => ({
+      ...prev,
+      [currentChatId]: {
+        ...prev[currentChatId],
+        messages: updatedMessages,
+        updatedAt: new Date()
+      }
+    }))
+
+    // Sohbet listesini güncelle
+    setChatList(prev => prev.map(chat =>
+      chat.id === currentChatId
+        ? { ...chat, updatedAt: new Date() }
+        : chat
+    ).sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)))
+
     setIsTyping(true)
+    let finalMessages = updatedMessages
 
     try {
       const response = await fetch("http://127.0.0.1:8000/chat", {
@@ -144,7 +583,9 @@ function App() {
         timestamp: new Date(data.timestamp)
       }
 
-      setMessages(prev => [...prev, botMessage])
+      finalMessages = [...updatedMessages, botMessage]
+      setMessages(finalMessages)
+
     } catch (err) {
       console.error("API çağrısı başarısız:", err)
       const botMessage = {
@@ -153,10 +594,30 @@ function App() {
         sender: 'bot',
         timestamp: new Date()
       }
-      setMessages(prev => [...prev, botMessage])
+
+      finalMessages = [...updatedMessages, botMessage]
+      setMessages(finalMessages)
+
     } finally {
       setIsTyping(false)
     }
+
+    // Sohbet geçmişini bot mesajıyla güncelle
+    setChatHistory(prev => ({
+      ...prev,
+      [currentChatId]: {
+        ...prev[currentChatId],
+        messages: finalMessages,
+        updatedAt: new Date()
+      }
+    }))
+
+    // Sohbet listesini güncelle
+    setChatList(prev => prev.map(chat =>
+      chat.id === currentChatId
+        ? { ...chat, updatedAt: new Date() }
+        : chat
+    ).sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)))
   }
 
   const formatTime = (timestamp) => {
@@ -166,12 +627,77 @@ function App() {
     })
   }
 
+  // Login sayfasını göster
+  if (!isLoggedIn) {
+    return <Login onLogin={handleLogin} />
+  }
+
   return (
     <div className={`app ${isDarkTheme ? 'dark-theme' : ''}`}>
       <div className="chat-container">
+        {/* Sidebar */}
+        <div className={`sidebar ${showSidebar ? 'show' : ''}`}>
+          <div className="sidebar-header">
+            <h2>Sohbetler</h2>
+            <button className="new-chat-button" onClick={createNewChat}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 5V19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+          </div>
+          <div className="chat-list">
+            {chatList.map((chat) => (
+              <div
+                key={chat.id}
+                className={`chat-item ${currentChatId === chat.id ? 'active' : ''}`}
+                onClick={() => switchToChat(chat.id)}
+              >
+                <div className="chat-info">
+                  <div className="chat-title">{chat.title}</div>
+                  <div className="chat-time">
+                    {(chat.updatedAt instanceof Date ? chat.updatedAt : new Date(chat.updatedAt)).toLocaleDateString('tr-TR', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </div>
+                </div>
+                {chatList.length > 1 && !chat.isNew && (
+                  <button
+                    className="delete-chat-button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      deleteChat(chat.id)
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M3 6H5H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Sidebar Overlay */}
+        {showSidebar && (
+          <div className="sidebar-overlay" onClick={() => setShowSidebar(false)}></div>
+        )}
+
         {/* Header */}
         <div className="chat-header">
           <div className="header-content">
+            <button className="sidebar-toggle" onClick={() => setShowSidebar(!showSidebar)}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 12H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M3 6H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M3 18H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
             <div className="bot-avatar" onClick={handleLogoClick}>
               <img src="/logo.jpg" alt="InterChat Logo" className="avatar-logo" />
             </div>
@@ -201,6 +727,13 @@ function App() {
                     </svg>
                   </div>
                 </div>
+              </button>
+              <button className="logout-button" onClick={handleLogout} title="Çıkış Yap">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M9 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M16 17L21 12L16 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M21 12H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
               </button>
             </div>
           </div>
@@ -232,7 +765,7 @@ function App() {
                       <div className="quick-icon">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                           <path d="M3 10H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                          <path d="M5 6H19C20.1046 6 21 6.89543 21 8V16C21 17.1046 20.1046 18 19 18H5C3.89543 18 3 17.1046 3 16V8C3 6.89543 3.89543 6 5 6Z" stroke="currentColor" strokeWidth="2"/>
+                          <path d="M5 6H19C20.1046 6 21 6.89543 21 8V16C21 17.1046 20.1046 18 19 18H5C3.89543 18 3 17.1046 3 16V8C3 6.89543 3 6 5 6Z" stroke="currentColor" strokeWidth="2"/>
                         </svg>
                       </div>
                       <span>Hesap Bakiyesi</span>
@@ -319,13 +852,44 @@ function App() {
                   <div className="modal-quick-icon">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M3 10H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                      <path d="M5 6H19C20.1046 6 21 6.89543 21 8V16C21 17.1046 20.1046 18 19 18H5C3.89543 18 3 17.1046 3 16V8C3 6.89543 3.89543 6 5 6Z" stroke="currentColor" strokeWidth="2"/>
+                      <path d="M5 6H19C20.1046 6 21 6.89543 21 8V16C21 17.1046 20.1046 18 19 18H5C3.89543 18 3 17.1046 3 16V8C3 6.89543 3 6 5 6Z" stroke="currentColor" strokeWidth="2"/>
                     </svg>
                   </div>
                   <div className="modal-quick-text">
                     <span className="modal-quick-title">Hesap Bakiyesi</span>
                     <span className="modal-quick-desc">Güncel bakiye bilgilerinizi görün.</span>
                   </div>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutModal && (
+        <div className="modal-overlay" onClick={cancelLogout}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Çıkış Yap</h3>
+              <button
+                className="modal-close-button"
+                onClick={cancelLogout}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            </div>
+            <div className="modal-body">
+              <p>Çıkış yapmak istediğinizden emin misiniz?</p>
+              <div className="modal-actions">
+                <button className="modal-confirm-button" onClick={confirmLogout}>
+                  Evet
+                </button>
+                <button className="modal-cancel-button" onClick={cancelLogout}>
+                  İptal
                 </button>
               </div>
             </div>
