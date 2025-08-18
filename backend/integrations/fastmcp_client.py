@@ -54,9 +54,14 @@ def _as_dict(x: Any) -> Dict[str, Any]:
     return {"_type": type(x).__name__, "_raw": str(x)}
 
 async def _acall(url: str, tool: str, args: Dict[str, Any]) -> Dict[str, Any]:
-    async with Client(url) as client:
-        res = await client.call_tool(tool, args)
-        return _as_dict(res)
+    try:
+        async with Client(url) as client:
+            res = await client.call_tool(tool, args)
+            return _as_dict(res)
+    except Exception as e:
+        # Deterministic error object for caller
+        return {"ok": False, "error": f"mcp_call_failed:{e.__class__.__name__}", "detail": str(e), "tool": tool, "args": args}
+
 
 def call_mcp_tool(url: str, tool: str, args: Dict[str, Any]) -> Dict[str, Any]:
     return asyncio.run(_acall(url, tool, args))

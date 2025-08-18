@@ -128,3 +128,14 @@ $env:USE_MCP = "1"
 $env:MCP_SSE_URL = "http://127.0.0.1:8081/sse"
 $env:MCP_BALANCE_TOOL = "get_balance"
 python -m agent.agent
+
+
+
+
+##### LLMİN AGENTLA BİRLEŞTİ
+## çalıştırmak için önce mcp server başlatın sonra
+cd backend
+python -m agent.agent
+
+## agent.py en üstünde USE_MCP = 1 sadece server kullanır
+## ama USE_MCP = 0 llm üzerinden mcp tool calling yapar
