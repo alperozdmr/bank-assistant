@@ -66,9 +66,25 @@ uvicorn main:app --reload
 bu commendi çalıştırın ama /app klasörünün içinde çalıştırmanız lazım
 
 ## Agent MCP server entegrasyonu tamamlandı test için:
-önce server'ı çalıştırın
+1) backend folderına girin
+cd "/backend" 
+### sizin directory'niz ne ise
+
+2) .venv leri oluşturun ve açın
+"/Library/Frameworks/Python.framework/Versions/3.11/bin/python3.11" -m venv .venv
+source .venv/bin/activate
+
+3) gerekli paketleri yükleyin
+python -m pip install -U pip fastmcp python-dotenv
+
+4) mcp server folder'ına girin yine cd ile ve server'ı başlatın
+cd "/mcp_server"
+python server.py
+
+5) tekrardan backend klasörüne girin ve .env leri aktive edin
 sonra backend klasöründe .env'leri aktive edin:
 source .venv/bin/activate
+
 daha sonra aşağıdaki komut ile agent'ı test edebilirsiniz:
 ##########
 export USE_MCP=1
@@ -76,3 +92,5 @@ export MCP_SSE_URL="http://127.0.0.1:8081/sse"
 export MCP_BALANCE_TOOL="get_balance"
 python -m agent.agent
 ##########
+
+Not: eğer sorun çıkarsa server.py'ın 10. satırındaki db_path'i kendi bilgisayarınızdaki dummy_bank.db'nin directory'sine göre ayarlayın
