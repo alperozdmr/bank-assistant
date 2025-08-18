@@ -45,7 +45,7 @@ function Login({ onLogin }) {
       const response = await fetch('http://127.0.0.1:8000/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ customer_id: customerNo, password })
+        body: JSON.stringify({ customer_no: customerNo, password })
       })
 
       const data = await response.json()
@@ -58,7 +58,7 @@ function Login({ onLogin }) {
       if (data?.success) {
         onLogin({
           customerNo,
-          userId: data.customer_id,
+          userId: data.customer_no,
           token: data.token
         })
       } else {
