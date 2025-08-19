@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional, List
+from typing import Any, Dict, Optional
 
 
 class AccountBalanceTool:
@@ -10,7 +10,9 @@ class AccountBalanceTool:
     def __init__(self, repo):
         self.repo = repo
 
-    def get_balance(self, account_id: Optional[int] = None, customer_id: Optional[int] = None) -> Dict[str, Any]:
+    def get_balance(
+        self, account_id: Optional[int] = None, customer_id: Optional[int] = None
+    ) -> Dict[str, Any]:
         """
         Repository üzerinden `accounts` tablosunu okuyarak hesap bakiyesini ve
         temel hesap alanlarını döndürür; UI/agent katmanının doğrudan tüketmesi
@@ -41,7 +43,7 @@ class AccountBalanceTool:
 
         if account_id is None and customer_id is None:
             return {"error": "parametre eksik: account_id veya customer_id verin"}
-        
+
         if account_id is not None:
             try:
                 acc_id = int(account_id)
@@ -62,7 +64,7 @@ class AccountBalanceTool:
                 "status": acc["status"],
                 "created_at": acc["created_at"],
             }
-    
+
         try:
             cid = int(customer_id)  # type: ignore[arg-type]
         except (TypeError, ValueError):
@@ -82,6 +84,7 @@ class AccountBalanceTool:
                 "status": acc["status"],
                 "created_at": acc["created_at"],
             }
+
         # birden fazla hesap
         def norm(a: Dict[str, Any]) -> Dict[str, Any]:
             return {
@@ -92,4 +95,5 @@ class AccountBalanceTool:
                 "status": a["status"],
                 "created_at": a["created_at"],
             }
+
         return {"customer_id": cid, "accounts": [norm(a) for a in rows]}

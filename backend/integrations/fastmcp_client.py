@@ -1,7 +1,11 @@
 from __future__ import annotations
-import asyncio, json
+
+import asyncio
+import json
 from typing import Any, Dict, Optional
+
 from fastmcp import Client
+
 
 def _from_content(content: Any) -> Optional[Dict[str, Any]]:
     if not isinstance(content, list):
@@ -22,6 +26,7 @@ def _from_content(content: Any) -> Optional[Dict[str, Any]]:
                     pass
     return None
 
+
 def _as_dict(x: Any) -> Dict[str, Any]:
     if isinstance(x, dict):
         return x.get("data") if isinstance(x.get("data"), dict) else x
@@ -41,7 +46,11 @@ def _as_dict(x: Any) -> Dict[str, Any]:
             try:
                 d = f()
                 if isinstance(d, dict):
-                    return d.get("data") if isinstance(d.get("data"), dict) else d.get("result", d)
+                    return (
+                        d.get("data")
+                        if isinstance(d.get("data"), dict)
+                        else d.get("result", d)
+                    )
             except Exception:
                 pass
     # string json olabilir
@@ -53,6 +62,7 @@ def _as_dict(x: Any) -> Dict[str, Any]:
     # debug fallback
     return {"_type": type(x).__name__, "_raw": str(x)}
 
+
 async def _acall(url: str, tool: str, args: Dict[str, Any]) -> Dict[str, Any]:
     try:
         async with Client(url) as client:
@@ -60,7 +70,13 @@ async def _acall(url: str, tool: str, args: Dict[str, Any]) -> Dict[str, Any]:
             return _as_dict(res)
     except Exception as e:
         # Deterministic error object for caller
-        return {"ok": False, "error": f"mcp_call_failed:{e.__class__.__name__}", "detail": str(e), "tool": tool, "args": args}
+        return {
+            "ok": False,
+            "error": f"mcp_call_failed:{e.__class__.__name__}",
+            "detail": str(e),
+            "tool": tool,
+            "args": args,
+        }
 
 
 def call_mcp_tool(url: str, tool: str, args: Dict[str, Any]) -> Dict[str, Any]:

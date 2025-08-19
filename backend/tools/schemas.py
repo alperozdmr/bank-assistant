@@ -37,6 +37,7 @@
 #     return {"tools": [TOOL_SPEC_ACCOUNT_BALANCE]}
 # schemas.py
 from __future__ import annotations
+
 from typing import Any, Dict, List
 
 # Single tool that accepts one of three identifier patterns:
@@ -65,11 +66,11 @@ TOOL_SPEC_ACCOUNT_BALANCE: Dict[str, Any] = {
                 },
                 "branch_code": {
                     "type": "integer",
-                    "description": "Şube kodu (ör. 9142)"
+                    "description": "Şube kodu (ör. 9142)",
                 },
                 "customer_no": {
                     "type": "integer",
-                    "description": "Müşteri numarası (ör. 12345678)"
+                    "description": "Müşteri numarası (ör. 12345678)",
                 },
             },
             "oneOf": [

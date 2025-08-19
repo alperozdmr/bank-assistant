@@ -75,7 +75,7 @@ python -m agent.agent
 
 ### MAC İÇİN ENVIRONMENT KURULUMU
 1) backend folderına girin
-cd "/backend" 
+cd "/backend"
 ### sizin directory'niz ne ise
 
 2) .venv leri oluşturun ve açın
@@ -140,6 +140,6 @@ python -m agent.agent
 ## agent.py en üstünde USE_MCP = 1 sadece server kullanır
 ## ama USE_MCP = 0 llm üzerinden mcp tool calling yapar
 
-# llm ve mcp server beraber çalışıyor 
+# llm ve mcp server beraber çalışıyor
 # öncemli!!!
-# config local'de app key boş, test etmek için sitesinden yenisini almalısınız huggingface'den 
+# config local'de app key boş, test etmek için sitesinden yenisini almalısınız huggingface'den

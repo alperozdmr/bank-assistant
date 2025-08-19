@@ -1,6 +1,6 @@
 # data/sqlite_repo.py
 import sqlite3
-from typing import Any, Dict, Optional, List
+from typing import Any, Dict, List, Optional
 
 
 class SQLiteAccountRepository:
@@ -50,7 +50,7 @@ class SQLiteAccountRepository:
             }
         finally:
             con.close()
-            
+
     def get_accounts_by_customer(self, customer_id: int) -> List[Dict[str, Any]]:
         con = sqlite3.connect(self.db_path)
         con.row_factory = sqlite3.Row
@@ -69,15 +69,17 @@ class SQLiteAccountRepository:
 
             out: List[Dict[str, Any]] = []
             for r in rows:
-                out.append({
-                    "account_id": int(r["account_id"]),
-                    "customer_id": int(r["customer_id"]),
-                    "account_type": str(r["account_type"]),
-                    "balance": float(r["balance"]),
-                    "currency": str(r["currency"]),
-                    "created_at": str(r["created_at"]),
-                    "status": str(r["status"]),
-                })
+                out.append(
+                    {
+                        "account_id": int(r["account_id"]),
+                        "customer_id": int(r["customer_id"]),
+                        "account_type": str(r["account_type"]),
+                        "balance": float(r["balance"]),
+                        "currency": str(r["currency"]),
+                        "created_at": str(r["created_at"]),
+                        "status": str(r["status"]),
+                    }
+                )
             return out
         finally:
             con.close()

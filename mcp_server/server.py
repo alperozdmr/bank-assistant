@@ -1,6 +1,7 @@
 # server.py
 import os
 from typing import Optional
+
 from data.sqlite_repo import SQLiteAccountRepository
 from fastmcp import FastMCP
 from tools.account_balance_tool import AccountBalanceTool
@@ -18,7 +19,9 @@ account_tools = AccountBalanceTool(repo)
 
 # === TIER 1: FOUNDATION TOOLS ===
 @mcp.tool()
-def get_balance(account_id: Optional[int] = None, customer_id: Optional[int] = None) -> dict:
+def get_balance(
+    account_id: Optional[int] = None, customer_id: Optional[int] = None
+) -> dict:
     """
     Retrieves current balance information for a specific account.
 
@@ -40,7 +43,6 @@ def get_balance(account_id: Optional[int] = None, customer_id: Optional[int] = N
         - error (str) with an explanatory message
     """
     return account_tools.get_balance(account_id=account_id, customer_id=customer_id)
-
 
 
 if __name__ == "__main__":
