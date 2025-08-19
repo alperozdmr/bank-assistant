@@ -1,4 +1,5 @@
 # data/sqlite_repo.py
+import os
 import sqlite3
 from typing import Any, Dict, List, Optional
 
@@ -7,8 +8,10 @@ class SQLiteAccountRepository:
     """
     accounts tablosundan tek kaydı (account_id ile) okur.
     """
+    BASE_DIR = os.path.dirname(__file__)
+    DB_PATH = os.environ.get("BANK_DB_PATH", os.path.join(BASE_DIR, "dummy_bank.db"))
 
-    def __init__(self, db_path: str = "bank.db"):
+    def __init__(self, db_path: str = DB_PATH):
         self.db_path = db_path
 
     def get_account(self, account_id: int) -> Optional[Dict[str, Any]]:
