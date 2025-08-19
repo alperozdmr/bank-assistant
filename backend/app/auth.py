@@ -2,7 +2,7 @@ import datetime
 import os
 from typing import Optional
 
-import jwt
+import jose.jwt as jwt
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import create_engine, text
@@ -42,7 +42,7 @@ class LoginResponse(BaseModel):
 
 # Veritabanı Bağlantısı
 def _get_engine():
-    database_url = os.getenv("DATABASE_URL", "sqlite:///./dummy_bank_new.db")
+    database_url = os.getenv("DATABASE_URL", "sqlite:///C:/Users/gurka/OneDrive/Masaüstü/bank-assistant/mcp_server/dummy_bank.db")
     connect_args = (
         {"check_same_thread": False} if database_url.startswith("sqlite") else {}
     )
