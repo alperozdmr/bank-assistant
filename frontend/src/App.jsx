@@ -445,10 +445,7 @@ function App() {
       })
 
       const data = await response.json()
-
-      // 1 saniye beklet (Bot yazıyor animasyonu için)
-      await new Promise(resolve => setTimeout(resolve, 1000))
-
+      
       const botMessage = {
         id: messages.length + 2,
         text: data.response, // FastAPI’den gelen cevap
@@ -572,9 +569,6 @@ function App() {
       })
 
       const data = await response.json()
-
-      // 1 saniye beklet (Bot yazıyor animasyonu için)
-      await new Promise(resolve => setTimeout(resolve, 1000))
 
       const botMessage = {
         id: messages.length + 2,
