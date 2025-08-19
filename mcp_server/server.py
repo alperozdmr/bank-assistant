@@ -12,7 +12,7 @@ BASE_DIR = os.path.dirname(__file__)
 DB_PATH = os.environ.get("BANK_DB_PATH", os.path.join(BASE_DIR, "dummy_bank.db"))
 
 # === Initialize tool classes ===
-repo = SQLiteAccountRepository(db_path="/Users/bilgehanakin/repo 19/bank-assistant/mcp_server/dummy_bank.db")
+repo = SQLiteAccountRepository(db_path=DB_PATH)
 account_tools = AccountBalanceTool(repo)
 
 
