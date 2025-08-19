@@ -139,3 +139,7 @@ python -m agent.agent
 
 ## agent.py en üstünde USE_MCP = 1 sadece server kullanır
 ## ama USE_MCP = 0 llm üzerinden mcp tool calling yapar
+
+# llm ve mcp server beraber çalışıyor 
+# öncemli!!!
+# config local'de app key boş, test etmek için sitesinden yenisini almalısınız huggingface'den 

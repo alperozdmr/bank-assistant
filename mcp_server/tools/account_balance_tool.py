@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
 
 
 class AccountBalanceTool:
@@ -10,7 +10,7 @@ class AccountBalanceTool:
     def __init__(self, repo):
         self.repo = repo
 
-    def get_balance(self, account_id: int) -> Dict[str, Any]:
+    def get_balance(self, account_id: Optional[int] = None, customer_id: Optional[int] = None) -> Dict[str, Any]:
         """
         Repository üzerinden `accounts` tablosunu okuyarak hesap bakiyesini ve
         temel hesap alanlarını döndürür; UI/agent katmanının doğrudan tüketmesi
@@ -38,22 +38,58 @@ class AccountBalanceTool:
             - Overdraft veya düşük bakiye durumunda uyarı mesajı üretmek
             - Döviz bozdurma/kur bilgisi isteyen akışlarda kaynak bakiye verisini sağlamak
         """
+
+        if account_id is None and customer_id is None:
+            return {"error": "parametre eksik: account_id veya customer_id verin"}
+        
+        if account_id is not None:
+            try:
+                acc_id = int(account_id)
+            except (TypeError, ValueError):
+                return {"error": "account_id geçersiz (int olmalı)"}
+
+            acc = self.repo.get_account(acc_id)
+            if not acc:
+                return {"error": f"Hesap bulunamadı: {acc_id}"}
+
+            # İstediğin alanları doğrudan döndür (UI/agent rahat işler)
+            return {
+                "account_id": acc["account_id"],
+                "customer_id": acc["customer_id"],
+                "account_type": acc["account_type"],
+                "balance": acc["balance"],
+                "currency": acc["currency"],
+                "status": acc["status"],
+                "created_at": acc["created_at"],
+            }
+    
         try:
-            account_id = int(account_id)
+            cid = int(customer_id)  # type: ignore[arg-type]
         except (TypeError, ValueError):
-            return {"error": "account_id geçersiz (int olmalı)"}
+            return {"error": "customer_id geçersiz (int olmalı)"}
 
-        acc: Optional[Dict[str, Any]] = self.repo.get_account(account_id)
-        if not acc:
-            return {"error": f"Hesap bulunamadı: {account_id}"}
-
-        # İstediğin alanları doğrudan döndür (UI/agent rahat işler)
-        return {
-            "account_id": acc["account_id"],
-            "customer_id": acc["customer_id"],
-            "account_type": acc["account_type"],
-            "balance": acc["balance"],
-            "currency": acc["currency"],
-            "status": acc["status"],
-            "created_at": acc["created_at"],
-        }
+        rows = self.repo.get_accounts_by_customer(cid)
+        if not rows:
+            return {"error": f"Müşteri bulunamadı veya hesap yok: {cid}"}
+        if len(rows) == 1:
+            acc = rows[0]
+            return {
+                "account_id": acc["account_id"],
+                "customer_id": acc["customer_id"],
+                "account_type": acc["account_type"],
+                "balance": acc["balance"],
+                "currency": acc["currency"],
+                "status": acc["status"],
+                "created_at": acc["created_at"],
+            }
+        # birden fazla hesap
+        def norm(a: Dict[str, Any]) -> Dict[str, Any]:
+            return {
+                "account_id": a["account_id"],
+                "account_type": a["account_type"],
+                "balance": a["balance"],
+                "currency": a["currency"],
+                "status": a["status"],
+                "created_at": a["created_at"],
+            }
+        return {"customer_id": cid, "accounts": [norm(a) for a in rows]}
