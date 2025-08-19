@@ -36,7 +36,7 @@ Thumbs.db
 .pytest_cache/
 
 # Database
-*.db
+
 *.sqlite3
 
 # Temporary files
