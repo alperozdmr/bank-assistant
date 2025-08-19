@@ -1,8 +1,9 @@
 # Import the router and lifespan from your chat module
-from app.chat import lifespan
-from app.chat import router as chat_router
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+
+from backend.chat.chat_history import lifespan
+from backend.chat.chat_history import router as chat_router
 
 # Create a temporary FastAPI app for testing
 app = FastAPI(lifespan=lifespan)
