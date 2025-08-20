@@ -1,11 +1,19 @@
 # server.py
-import os
-from typing import Optional
 
-from .data.sqlite_repo import SQLiteAccountRepository
+###############
+import os
+import sys
+
+from data.sqlite_repo import SQLiteRepository
 from fastmcp import FastMCP
-from .tools.account_balance_tool import AccountBalanceTool
+from tools.general_tools import GeneralTools
+
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if ROOT not in sys.path:
+    sys.path.insert(0, ROOT)
+###############
 from backend.config_local import DB_PATH
+
 # === Initialize MCP server ===
 mcp = FastMCP("Fortuna Banking Services")
 
@@ -13,15 +21,12 @@ mcp = FastMCP("Fortuna Banking Services")
 # DB_PATH = os.environ.get("BANK_DB_PATH", os.path.join(BASE_DIR, "dummy_bank.db"))
 
 # === Initialize tool classes ===
-repo = SQLiteAccountRepository(db_path=DB_PATH)
-account_tools = AccountBalanceTool(repo)
+repo = SQLiteRepository(db_path=DB_PATH)
+account_tools = GeneralTools(repo)
 
 
-# === TIER 1: FOUNDATION TOOLS ===
 @mcp.tool()
-def get_balance(
-    account_id: Optional[int] = None, customer_id: Optional[int] = None
-) -> dict:
+def get_balance(account_id: int) -> dict:
     """
     Retrieves current balance information for a specific account.
 
@@ -42,7 +47,28 @@ def get_balance(
         If the account is not found or the input is invalid, returns:
         - error (str) with an explanatory message
     """
-    return account_tools.get_balance(account_id=account_id, customer_id=customer_id)
+    return account_tools.get_balance(account_id)
+
+
+@mcp.tool()
+def get_accounts(customer_id: int) -> dict:
+    """
+    Fetch customer's account(s) from `accounts`. Read-only; output is
+    normalized for chat/agent flows.
+
+    Parameters:
+        customer_id (int): Customer ID.
+
+    Returns:
+        - {"error": str} if input is invalid or no records exist.
+        - Single account → object with: account_id, customer_id, account_type
+          (checking/savings/credit), balance, currency (TRY/USD/EUR),
+          status (active/frozen/closed), created_at ("YYYY-MM-DD HH:MM:SS").
+        - Multiple accounts → {"customer_id": int, "accounts": [
+          {account_id, account_type, balance, currency, status, created_at}
+          ]}.
+    """
+    return account_tools.get_accounts(customer_id)
 
 
 if __name__ == "__main__":

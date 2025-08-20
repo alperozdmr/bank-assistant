@@ -4,10 +4,11 @@ import sqlite3
 from typing import Any, Dict, List, Optional
 
 
-class SQLiteAccountRepository:
+class SQLiteRepository:
     """
     accounts tablosundan tek kaydı (account_id ile) okur.
     """
+
     BASE_DIR = os.path.dirname(__file__)
     DB_PATH = os.environ.get("BANK_DB_PATH", os.path.join(BASE_DIR, "dummy_bank.db"))
 

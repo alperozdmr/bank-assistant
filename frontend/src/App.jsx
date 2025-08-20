@@ -445,7 +445,7 @@ function App() {
       })
 
       const data = await response.json()
-      
+
       const botMessage = {
         id: messages.length + 2,
         text: data.response, // FastAPI’den gelen cevap

@@ -3,10 +3,10 @@ import os
 from typing import Optional
 
 import jose.jwt as jwt
+from config_local import DB_PATH
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import create_engine, text
-from config_local import DB_PATH
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -43,7 +43,7 @@ class LoginResponse(BaseModel):
 
 # Veritabanı Bağlantısı
 def _get_engine():
-    database_url = DB_PATH 
+    database_url = DB_PATH
     connect_args = (
         {"check_same_thread": False} if database_url.startswith("sqlite") else {}
     )

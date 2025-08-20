@@ -3,14 +3,11 @@ import uuid
 from datetime import datetime
 from typing import Optional
 
-import jose.jwt as jwt 
-from fastapi import FastAPI,Depends, HTTPException,status
+import jose.jwt as jwt
+from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel
-from chat.chat_history import router as chat_router
-
-
 
 from .auth import router as auth_router
 
@@ -29,28 +26,31 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-#--------------------
-#Chat router'ı ekle
-#--------------------
+# --------------------
+# Chat router'ı ekle
+# --------------------
 app.include_router(auth_router)
 
-#--------------------
+# --------------------
 # Auth Router'ı ekle
-#--------------------
+# --------------------
 app.include_router(auth_router)
 
 # -------------------
 # JWT Token Ayarları
 # -------------------
-SECRET_KEY = os.getenv("SECRET_KEY", "your_secret_key")  
+SECRET_KEY = os.getenv("SECRET_KEY", "your_secret_key")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30  # Token’ın geçerlilik süresi 30 dakika sonra tekrar giriş yapılması gerekecek
+ACCESS_TOKEN_EXPIRE_MINUTES = (
+    30  # Token’ın geçerlilik süresi 30 dakika sonra tekrar giriş yapılması gerekecek
+)
 security = HTTPBearer()
 
 
 # -------------------
-# Token Doğrulama 
+# Token Doğrulama
 # -------------------
+
 
 def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """JWT token'ı doğrular ve kullanıcı bilgilerini döndürür"""
@@ -78,16 +78,16 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-#--------------------
+
+# --------------------
 # Request ve Response Modelleri
-#--------------------
+# --------------------
 
 
 class ChatRequest(BaseModel):
     message: str
     session_id: Optional[str] = None
     user_id: str
-
 
 
 class ChatResponse(BaseModel):
@@ -107,39 +107,40 @@ async def health_check():
     return {"status": "healthy", "app": "InterChat", "module": "1"}
 
 
-#--------------------
+# --------------------
 # Protected Endpoint(Token Gerektiren)
-#--------------------
+# --------------------
 
-@app.post("/chat",response_model=ChatResponse)
+
+@app.post("/chat", response_model=ChatResponse)
 async def chat_endpoint(request: ChatRequest):
-    """"
+    """ "
     Chat endpoint'i
     """
 
-    #Session ID oluştur veya mevcut olanı kullan
+    # Session ID oluştur veya mevcut olanı kullan
     session_id = request.session_id or str(uuid.uuid4())
 
-    #Message ID oluştur
+    # Message ID oluştur
     message_id = str(uuid.uuid4())
 
-# Kişiselleştirilmiş yanıt
-    bot_response = f"Merhaba! Size nasıl yardımcı olabilirim? Mesajınız: '{request.message}'",
-    
+    # Kişiselleştirilmiş yanıt
+    bot_response = (
+        f"Merhaba! Size nasıl yardımcı olabilirim? Mesajınız: '{request.message}'",
+    )
+
     response = ChatResponse(
         session_id=session_id,
         message_id=message_id,
         response=bot_response[0],
-        timestamp=datetime.now()
+        timestamp=datetime.now(),
     )
 
+
 @app.get("/profile")
-async def get_profile(
-    customer_no: str = Depends(verify_token)
-):
+async def get_profile(customer_no: str = Depends(verify_token)):
     """
     Kullanıcı profili bilgilerini döndürür.
     """
-   
-    return {"customer_no": customer_no, 
-    "message": f"Hoş geldiniz {customer_no}!"}
+
+    return {"customer_no": customer_no, "message": f"Hoş geldiniz {customer_no}!"}
