@@ -2,9 +2,9 @@ import datetime
 import os
 from typing import Optional
 
-import jose.jwt as jwt
 from config_local import DB_PATH
 from fastapi import APIRouter, HTTPException
+from jose import jwt
 from pydantic import BaseModel
 from sqlalchemy import create_engine, text
 
@@ -43,10 +43,8 @@ class LoginResponse(BaseModel):
 
 # Veritabanı Bağlantısı
 def _get_engine():
-    database_url = DB_PATH
-    connect_args = (
-        {"check_same_thread": False} if database_url.startswith("sqlite") else {}
-    )
+    database_url = f"sqlite:///{DB_PATH}"
+    connect_args = {"check_same_thread": False}
     return create_engine(database_url, future=True, connect_args=connect_args)
 
 
