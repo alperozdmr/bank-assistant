@@ -1,5 +1,4 @@
 # server.py
-
 ###############
 import os
 import sys
@@ -8,11 +7,13 @@ from data.sqlite_repo import SQLiteRepository
 from fastmcp import FastMCP
 from tools.general_tools import GeneralTools
 
+###############
+from backend.config_local import DB_PATH
+
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
-###############
-from backend.config_local import DB_PATH
+
 
 # === Initialize MCP server ===
 mcp = FastMCP("Fortuna Banking Services")
@@ -22,7 +23,7 @@ mcp = FastMCP("Fortuna Banking Services")
 
 # === Initialize tool classes ===
 repo = SQLiteRepository(db_path=DB_PATH)
-account_tools = GeneralTools(repo)
+general_tools = GeneralTools(repo)
 
 
 @mcp.tool()
@@ -47,7 +48,7 @@ def get_balance(account_id: int) -> dict:
         If the account is not found or the input is invalid, returns:
         - error (str) with an explanatory message
     """
-    return account_tools.get_balance(account_id)
+    return general_tools.get_balance(account_id)
 
 
 @mcp.tool()
@@ -68,7 +69,23 @@ def get_accounts(customer_id: int) -> dict:
           {account_id, account_type, balance, currency, status, created_at}
           ]}.
     """
-    return account_tools.get_accounts(customer_id)
+    return general_tools.get_accounts(customer_id)
+
+
+@mcp.tool()
+def get_card_info(card_id: int) -> dict:
+    """
+    Retrieves credit card details like limit, debt, and payment dates.
+    """
+    return general_tools.get_card_info(card_id=card_id)
+
+
+@mcp.tool()
+def list_recent_transactions(customer_id: int, n: int = 5) -> dict:
+    """
+    Lists the last 'n' transactions for a customer.
+    """
+    return general_tools.list_recent_transactions(customer_id=customer_id, n=n)
 
 
 if __name__ == "__main__":

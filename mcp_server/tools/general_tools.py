@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 
 class GeneralTools:
@@ -39,7 +39,7 @@ class GeneralTools:
             - Döviz bozdurma/kur bilgisi isteyen akışlarda kaynak bakiye verisini sağlamak
         """
 
-        if account_id is None :
+        if account_id is None:
             return {"error": "parametre eksik: account_id veya customer_id verin"}
 
         if account_id is not None:
@@ -64,7 +64,6 @@ class GeneralTools:
             }
 
     def get_accounts(self, customer_id: int) -> Dict[str, Any]:
-
         """
         Müşteri kimliğine göre `accounts` tablosunu sorgulayarak müşterinin sahip olduğu
         hesap(ları) döndürür. Girdi doğrulaması yapar ve sonuç nesnesini UI/agent
@@ -136,3 +135,64 @@ class GeneralTools:
             }
 
         return {"customer_id": cid, "accounts": [norm(a) for a in rows]}
+
+    def get_card_info(self, card_id: int) -> Dict[str, Any]:
+        """
+        Kredi kartı detaylarını (limit, borç, ödeme günleri) döndürür.
+
+        Args:
+            card_id (int): Bankacılık sistemindeki benzersiz sayısal kart kimliği.
+
+        Returns:
+            Dict containing card details or an error message.
+        """
+        if card_id is None:
+            return {"error": "parametre eksik: card_id verin"}
+
+        try:
+            c_id = int(card_id)
+        except (TypeError, ValueError):
+            return {"error": "card_id geçersiz (int olmalı)"}
+
+        card_data = self.repo.get_card_details(c_id)
+
+        if not card_data:
+            return {"error": f"Kart bulunamadı: {c_id}"}
+
+        return {
+            "card_id": card_data["card_id"],
+            "limit": card_data["credit_limit"],
+            "borc": card_data["current_debt"],
+            "kesim_tarihi": card_data["statement_day"],
+            "son_odeme_tarihi": card_data["due_day"],
+        }
+
+    def list_recent_transactions(self, customer_id: int, n: int = 5) -> Dict[str, Any]:
+        """
+        Bir müşterinin tüm hesaplarındaki son 'n' adet işlemi listeler.
+
+        Args:
+            customer_id (int): Müşteri kimliği.
+            n (int): Listelenecek işlem sayısı (varsayılan: 5).
+
+        Returns:
+            A dictionary containing a list of transactions or an error.
+        """
+        if customer_id is None:
+            return {"error": "parametre eksik: customer_id verin"}
+
+        try:
+            c_id = int(customer_id)
+        except (TypeError, ValueError):
+            return {"error": "customer_id geçersiz (int olmalı)"}
+
+        transactions = self.repo.get_transactions_by_customer(c_id, n)
+
+        if not transactions:
+            return {
+                "customer_id": c_id,
+                "transactions": [],
+                "message": "Müşteriye ait son işlem bulunamadı.",
+            }
+
+        return {"customer_id": c_id, "transactions": transactions}
