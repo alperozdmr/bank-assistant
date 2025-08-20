@@ -2,11 +2,13 @@ import datetime
 import os
 from typing import Optional
 
-from config_local import DB_PATH
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException,Depends,status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import jwt
 from pydantic import BaseModel
 from sqlalchemy import create_engine, text
+
+from config_local import DB_PATH
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -14,6 +16,9 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 SECRET_KEY = os.getenv("SECRET_KEY", "your_secret_key")  # Güvenli bir anahtar kullanın.
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30  # Token’ın geçerlilik süresi
+
+ # Güvenlik şeması
+security = HTTPBearer()
 
 
 # Token oluşturma fonksiyonu
@@ -27,6 +32,32 @@ def create_access_token(data: dict, expires_delta: Optional[datetime.timedelta] 
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
+# Token doğrulama fonksiyonu
+def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """JWT token'ı doğrular ve kullanıcı bilgilerini döndürür. """
+    token=credentials.credentials
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        customer_no: str = payload.get("sub")
+        if customer_no is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token geçersiz",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        return customer_no
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token süresi dolmuş",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    except jwt.JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token doğrulanamadı",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
 # Pydantic Modelleri
 class LoginRequest(BaseModel):
@@ -102,3 +133,12 @@ def logout():
     # Bu endpoint'te sadece token’ın client tarafında silinmesi beklenir.
     # Server tarafında herhangi bir şey yapılması gerekmez, çünkü JWT stateless'tir.
     return {"message": "Çıkış başarılı."}
+
+# Profil endpoint'i
+@router.get("/profile")
+async def get_profile(customer_no: str = Depends(verify_token)):
+    """
+    Kullanıcının profil bilgilerini döndürür.
+    """
+
+    return {"customer_no":customer_no,"message": f"Hoşgeldunuz {customer_no}!"}
