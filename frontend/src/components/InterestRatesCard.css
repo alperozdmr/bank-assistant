@@ -1,0 +1,216 @@
+/* Interest Rates Card Styles */
+.interest-rates-card {
+  background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+  border: 1px solid #e1e8ed;
+  border-radius: 16px;
+  padding: 20px;
+  margin: 8px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+
+  width: 100%;
+}
+
+.interest-rates-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.interest-rates-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(76, 175, 80, 0.2);
+}
+
+.interest-rates-card-icon {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+.interest-rates-card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0;
+}
+
+.interest-rates-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.interest-rates-list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  max-width: 100%;
+}
+
+@media (max-width: 768px) {
+  .interest-rates-list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .interest-rates-list {
+    grid-template-columns: repeat(1, 1fr);
+  }
+}
+
+.interest-rate-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 12px;
+  border: 1px solid rgba(76, 175, 80, 0.1);
+  transition: all 0.2s ease;
+}
+
+.interest-rate-item:hover {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(76, 175, 80, 0.2);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.interest-rate-info {
+  flex: 1;
+}
+
+.product-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 4px;
+}
+
+.rate-updated {
+  font-size: 12px;
+  color: #666;
+}
+
+.interest-rate-value {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.rate-percentage {
+  font-size: 20px;
+  font-weight: 700;
+  color: #4caf50;
+}
+
+.rate-type {
+  font-size: 11px;
+  font-weight: 500;
+  color: #666;
+  text-transform: uppercase;
+}
+
+.interest-rates-summary {
+  text-align: center;
+  margin-top: 8px;
+  padding: 8px;
+  font-size: 13px;
+  color: #666;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Dark theme for interest rates cards */
+.dark-theme .interest-rates-card {
+  background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+  border-color: #444;
+  color: #e1e8ed;
+}
+
+.dark-theme .interest-rates-card-title {
+  color: #e1e8ed;
+}
+
+.dark-theme .interest-rate-item {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-theme .interest-rate-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.dark-theme .product-name {
+  color: #e1e8ed;
+}
+
+.dark-theme .rate-updated {
+  color: #999;
+}
+
+.dark-theme .rate-percentage {
+  color: #66bb6a;
+}
+
+.dark-theme .rate-type {
+  color: #999;
+}
+
+.dark-theme .interest-rates-summary {
+  background: rgba(255, 255, 255, 0.1);
+  color: #999;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Mobile responsiveness for interest rates cards */
+@media (max-width: 480px) {
+  .interest-rates-card {
+    padding: 16px;
+    margin: 6px 0;
+    border-radius: 12px;
+    max-width: none;
+  }
+
+  .interest-rates-card-header {
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+  }
+
+  .interest-rates-card-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .interest-rates-card-title {
+    font-size: 15px;
+  }
+
+  .interest-rate-item {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+
+  .product-name {
+    font-size: 15px;
+  }
+
+  .rate-percentage {
+    font-size: 18px;
+  }
+}

@@ -1,0 +1,274 @@
+/* Exchange Rates Card Styles */
+.exchange-rates-card {
+  background: linear-gradient(135deg, #fff8e1 0%, #f3e5ab 100%);
+  border: 1px solid #e1e8ed;
+  border-radius: 16px;
+  padding: 20px;
+  margin: 8px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+  max-width: 800px;
+  width: 100%;
+}
+
+.exchange-rates-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.exchange-rates-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 193, 7, 0.2);
+}
+
+.exchange-rates-card-icon {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #ffc107 0%, #ff8f00 100%);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+.exchange-rates-card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0;
+}
+
+.exchange-rates-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.rates-list {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  max-width: 100%;
+}
+
+/* Tek kur için özel stiller */
+.single-rate {
+  max-width: 400px;
+  width: fit-content;
+}
+
+.single-rate-list {
+  display: flex;
+  grid-template-columns: unset;
+  justify-content: center;
+}
+
+.single-rate-item {
+  min-height: auto;
+  padding: 16px 20px;
+  max-width: 300px;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .rates-list {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .rates-list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.rate-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 12px 8px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 193, 7, 0.1);
+  transition: all 0.2s ease;
+  min-height: 100px;
+  justify-content: space-between;
+  font-size: 13px;
+}
+
+.rate-item:hover {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(255, 193, 7, 0.2);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.rate-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.currency-pair {
+  font-size: 14px;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 2px;
+}
+
+.rate-updated {
+  font-size: 11px;
+  color: #666;
+}
+
+.rate-prices {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.rate-price {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.rate-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #666;
+}
+
+.rate-value {
+  font-size: 12px;
+  font-weight: 700;
+  color: #2c3e50;
+}
+
+.rate-price.buy .rate-value {
+  color: #16a34a;
+}
+
+.rate-price.sell .rate-value {
+  color: #dc2626;
+}
+
+.rates-summary {
+  text-align: center;
+  margin-top: 8px;
+  padding: 8px;
+  font-size: 13px;
+  color: #666;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Dark theme for exchange rates cards */
+.dark-theme .exchange-rates-card {
+  background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+  border-color: #444;
+  color: #e1e8ed;
+}
+
+.dark-theme .exchange-rates-card-title {
+  color: #e1e8ed;
+}
+
+.dark-theme .rate-item {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-theme .rate-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.dark-theme .currency-pair {
+  color: #e1e8ed;
+}
+
+.dark-theme .rate-updated {
+  color: #999;
+}
+
+.dark-theme .rate-label {
+  color: #999;
+}
+
+.dark-theme .rate-value {
+  color: #e1e8ed;
+}
+
+.dark-theme .rate-price.buy .rate-value {
+  color: #4ade80;
+}
+
+.dark-theme .rate-price.sell .rate-value {
+  color: #f87171;
+}
+
+.dark-theme .rates-summary {
+  background: rgba(255, 255, 255, 0.1);
+  color: #999;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Mobile responsiveness for exchange rates cards */
+@media (max-width: 480px) {
+  .exchange-rates-card {
+    padding: 16px;
+    margin: 6px 0;
+    border-radius: 12px;
+    max-width: none;
+  }
+
+  .exchange-rates-card-header {
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+  }
+
+  .exchange-rates-card-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .exchange-rates-card-title {
+    font-size: 15px;
+  }
+
+  .rates-list {
+    grid-template-columns: 1fr;
+  }
+
+  .rate-item {
+    min-height: auto;
+    padding: 14px;
+  }
+
+  .rate-prices {
+    gap: 24px;
+  }
+
+  .currency-pair {
+    font-size: 15px;
+  }
+
+  .rate-value {
+    font-size: 13px;
+  }
+}

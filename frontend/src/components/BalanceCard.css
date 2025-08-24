@@ -1,0 +1,380 @@
+/* Balance Card Styles */
+.balance-card {
+  background: linear-gradient(135deg, #f8f9ff 0%, #f0f7ff 100%);
+  border: 1px solid #e1e8ed;
+  border-radius: 16px;
+  padding: 20px;
+  margin: 8px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+  max-width: 400px;
+  width: 100%;
+}
+
+/* Special width for multiple accounts */
+.balance-card:has(.accounts-list) {
+  max-width: none;
+  width: 100%;
+}
+
+.balance-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.balance-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(23, 137, 220, 0.1);
+}
+
+.balance-card-icon {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #1789dc 0%, #58167d 100%);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+.balance-card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0;
+}
+
+.balance-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.account-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.account-id {
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
+}
+
+.account-details {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.account-type, .account-status {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.account-type .label, .account-status .label {
+  font-size: 12px;
+  color: #999;
+  font-weight: 500;
+}
+
+.account-type .value {
+  font-size: 12px;
+  color: #2c3e50;
+  font-weight: 600;
+  background: rgba(23, 137, 220, 0.1);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.status-badge {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: capitalize;
+}
+
+.status-badge.aktif, .status-badge.active {
+  background: rgba(34, 197, 94, 0.1);
+  color: #16a34a;
+}
+
+.status-badge.dondurulmuş, .status-badge.dondurulmus, .status-badge.frozen {
+  background: rgba(251, 191, 36, 0.1);
+  color: #d97706;
+}
+
+.status-badge.kapali, .status-badge.kapalı, .status-badge.closed {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+}
+
+.balance-amount {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.balance-amount .amount {
+  font-size: 24px;
+  font-weight: 700;
+  color: #2c3e50;
+  line-height: 1;
+}
+
+.balance-amount .currency {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1789dc;
+  opacity: 0.8;
+}
+
+/* Multiple Accounts */
+.accounts-list {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+
+.account-item {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 12px;
+  border: 1px solid rgba(23, 137, 220, 0.08);
+  transition: all 0.2s ease;
+  min-width: 250px;
+  flex: 1;
+  max-width: 300px;
+}
+
+.account-item .account-info {
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex: 1;
+}
+
+.account-meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.account-type-small {
+  font-size: 11px;
+  color: #2c3e50;
+  font-weight: 500;
+  background: rgba(23, 137, 220, 0.1);
+  padding: 1px 6px;
+  border-radius: 3px;
+}
+
+.status-badge-small {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 3px;
+  text-transform: capitalize;
+}
+
+.status-badge-small.aktif, .status-badge-small.active {
+  background: rgba(34, 197, 94, 0.1);
+  color: #16a34a;
+}
+
+.status-badge-small.dondurulmuş, .status-badge-small.dondurulmus, .status-badge-small.frozen {
+  background: rgba(251, 191, 36, 0.1);
+  color: #d97706;
+}
+
+.status-badge-small.kapali, .status-badge-small.kapalı, .status-badge-small.closed {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+}
+
+.account-item:hover {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(23, 137, 220, 0.15);
+}
+
+.account-balance {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.account-balance .amount {
+  font-size: 20px;
+  font-weight: 700;
+  color: #2c3e50;
+  line-height: 1;
+}
+
+.account-balance .currency {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1789dc;
+  opacity: 0.8;
+}
+
+/* Dark theme for balance cards */
+.dark-theme .balance-card {
+  background: linear-gradient(135deg, #2a2a2a 0%, #1f1f1f 100%);
+  border-color: #444;
+  color: #e1e8ed;
+}
+
+.dark-theme .balance-card-title {
+  color: #e1e8ed;
+}
+
+.dark-theme .account-id {
+  color: #999;
+}
+
+.dark-theme .balance-amount .amount {
+  color: #e1e8ed;
+}
+
+.dark-theme .balance-amount .currency {
+  color: #64b5f6;
+}
+
+.dark-theme .account-item {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-theme .account-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.dark-theme .account-balance .amount {
+  color: #e1e8ed;
+}
+
+.dark-theme .account-balance .currency {
+  color: #64b5f6;
+}
+
+.dark-theme .account-type .value {
+  background: rgba(100, 181, 246, 0.1);
+  color: #64b5f6;
+}
+
+.dark-theme .account-type-small {
+  background: rgba(100, 181, 246, 0.1);
+  color: #64b5f6;
+}
+
+.dark-theme .status-badge.aktif, .dark-theme .status-badge.active,
+.dark-theme .status-badge-small.aktif, .dark-theme .status-badge-small.active {
+  background: rgba(34, 197, 94, 0.2);
+  color: #4ade80;
+}
+
+.dark-theme .status-badge.dondurulmuş, .dark-theme .status-badge.dondurulmus, .dark-theme .status-badge.frozen,
+.dark-theme .status-badge-small.dondurulmuş, .dark-theme .status-badge-small.dondurulmus, .dark-theme .status-badge-small.frozen {
+  background: rgba(251, 191, 36, 0.2);
+  color: #fbbf24;
+}
+
+.dark-theme .status-badge.kapalı, .dark-theme .status-badge.closed,
+.dark-theme .status-badge-small.kapalı, .dark-theme .status-badge-small.closed {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+}
+
+.balance-summary {
+  text-align: center;
+  margin-top: 8px;
+  padding: 8px;
+  font-size: 13px;
+  color: #666;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.dark-theme .balance-summary {
+  background: rgba(255, 255, 255, 0.1);
+  color: #999;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Mobile responsiveness for balance cards */
+@media (max-width: 768px) {
+  .accounts-list {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .account-item {
+    min-width: unset;
+    max-width: none;
+    flex: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .balance-card {
+    padding: 16px;
+    margin: 6px 0;
+    border-radius: 12px;
+    max-width: none;
+  }
+
+  .balance-card-header {
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+  }
+
+  .balance-card-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .balance-card-title {
+    font-size: 15px;
+  }
+
+  .balance-amount .amount {
+    font-size: 20px;
+  }
+
+  .balance-amount .currency {
+    font-size: 14px;
+  }
+
+  .account-item {
+    padding: 12px;
+    min-width: unset;
+    max-width: none;
+  }
+
+  .account-balance .amount {
+    font-size: 18px;
+  }
+
+  .account-balance .currency {
+    font-size: 13px;
+  }
+}

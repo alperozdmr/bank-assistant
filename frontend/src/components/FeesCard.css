@@ -1,0 +1,270 @@
+/* Fees Card Styles */
+.fees-card {
+  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+  border: 1px solid #e1e8ed;
+  border-radius: 16px;
+  padding: 20px;
+  margin: 8px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+  max-width: 500px;
+  width: 100%;
+}
+
+.fees-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.fees-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 152, 0, 0.2);
+}
+
+.fees-card-icon {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #ff9800 0%, #e65100 100%);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+.fees-card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0;
+}
+
+.fees-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.fee-service-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.service-code {
+  font-size: 18px;
+  font-weight: 700;
+  color: #2c3e50;
+  text-transform: uppercase;
+}
+
+.service-description {
+  font-size: 14px;
+  color: #666;
+  line-height: 1.4;
+}
+
+.fee-updated {
+  font-size: 12px;
+  color: #999;
+}
+
+.fee-pricing {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 152, 0, 0.1);
+}
+
+.fee-value-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.fee-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #ff9800;
+  line-height: 1;
+}
+
+.fee-type {
+  font-size: 12px;
+  font-weight: 500;
+  color: #666;
+  text-transform: uppercase;
+}
+
+.fee-limits {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+  font-size: 11px;
+  color: #999;
+}
+
+.fee-limits span {
+  padding: 2px 6px;
+  background: rgba(255, 152, 0, 0.1);
+  border-radius: 4px;
+}
+
+.fee-tiers {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.fee-tier {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 152, 0, 0.1);
+}
+
+.tier-threshold {
+  font-size: 12px;
+  font-weight: 500;
+  color: #666;
+}
+
+.tier-fee {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ff9800;
+}
+
+.fee-tier-more {
+  text-align: center;
+  font-size: 12px;
+  color: #999;
+  font-style: italic;
+}
+
+/* Dark theme for fees cards */
+.dark-theme .fees-card {
+  background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+  border-color: #444;
+  color: #e1e8ed;
+}
+
+.dark-theme .fees-card-title {
+  color: #e1e8ed;
+}
+
+.dark-theme .service-code {
+  color: #e1e8ed;
+}
+
+.dark-theme .service-description {
+  color: #999;
+}
+
+.dark-theme .fee-updated {
+  color: #777;
+}
+
+.dark-theme .fee-pricing {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-theme .fee-value {
+  color: #ffb74d;
+}
+
+.dark-theme .fee-type {
+  color: #999;
+}
+
+.dark-theme .fee-limits {
+  color: #777;
+}
+
+.dark-theme .fee-limits span {
+  background: rgba(255, 183, 77, 0.1);
+}
+
+.dark-theme .fee-tier {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-theme .tier-threshold {
+  color: #999;
+}
+
+.dark-theme .tier-fee {
+  color: #ffb74d;
+}
+
+.dark-theme .fee-tier-more {
+  color: #777;
+}
+
+/* Mobile responsiveness for fees cards */
+@media (max-width: 480px) {
+  .fees-card {
+    padding: 16px;
+    margin: 6px 0;
+    border-radius: 12px;
+    max-width: none;
+  }
+
+  .fees-card-header {
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+  }
+
+  .fees-card-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .fees-card-title {
+    font-size: 15px;
+  }
+
+  .service-code {
+    font-size: 16px;
+  }
+
+  .service-description {
+    font-size: 13px;
+  }
+
+  .fee-value {
+    font-size: 20px;
+  }
+
+  .fee-tiers {
+    gap: 6px;
+  }
+
+  .fee-tier {
+    padding: 6px 10px;
+  }
+
+  .tier-threshold {
+    font-size: 11px;
+  }
+
+  .tier-fee {
+    font-size: 13px;
+  }
+}
+

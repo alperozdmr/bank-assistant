@@ -1,0 +1,292 @@
+/* ATM Card Styles */
+.atm-card {
+  background: linear-gradient(135deg, #f0f7ff 0%, #e6f3ff 100%);
+  border: 1px solid #e1e8ed;
+  border-radius: 16px;
+  padding: 20px;
+  margin: 8px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+/* Dynamic width based on result count */
+.atm-card.single-result {
+  max-width: 500px;
+}
+
+.atm-card.dual-result {
+  max-width: 700px;
+}
+
+.atm-card.multi-result {
+  max-width: 900px;
+}
+
+.atm-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.atm-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(23, 137, 220, 0.1);
+}
+
+.atm-card-icon {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #1789dc 0%, #58167d 100%);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+.atm-card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0;
+}
+
+.atm-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.atm-list {
+  display: grid;
+  gap: 12px;
+}
+
+/* Grid columns based on result count */
+.single-result .atm-list {
+  grid-template-columns: 1fr;
+}
+
+.dual-result .atm-list {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.multi-result .atm-list {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+@media (max-width: 768px) {
+  .atm-list,
+  .single-result .atm-list,
+  .dual-result .atm-list,
+  .multi-result .atm-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+.atm-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 12px;
+  border: 1px solid rgba(23, 137, 220, 0.08);
+  transition: all 0.2s ease;
+  min-height: 140px;
+}
+
+.atm-item:hover {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(23, 137, 220, 0.15);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.atm-info {
+  flex: 1;
+}
+
+.atm-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 4px;
+}
+
+.atm-address {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.atm-meta {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.atm-type-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.atm-type-badge.atm {
+  background: rgba(34, 197, 94, 0.1);
+  color: #16a34a;
+}
+
+.atm-type-badge.branch {
+  background: rgba(59, 130, 246, 0.1);
+  color: #2563eb;
+}
+
+.atm-location {
+  font-size: 12px;
+  color: #999;
+}
+
+.atm-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-left: 16px;
+}
+
+.map-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: linear-gradient(135deg, #1789dc 0%, #58167d 100%);
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.map-link:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(23, 137, 220, 0.3);
+}
+
+.atm-summary {
+  text-align: center;
+  margin-top: 8px;
+  padding: 8px;
+  font-size: 13px;
+  color: #666;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Dark theme for ATM cards */
+.dark-theme .atm-card {
+  background: linear-gradient(135deg, #2a2a2a 0%, #1f1f1f 100%);
+  border-color: #444;
+  color: #e1e8ed;
+}
+
+.dark-theme .atm-card-title {
+  color: #e1e8ed;
+}
+
+.dark-theme .atm-item {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-theme .atm-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.dark-theme .atm-name {
+  color: #e1e8ed;
+}
+
+.dark-theme .atm-address {
+  color: #999;
+}
+
+.dark-theme .atm-location {
+  color: #777;
+}
+
+.dark-theme .atm-type-badge.atm {
+  background: rgba(34, 197, 94, 0.2);
+  color: #4ade80;
+}
+
+.dark-theme .atm-type-badge.branch {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+}
+
+.dark-theme .atm-summary {
+  background: rgba(255, 255, 255, 0.1);
+  color: #999;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Mobile responsiveness for ATM cards */
+@media (max-width: 480px) {
+  .atm-card {
+    padding: 16px;
+    margin: 6px 0;
+    border-radius: 12px;
+    max-width: none;
+  }
+
+  .atm-card-header {
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+  }
+
+  .atm-card-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .atm-card-title {
+    font-size: 15px;
+  }
+
+  .atm-item {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .atm-actions {
+    margin-left: 0;
+    flex-direction: row;
+    justify-content: flex-end;
+  }
+
+  .map-link {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+
+  .atm-name {
+    font-size: 15px;
+  }
+
+  .atm-address {
+    font-size: 13px;
+  }
+}

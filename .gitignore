@@ -1,0 +1,43 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Cython / compiled
+*.so
+*.pyd
+*.dll
+
+# ---- Virtual Envs ----
+.venv/
+venv/
+ENV/
+env/
+env.bak/
+*.env
+
+# ---- Databases ----
+
+*.sqlite
+*.sqlite3
+
+# ---- Jupyter ----
+.ipynb_checkpoints
+*.ipynb
+
+# ---- IDE / Editor ----
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ---- OS files ----
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# ---- file ----
+test.py

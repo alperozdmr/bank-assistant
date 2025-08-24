@@ -1,0 +1,260 @@
+/* Card Info Card Styles */
+.card-info-card {
+  background: linear-gradient(135deg, #f0f4ff 0%, #e6f3ff 100%);
+  border: 1px solid #e1e8ed;
+  border-radius: 16px;
+  padding: 20px;
+  margin: 8px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+  max-width: 600px;
+  width: 100%;
+}
+
+.card-info-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.card-info-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.card-info-card-icon {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+.card-info-card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0;
+}
+
+.card-info-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.card-info-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.card-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 10px;
+  border: 1px solid rgba(59, 130, 246, 0.1);
+  transition: all 0.2s ease;
+}
+
+.card-info-item:hover {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(59, 130, 246, 0.2);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.card-info-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.card-info-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: #2c3e50;
+  line-height: 1.2;
+}
+
+.card-info-value.limit {
+  color: #28a745;
+}
+
+.card-info-value.debt {
+  color: #dc3545;
+}
+
+.card-info-value.available {
+  color: #17a2b8;
+}
+
+.card-info-summary {
+  margin-top: 8px;
+}
+
+.card-usage-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 10px;
+  border: 1px solid rgba(59, 130, 246, 0.1);
+}
+
+.usage-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 4px;
+}
+
+.usage-bar {
+  width: 100%;
+  height: 8px;
+  background: rgba(220, 53, 69, 0.2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.usage-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #28a745 0%, #ffc107 50%, #dc3545 100%);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.usage-percentage {
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  text-align: center;
+  margin-top: 4px;
+}
+
+/* Dark theme for card info cards */
+.dark-theme .card-info-card {
+  background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+  border-color: #444;
+  color: #e1e8ed;
+}
+
+.dark-theme .card-info-card-title {
+  color: #e1e8ed;
+}
+
+.dark-theme .card-info-item {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-theme .card-info-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.dark-theme .card-info-label {
+  color: #999;
+}
+
+.dark-theme .card-info-value {
+  color: #e1e8ed;
+}
+
+.dark-theme .card-info-value.limit {
+  color: #4ade80;
+}
+
+.dark-theme .card-info-value.debt {
+  color: #f87171;
+}
+
+.dark-theme .card-info-value.available {
+  color: #22d3ee;
+}
+
+.dark-theme .card-usage-bar {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-theme .usage-label {
+  color: #e1e8ed;
+}
+
+.dark-theme .usage-percentage {
+  color: #999;
+}
+
+/* Mobile responsiveness for card info cards */
+@media (max-width: 768px) {
+  .card-info-card {
+    padding: 16px;
+    margin: 6px 0;
+    border-radius: 12px;
+    max-width: none;
+  }
+
+  .card-info-card-header {
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+  }
+
+  .card-info-card-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .card-info-card-title {
+    font-size: 15px;
+  }
+
+  .card-info-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .card-info-item {
+    padding: 10px;
+  }
+
+  .card-info-value {
+    font-size: 15px;
+  }
+
+  .card-usage-bar {
+    padding: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .card-info-card {
+    padding: 12px;
+  }
+
+  .card-info-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .card-info-item {
+    padding: 8px;
+  }
+
+  .card-info-value {
+    font-size: 14px;
+  }
+}
