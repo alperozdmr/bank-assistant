@@ -173,13 +173,7 @@ async def chat_endpoint(request: ChatRequest):
     else:
         final_text = "Şu anda yanıt veremiyorum, lütfen tekrar deneyin."
 
-    def _strip_think(text: str) -> str:
-        if not isinstance(text, str):
-            return text
-        cleaned = re.sub(r"<think\b[\s\S]*?</think>", "", text, flags=re.IGNORECASE)
-        return cleaned.strip()
-
-    final_text = _strip_think(final_text)
+  
 
     # çıkış logu (yanıt maskeli)
     log.info("chat_response", extra={
@@ -189,7 +183,13 @@ async def chat_endpoint(request: ChatRequest):
         "meta": {"session_id": session_id, "message_id": message_id, "has_ui_component": ui_component is not None},
         "response_masked": mask_text(final_text),
     })
+    def _strip_think(text: str) -> str:
+        if not isinstance(text, str):
+            return text
+        cleaned = re.sub(r"<think\b[\s\S]*?</think>", "", text, flags=re.IGNORECASE)
+        return cleaned.strip()
 
+    final_text = _strip_think(final_text)
    
 
     return ChatResponse(

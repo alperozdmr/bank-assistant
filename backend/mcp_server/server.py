@@ -3,9 +3,9 @@
 import os
 import sys
 
-from data.sqlite_repo import SQLiteRepository
+from .data.sqlite_repo import SQLiteRepository
 from fastmcp import FastMCP
-from tools.general_tools import GeneralTools 
+from .tools.general_tools import GeneralTools 
 
 ###############
 
@@ -51,6 +51,7 @@ def get_balance(account_id: int) -> dict:
 
 
 @mcp.tool()
+@log_tool
 def get_accounts(customer_id: int) -> dict:
     """
     Fetch customer's account(s) from `accounts`. Read-only; output is
@@ -72,6 +73,7 @@ def get_accounts(customer_id: int) -> dict:
 
 
 @mcp.tool()
+@log_tool
 def get_card_info(card_id: int) -> dict:
     """
     Fetches a financial summary for a credit card, including its limit, current debt, statement date, and due date.
@@ -92,6 +94,7 @@ def get_card_info(card_id: int) -> dict:
 
 
 @mcp.tool()
+@log_tool
 def list_recent_transactions(customer_id: int, n: int = 5) -> dict:
     """
     Lists the last 'n' transactions (money in/out) across all accounts for a given customer, sorted by date.
@@ -112,6 +115,7 @@ def list_recent_transactions(customer_id: int, n: int = 5) -> dict:
     return general_tools.list_recent_transactions(customer_id=customer_id, n=n)
 
 @mcp.tool()
+@log_tool
 def get_exchange_rates() -> dict:
     """Fetch FX rates from `fx_rates`. Read-only; output is normalized for chat/agent flows.
 
@@ -151,6 +155,7 @@ def get_exchange_rates() -> dict:
 
 
 @mcp.tool()
+@log_tool
 def get_interest_rates() -> dict:
     """Fetch interest rates from `interest_rates`. Read-only; output is normalized for chat/agent flows.
 
@@ -187,6 +192,7 @@ def get_interest_rates() -> dict:
     return general_tools.get_interest_rates()
 
 @mcp.tool()
+@log_tool
 def get_fee(service_code: str) -> dict:
     """
     Tek bir hizmet kodu için ücret bilgisini döndürür.
