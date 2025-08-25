@@ -19,7 +19,10 @@ _BALANCE_WORDS = (
     "ne kadar var",
     "kalan para",
     "hesabımda ne kadar",
-    "bakiyem",
+    "bakiyem"
+)
+_CARD_WORDS = ("kart", "kredi kartı", "kartım", "kart bilgisi", "kart detayı", 
+               "limit", "borç", "son ödeme", "kesim", "kullanılabilir limit"
 )
 _FX_WORDS   = ("kur", "döviz", "doviz", "usd", "eur", "dolar", "euro", "sterlin", "rate")
 _INT_WORDS  = ("faiz", "oran", "interest", "yatırım", "mevduat", "kredi faizi", "kredi")
@@ -700,7 +703,7 @@ def handle_message(user_text: str) -> Dict[str, Any]:
         return result
     
     # Kart bilgileri
-    if any(w in low for w in ["kart", "kredi kartı", "kartım", "kartımın", "kart bilgisi", "kart detayı"]):
+    if any(w in low for w in _CARD_WORDS):
         # Kart ID'sini çıkar
         import re
         card_match = re.search(r'\b(\d{1,3})\b', user_text)
