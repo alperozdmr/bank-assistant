@@ -1,0 +1,772 @@
+[
+    {
+        "question": "Mobil bankacılığa nasıl kayıt olabilirim / şifre alabilirim?",
+        "answer": "Uygulamayı indirip 'Şifre Al' seçeneğini kullanarak kart bilgileri veya T.C. kimlik numaranız ile şifre oluşturabilirsiniz.",
+        "category": "kayit"
+    },
+    {
+        "question": "Mobil bankacılık şifresi nasıl alınır?",
+        "answer": "Uygulamayı indirip 'Şifre Al' seçeneğini kullanarak kart bilgileri veya T.C. kimlik numaranız ile şifre oluşturabilirsiniz.",
+        "category": "kayit"
+    },
+    {
+        "question": "İlk kez mobil bankacılık kullanacağım ne yapmalıyım?",
+        "answer": "Uygulamayı indirip 'Şifre Al' seçeneğini kullanarak kart bilgileri veya T.C. kimlik numaranız ile şifre oluşturabilirsiniz.",
+        "category": "kayit"
+    },
+    {
+        "question": "Mobil uygulamaya nasıl üye olabilirim?",
+        "answer": "Uygulamayı indirip 'Şifre Al' seçeneğini kullanarak kart bilgileri veya T.C. kimlik numaranız ile şifre oluşturabilirsiniz.",
+        "category": "kayit"
+    },
+    {
+        "question": "Mobil bankacılık şifremi unuttum, nasıl yenilerim?",
+        "answer": "Uygulama giriş ekranındaki 'Şifremi Unuttum' seçeneğinden yeni şifre oluşturabilirsiniz.",
+        "category": "sifre"
+    },
+    {
+        "question": "Şifremi hatırlamıyorum ne yapmalıyım?",
+        "answer": "Uygulama giriş ekranındaki 'Şifremi Unuttum' seçeneğinden yeni şifre oluşturabilirsiniz.",
+        "category": "sifre"
+    },
+    {
+        "question": "Mobil bankacılık parolamı nasıl sıfırlarım?",
+        "answer": "Uygulama giriş ekranındaki 'Şifremi Unuttum' seçeneğinden yeni şifre oluşturabilirsiniz.",
+        "category": "sifre"
+    },
+    {
+        "question": "Şifre yenileme işlemi nasıl yapılır?",
+        "answer": "Uygulama giriş ekranındaki 'Şifremi Unuttum' seçeneğinden yeni şifre oluşturabilirsiniz.",
+        "category": "sifre"
+    },
+    {
+        "question": "Cep telefon numaram değiştiğinde ne yapmam gerekir?",
+        "answer": "Şubenizden, internet bankacılığından veya çağrı merkezinden numaranızı güncelleyebilirsiniz.",
+        "category": "iletisim"
+    },
+    {
+        "question": "Telefon numarası güncelleme nasıl yapılır?",
+        "answer": "Şubenizden, internet bankacılığından veya çağrı merkezinden numaranızı güncelleyebilirsiniz.",
+        "category": "iletisim"
+    },
+    {
+        "question": "GSM numaram değişti güncelleme yapmam gerekiyor",
+        "answer": "Şubenizden, internet bankacılığından veya çağrı merkezinden numaranızı güncelleyebilirsiniz.",
+        "category": "iletisim"
+    },
+    {
+        "question": "Mobil uygulamaya girişte hata alıyorum, ne yapmalıyım?",
+        "answer": "İnternet bağlantınızı kontrol edin, uygulamayı güncelleyin ve cihazınızı yeniden başlatın. Sorun devam ederse bankanızla iletişime geçin.",
+        "category": "hata"
+    },
+    {
+        "question": "Uygulamaya giriş yapamıyorum",
+        "answer": "İnternet bağlantınızı kontrol edin, uygulamayı güncelleyin ve cihazınızı yeniden başlatın. Sorun devam ederse bankanızla iletişime geçin.",
+        "category": "hata"
+    },
+    {
+        "question": "Mobil bankacılık çalışmıyor ne yapmalıyım?",
+        "answer": "İnternet bağlantınızı kontrol edin, uygulamayı güncelleyin ve cihazınızı yeniden başlatın. Sorun devam ederse bankanızla iletişime geçin.",
+        "category": "hata"
+    },
+    {
+        "question": "Uygulama açılmıyor sorun ne olabilir?",
+        "answer": "İnternet bağlantınızı kontrol edin, uygulamayı güncelleyin ve cihazınızı yeniden başlatın. Sorun devam ederse bankanızla iletişime geçin.",
+        "category": "hata"
+    },
+    {
+        "question": "Mobil Onay Kodu nedir, nasıl kullanılır?",
+        "answer": "Güvenlik için gönderilen tek kullanımlık koddur. İşlem sırasında uygulama veya SMS ile iletilir ve ilgili ekrana girilir.",
+        "category": "guvenlik"
+    },
+    {
+        "question": "SMS onay kodu nedir?",
+        "answer": "Güvenlik için gönderilen tek kullanımlık koddur. İşlem sırasında uygulama veya SMS ile iletilir ve ilgili ekrana girilir.",
+        "category": "guvenlik"
+    },
+    {
+        "question": "OTP kodu ne demek?",
+        "answer": "Güvenlik için gönderilen tek kullanımlık koddur. İşlem sırasında uygulama veya SMS ile iletilir ve ilgili ekrana girilir.",
+        "category": "guvenlik"
+    },
+    {
+        "question": "Onay kodu gelmiyor ne yapmalıyım?",
+        "answer": "Telefon numaranızın güncel olduğundan emin olun. SMS engelleyici uygulama varsa kontrol edin. Sorun devam ederse çağrı merkezini arayın.",
+        "category": "guvenlik"
+    },
+    {
+        "question": "Mobil bankacılık güvenli mi? Güvenliğim için nelere dikkat etmeliyim?",
+        "answer": "Bankaların güvenlik altyapısı bulunur. Şifrenizi kimseyle paylaşmayın, resmi olmayan bağlantılardan giriş yapmayın.",
+        "category": "guvenlik"
+    },
+    {
+        "question": "Mobil bankacılık kullanmak riskli mi?",
+        "answer": "Bankaların güvenlik altyapısı bulunur. Şifrenizi kimseyle paylaşmayın, resmi olmayan bağlantılardan giriş yapmayın.",
+        "category": "guvenlik"
+    },
+    {
+        "question": "Güvenlik önlemleri nelerdir?",
+        "answer": "Bankaların güvenlik altyapısı bulunur. Şifrenizi kimseyle paylaşmayın, resmi olmayan bağlantılardan giriş yapmayın.",
+        "category": "guvenlik"
+    },
+    {
+        "question": "Dolandırıcılıktan nasıl korunurum?",
+        "answer": "Şifrenizi kimseyle paylaşmayın, banka adına aranıp bilgi istenmesi durumunda işlemi sonlandırın ve resmi kanallardan iletişime geçin.",
+        "category": "guvenlik"
+    },
+    {
+        "question": "Uygulama yavaş çalışıyor veya açılmıyor, nasıl düzeltebilirim?",
+        "answer": "Cihazın güncellemelerini ve internet bağlantısını kontrol edin, önbelleği temizleyin, gerekirse uygulamayı yeniden yükleyin.",
+        "category": "performans"
+    },
+    {
+        "question": "Mobil bankacılık uygulaması donuyor",
+        "answer": "Cihazın güncellemelerini ve internet bağlantısını kontrol edin, önbelleği temizleyin, gerekirse uygulamayı yeniden yükleyin.",
+        "category": "performans"
+    },
+    {
+        "question": "Uygulama çok yavaş ne yapmalıyım?",
+        "answer": "Cihazın güncellemelerini ve internet bağlantısını kontrol edin, önbelleği temizleyin, gerekirse uygulamayı yeniden yükleyin.",
+        "category": "performans"
+    },
+    {
+        "question": "Hesap bakiyemi ve hareketlerimi nasıl görüntüleyebilirim?",
+        "answer": "Uygulamada 'Hesaplarım' veya 'Hesap Özeti' bölümünden bakiyenizi ve hareketlerinizi görebilirsiniz.",
+        "category": "hesap"
+    },
+    {
+        "question": "Bakiyemi nasıl öğrenirim?",
+        "answer": "Uygulamada 'Hesaplarım' veya 'Hesap Özeti' bölümünden bakiyenizi ve hareketlerinizi görebilirsiniz.",
+        "category": "hesap"
+    },
+    {
+        "question": "Hesap hareketlerimi nereden görebilirim?",
+        "answer": "Uygulamada 'Hesaplarım' veya 'Hesap Özeti' bölümünden bakiyenizi ve hareketlerinizi görebilirsiniz.",
+        "category": "hesap"
+    },
+    {
+        "question": "Hesap ekstresi nasıl alınır?",
+        "answer": "Uygulamada 'Hesaplarım' bölümünden hesabınızı seçip 'Hesap Ekstresi' seçeneğini kullanabilirsiniz.",
+        "category": "hesap"
+    },
+    {
+        "question": "IBAN numaramı nasıl öğrenirim?",
+        "answer": "Uygulamada 'Hesaplarım' bölümünde hesabınızın altında IBAN numaranız yazılıdır. Kopyalamak için üzerine tıklayabilirsiniz.",
+        "category": "hesap"
+    },
+    {
+        "question": "Kredi kartı limitimi ve ekstreme nasıl bakarım?",
+        "answer": "'Kartlarım' bölümünde limit bilgisi ve ekstre görüntüleme seçenekleri bulunur.",
+        "category": "kart"
+    },
+    {
+        "question": "Kart limitimi nasıl öğrenirim?",
+        "answer": "'Kartlarım' bölümünde limit bilgisi ve ekstre görüntüleme seçenekleri bulunur.",
+        "category": "kart"
+    },
+    {
+        "question": "Kredi kartı ekstrem nasıl görüntülenir?",
+        "answer": "'Kartlarım' bölümünde limit bilgisi ve ekstre görüntüleme seçenekleri bulunur.",
+        "category": "kart"
+    },
+    {
+        "question": "Kart borcumu nasıl öğrenirim?",
+        "answer": "'Kartlarım' bölümünde güncel borç bilginiz ve ödeme tarihiniz görüntülenir.",
+        "category": "kart"
+    },
+    {
+        "question": "Kartımı nasıl bloke ederim?",
+        "answer": "'Kartlarım' bölümünden kartınızı seçip 'Kart Blokesi' seçeneğini kullanarak kartınızı anında bloke edebilirsiniz.",
+        "category": "kart"
+    },
+    {
+        "question": "Kayıp kart bildirimi nasıl yapılır?",
+        "answer": "'Kartlarım' bölümünden kartınızı seçip 'Kart Blokesi' seçeneğini kullanın veya hemen 444 0 444'ü arayın.",
+        "category": "kart"
+    },
+    {
+        "question": "Para transferi (EFT, havale, FAST) nasıl yapılır?",
+        "answer": "'Para Transferi' veya 'Havale/EFT' menüsünden alıcı bilgilerini girip işlemi onaylayabilirsiniz.",
+        "category": "transfer"
+    },
+    {
+        "question": "Para gönderme işlemi nasıl yapılır?",
+        "answer": "'Para Transferi' veya 'Havale/EFT' menüsünden alıcı bilgilerini girip işlemi onaylayabilirsiniz.",
+        "category": "transfer"
+    },
+    {
+        "question": "Havale nasıl yapılır?",
+        "answer": "'Para Transferi' veya 'Havale/EFT' menüsünden alıcı bilgilerini girip işlemi onaylayabilirsiniz.",
+        "category": "transfer"
+    },
+    {
+        "question": "EFT nasıl gönderilir?",
+        "answer": "'Para Transferi' menüsünden 'EFT' seçeneğini seçip, alıcı banka ve hesap bilgilerini girerek gönderebilirsiniz.",
+        "category": "transfer"
+    },
+    {
+        "question": "FAST ile para transferi nasıl yapılır?",
+        "answer": "'Para Transferi' menüsünden 'FAST' seçeneğini seçin. 7/24 anında transfer yapabilirsiniz. Limit 50.000 TL'dir.",
+        "category": "transfer"
+    },
+    {
+        "question": "Başka hesaba para transferi nasıl yapılır?",
+        "answer": "'Para Transferi' menüsünden işlem tipini seçip (Havale/EFT/FAST), alıcı bilgilerini girerek transfer yapabilirsiniz.",
+        "category": "transfer"
+    },
+    {
+        "question": "Fatura veya vergi ödemelerimi mobil uygulamadan yapabilir miyim?",
+        "answer": "Evet, 'Ödemeler' menüsünden fatura, vergi, bağış vb. ödemeler yapılabilir.",
+        "category": "odeme"
+    },
+    {
+        "question": "Fatura ödemesi nasıl yapılır?",
+        "answer": "Evet, 'Ödemeler' menüsünden fatura, vergi, bağış vb. ödemeler yapılabilir.",
+        "category": "odeme"
+    },
+    {
+        "question": "Vergi borcu ödeme nasıl yapılır?",
+        "answer": "'Ödemeler' menüsünden 'Vergi Ödemeleri' seçeneğini kullanarak tüm vergi borçlarınızı ödeyebilirsiniz.",
+        "category": "odeme"
+    },
+    {
+        "question": "SGK ödemesi yapabilir miyim?",
+        "answer": "Evet, 'Ödemeler' menüsünden 'SGK Ödemeleri' seçeneğini kullanarak SGK prim borçlarınızı ödeyebilirsiniz.",
+        "category": "odeme"
+    },
+    {
+        "question": "Otomatik ödeme talimatı nasıl verilir?",
+        "answer": "'Ödemeler' menüsünden 'Otomatik Ödemeler' seçeneğini kullanarak faturalarınıza otomatik ödeme talimatı verebilirsiniz.",
+        "category": "odeme"
+    },
+    {
+        "question": "Mobil uygulamada kredi başvurusu yapabilir miyim?",
+        "answer": "Evet, 'Krediler' bölümünden ihtiyaç kredisi gibi ürünlere başvurabilirsiniz.",
+        "category": "kredi"
+    },
+    {
+        "question": "Kredi başvurusu nasıl yapılır?",
+        "answer": "Evet, 'Krediler' bölümünden ihtiyaç kredisi gibi ürünlere başvurabilirsiniz.",
+        "category": "kredi"
+    },
+    {
+        "question": "İhtiyaç kredisi başvurusu yapabilir miyim?",
+        "answer": "Evet, 'Krediler' bölümünden kredi limitinizi sorgulayıp, uygun koşullarda başvuru yapabilirsiniz.",
+        "category": "kredi"
+    },
+    {
+        "question": "Kredi başvurum ne durumda?",
+        "answer": "'Krediler' bölümünden 'Başvurularım' seçeneğini kullanarak başvurunuzun durumunu takip edebilirsiniz.",
+        "category": "kredi"
+    },
+    {
+        "question": "Kredi taksitimi nasıl öderim?",
+        "answer": "'Krediler' bölümünden kredinizi seçip 'Taksit Öde' seçeneği ile ödeme yapabilirsiniz.",
+        "category": "kredi"
+    },
+    {
+        "question": "Kart şifremi veya internet/mobil bankacılık şifremi nasıl değiştirebilirim?",
+        "answer": "'Ayarlar' veya 'Şifre İşlemleri' bölümünden şifre değişikliği yapabilirsiniz.",
+        "category": "sifre"
+    },
+    {
+        "question": "Şifre değiştirme işlemi nasıl yapılır?",
+        "answer": "'Ayarlar' veya 'Şifre İşlemleri' bölümünden şifre değişikliği yapabilirsiniz.",
+        "category": "sifre"
+    },
+    {
+        "question": "Kart şifremi nasıl değiştirebilirim?",
+        "answer": "'Kartlarım' bölümünden kartınızı seçip 'Şifre İşlemleri' ile kart şifrenizi değiştirebilirsiniz.",
+        "category": "sifre"
+    },
+    {
+        "question": "Mobil uygulamadan sanal kart oluşturabilir miyim?",
+        "answer": "Evet, 'Kartlarım' menüsünden sanal kart oluşturma seçeneğini kullanabilirsiniz.",
+        "category": "kart"
+    },
+    {
+        "question": "Sanal kart nasıl alınır?",
+        "answer": "Evet, 'Kartlarım' menüsünden sanal kart oluşturma seçeneğini kullanabilirsiniz.",
+        "category": "kart"
+    },
+    {
+        "question": "İnternetten alışveriş için sanal kart oluşturabilir miyim?",
+        "answer": "Evet, 'Kartlarım' menüsünden 'Sanal Kart Oluştur' seçeneği ile güvenli alışveriş için sanal kart oluşturabilirsiniz.",
+        "category": "kart"
+    },
+    {
+        "question": "Mobil bankacılıkta işlem limitlerimi nasıl öğrenirim veya artırabilirim?",
+        "answer": "'Ayarlar' veya 'Limit İşlemleri' bölümünden mevcut limitlerinizi görüntüleyebilir ve artırma talebi gönderebilirsiniz.",
+        "category": "limit"
+    },
+    {
+        "question": "Transfer limitimi nasıl artırabilirim?",
+        "answer": "'Ayarlar' veya 'Limit İşlemleri' bölümünden mevcut limitlerinizi görüntüleyebilir ve artırma talebi gönderebilirsiniz.",
+        "category": "limit"
+    },
+    {
+        "question": "Günlük EFT limitim nedir?",
+        "answer": "'Ayarlar' veya 'Limit İşlemleri' bölümünden günlük, haftalık ve aylık limitlerizi görüntüleyebilirsiniz.",
+        "category": "limit"
+    },
+    {
+        "question": "QR kod ile para transferi yapabilir miyim?",
+        "answer": "Evet, 'QR İşlemleri' menüsünden QR kod okutarak veya QR kod oluşturarak para transferi yapabilirsiniz.",
+        "category": "qr"
+    },
+    {
+        "question": "QR kod ile ödeme nasıl yapılır?",
+        "answer": "'QR İşlemleri' menüsünden 'QR Okut' seçeneği ile kamerayı açıp QR kodu okutarak ödeme yapabilirsiniz.",
+        "category": "qr"
+    },
+    {
+        "question": "Döviz alım satım işlemi yapabilir miyim?",
+        "answer": "Evet, 'Döviz İşlemleri' menüsünden güncel kurlardan döviz alım-satım işlemi yapabilirsiniz.",
+        "category": "doviz"
+    },
+    {
+        "question": "Dolar veya Euro nasıl alabilirim?",
+        "answer": "'Döviz İşlemleri' menüsünden istediğiniz döviz cinsini seçerek alım-satım yapabilirsiniz.",
+        "category": "doviz"
+    },
+    {
+        "question": "Yatırım işlemleri yapabilir miyim?",
+        "answer": "Evet, 'Yatırım' menüsünden altın, döviz, fon ve hisse senedi işlemlerinizi yapabilirsiniz.",
+        "category": "yatirim"
+    },
+    {
+        "question": "Altın hesabı nasıl açarım?",
+        "answer": "'Yatırım' menüsünden 'Altın İşlemleri' seçeneği ile altın hesabı açabilir ve işlem yapabilirsiniz.",
+        "category": "yatirim"
+    },
+    {
+        "question": "Hesap açma ücreti var mı?",
+        "answer": "Vadesiz mevduat hesapları ücretsiz açılır. Diğer hesap türleri için 'Ücretler' menüsünden bilgi alabilirsiniz.",
+        "category": "ucret"
+    },
+    {
+        "question": "Kart aidatı ne kadar?",
+        "answer": "Kart aidatları kart türüne göre değişir. 'Kartlarım' bölümünden kartınızın aidat bilgisini görebilirsiniz.",
+        "category": "ucret"
+    },
+    {
+        "question": "ATM'den para çekme limiti nedir?",
+        "answer": "Günlük ATM para çekme limiti kart türüne göre değişir. 'Kartlarım' bölümünden limitinizi görebilir ve değiştirebilirsiniz.",
+        "category": "limit"
+    },
+    {
+        "question": "Günde en fazla ne kadar para çekebilirim?",
+        "answer": "Günlük ATM para çekme limiti kart türüne göre değişir. 'Kartlarım' bölümünden limitinizi görebilir ve değiştirebilirsiniz.",
+        "category": "limit"
+    },
+    {
+        "question": "Başka bankadan para transferi ücreti ne kadar?",
+        "answer": "EFT ücretleri tutar ve saat dilimine göre değişir. 'Ücret ve Komisyonlar' menüsünden güncel ücretleri görebilirsiniz.",
+        "category": "ucret"
+    },
+    {
+        "question": "EFT ücreti ne kadar?",
+        "answer": "EFT ücretleri tutar ve saat dilimine göre değişir. 'Ücret ve Komisyonlar' menüsünden güncel ücretleri görebilirsiniz.",
+        "category": "ucret"
+    },
+    {
+        "question": "Havale ücreti alınıyor mu?",
+        "answer": "Aynı banka içi havaleler genellikle ücretsizdir. Detaylı bilgi için 'Ücret ve Komisyonlar' menüsünü kontrol edin.",
+        "category": "ucret"
+    },
+    {
+        "question": "3D Secure nedir nasıl açılır?",
+        "answer": "'Kartlarım' menüsünden kartınızı seçip 'Güvenlik Ayarları' altından 3D Secure'u aktif edebilirsiniz. İnternet alışverişlerinde ekstra güvenlik sağlar.",
+        "category": "guvenlik"
+    },
+    {
+        "question": "İnternet alışverişlerini nasıl güvenli yaparım?",
+        "answer": "3D Secure'u aktif edin, sanal kart kullanın ve güvenilir sitelerden alışveriş yapın. SMS onay kodunu kimseyle paylaşmayın.",
+        "category": "guvenlik"
+    },
+    {
+        "question": "Kartımın internete kapalı olmasını istiyorum",
+        "answer": "'Kartlarım' menüsünden kartınızı seçip 'Kart Ayarları' altından internet alışverişlerini kapatabilirsiniz.",
+        "category": "kart"
+    },
+    {
+        "question": "Temassız özelliği nasıl kapatılır?",
+        "answer": "'Kartlarım' menüsünden kartınızı seçip 'Kart Ayarları' altından temassız ödeme özelliğini kapatabilirsiniz.",
+        "category": "kart"
+    },
+    {
+        "question": "NFC ödemelerini kapatmak istiyorum",
+        "answer": "'Kartlarım' menüsünden kartınızı seçip 'Kart Ayarları' altından NFC/temassız ödeme özelliğini kapatabilirsiniz.",
+        "category": "kart"
+    },
+    {
+        "question": "Hesabıma EFT/havale geldi göremiyorum",
+        "answer": "EFT işlemleri banka çalışma saatlerinde işleme alınır. 'Hesaplarım' bölümünden bekleyen işlemleri kontrol edebilirsiniz.",
+        "category": "transfer"
+    },
+    {
+        "question": "Gelen havale ne zaman hesabıma geçer?",
+        "answer": "Aynı banka içi havaleler anında, EFT işlemleri ise mesai saatleri içinde genellikle 15-30 dakika içinde geçer.",
+        "category": "transfer"
+    },
+    {
+        "question": "Hafta sonu EFT yapabilir miyim?",
+        "answer": "EFT sadece hafta içi mesai saatlerinde yapılır. Hafta sonu için FAST sistemini kullanabilirsiniz (7/24 aktif).",
+        "category": "transfer"
+    },
+    {
+        "question": "FAST ile EFT arasındaki fark nedir?",
+        "answer": "FAST 7/24 anında transfer sağlar, limit 50.000 TL'dir. EFT sadece mesai saatlerinde çalışır ama limit yoktur.",
+        "category": "transfer"
+    },
+    {
+        "question": "Yurtdışına para transferi nasıl yapılır?",
+        "answer": "'Para Transferi' menüsünden 'Swift/Yurtdışı Transfer' seçeneğini kullanın. IBAN ve Swift kodu gereklidir.",
+        "category": "transfer"
+    },
+    {
+        "question": "Swift kodu nedir?",
+        "answer": "Uluslararası para transferlerinde bankaları tanımlayan koddur. 'Yardım' menüsünden bankamızın Swift kodunu görebilirsiniz.",
+        "category": "transfer"
+    },
+    {
+        "question": "Hesap cüzdanı nedir?",
+        "answer": "Hesap cüzdanı, tüm banka hesaplarınızı tek yerden yönetmenizi sağlar. 'Hesaplarım' menüsünden erişebilirsiniz.",
+        "category": "hesap"
+    },
+    {
+        "question": "Vadeli hesap nasıl açılır?",
+        "answer": "'Yatırım' menüsünden 'Vadeli Mevduat' seçeneği ile TL veya döviz vadeli hesap açabilirsiniz.",
+        "category": "yatirim"
+    },
+    {
+        "question": "Vadeli mevduat faiz oranları nedir?",
+        "answer": "'Yatırım' menüsünden güncel vadeli mevduat faiz oranlarını görebilir ve hesaplama yapabilirsiniz.",
+        "category": "yatirim"
+    },
+    {
+        "question": "Altın hesabımdan fiziki altın çekebilir miyim?",
+        "answer": "Belirli gramaj üzerindeki altın hesaplarınızı şubelerimizden fiziki olarak teslim alabilirsiniz.",
+        "category": "yatirim"
+    },
+    {
+        "question": "Bireysel emeklilik (BES) başvurusu yapabilir miyim?",
+        "answer": "'Sigorta ve Emeklilik' menüsünden BES planlarını inceleyip başvuru yapabilirsiniz.",
+        "category": "yatirim"
+    },
+    {
+        "question": "Otomatik yatırım talimatı verebilir miyim?",
+        "answer": "'Yatırım' menüsünden 'Düzenli Yatırım' seçeneği ile aylık otomatik yatırım talimatı verebilirsiniz.",
+        "category": "yatirim"
+    },
+    {
+        "question": "Çocuğum için hesap açabilir miyim?",
+        "answer": "18 yaş altı çocuklar için şubelerimizden veli/vasi olarak hesap açabilirsiniz. Mobil'den bilgi alabilirsiniz.",
+        "category": "hesap"
+    },
+    {
+        "question": "Ortak hesap nasıl açılır?",
+        "answer": "Ortak hesaplar şubelerimizden hesap sahiplerinin birlikte başvurusu ile açılabilir.",
+        "category": "hesap"
+    },
+    {
+        "question": "Hesabımı nasıl kapatırım?",
+        "answer": "Hesap kapatma işlemi için şubenize gitmeniz gerekir. Mobil'den hesap kapatma talebi oluşturabilirsiniz.",
+        "category": "hesap"
+    },
+    {
+        "question": "Ek kart nasıl çıkarabilirim?",
+        "answer": "'Kartlarım' menüsünden 'Ek Kart Başvurusu' seçeneği ile ailenize ek kart çıkarabilirsiniz.",
+        "category": "kart"
+    },
+    {
+        "question": "Ek kart limiti nasıl belirlenir?",
+        "answer": "Ek kart limiti ana kart limitinden pay alır. 'Kartlarım' bölümünden limit ayarlaması yapabilirsiniz.",
+        "category": "kart"
+    },
+    {
+        "question": "Kredi kartı borç erteleme yapabilir miyim?",
+        "answer": "'Kartlarım' menüsünden kartınızı seçip 'Taksitlendirme' seçeneği ile borcunuzu taksitlendirebilirsiniz.",
+        "category": "kart"
+    },
+    {
+        "question": "Asgari ödeme tutarı nedir?",
+        "answer": "Kredi kartı asgari ödeme tutarı dönem borcunuzun %30'udur. 'Kartlarım' bölümünden görebilirsiniz.",
+        "category": "kart"
+    },
+    {
+        "question": "Kredi kartı puanlarımı nasıl kullanırım?",
+        "answer": "'Kartlarım' menüsünden 'Puan/Mil' seçeneği ile puanlarınızı görebilir ve kullanabilirsiniz.",
+        "category": "kart"
+    },
+    {
+        "question": "Birikim hesabı nedir?",
+        "answer": "Düzenli tasarruf yapmanızı sağlayan hesaptır. 'Yatırım' menüsünden birikim hesabı açabilirsiniz.",
+        "category": "yatirim"
+    },
+    {
+        "question": "Konut kredisi başvurusu nasıl yapılır?",
+        "answer": "'Krediler' menüsünden 'Konut Kredisi' seçeneği ile başvuru yapabilir, ödeme planı oluşturabilirsiniz.",
+        "category": "kredi"
+    },
+    {
+        "question": "Kredimi erken kapatmak istiyorum",
+        "answer": "'Krediler' menüsünden kredinizi seçip 'Erken Ödeme' seçeneği ile kapatma tutarını görebilirsiniz.",
+        "category": "kredi"
+    },
+    {
+        "question": "Kredi ödememi erteleyebilir miyim?",
+        "answer": "'Krediler' menüsünden 'Ödeme Erteleme' talebi oluşturabilirsiniz. Onay durumu size bildirilecektir.",
+        "category": "kredi"
+    },
+    {
+        "question": "Kredi notu/skoru nasıl öğrenilir?",
+        "answer": "'Krediler' menüsünden 'Kredi Notum' seçeneği ile Findeks kredi notunuzu sorgulayabilirsiniz.",
+        "category": "kredi"
+    },
+    {
+        "question": "Taşıt kredisi için ne gerekli?",
+        "answer": "'Krediler' menüsünden 'Taşıt Kredisi' seçeneğinden gerekli evrakları görebilir ve başvuru yapabilirsiniz.",
+        "category": "kredi"
+    },
+    {
+        "question": "Teminat mektubu nasıl alınır?",
+        "answer": "'Krediler' menüsünden 'Teminat Mektubu' talebi oluşturabilirsiniz. İşlem şubeden tamamlanır.",
+        "category": "kredi"
+    },
+    {
+        "question": "POS cihazı başvurusu yapabilir miyim?",
+        "answer": "'Ticari İşlemler' menüsünden POS başvurusu yapabilirsiniz. Ticari hesap gereklidir.",
+        "category": "ticari"
+    },
+    {
+        "question": "Sanal POS nasıl alınır?",
+        "answer": "'Ticari İşlemler' menüsünden 'Sanal POS' başvurusu yapabilirsiniz. E-ticaret siteleri için uygundur.",
+        "category": "ticari"
+    },
+    {
+        "question": "Toplu ödeme nasıl yapılır?",
+        "answer": "'Ticari İşlemler' menüsünden 'Toplu Ödeme' ile maaş ve tedarikçi ödemelerinizi yapabilirsiniz.",
+        "category": "ticari"
+    },
+    {
+        "question": "Çek defteri nasıl alınır?",
+        "answer": "'Başvurular' menüsünden 'Çek Defteri Talebi' oluşturabilirsiniz. Şubeden teslim alabilirsiniz.",
+        "category": "basvuru"
+    },
+    {
+        "question": "Senet işlemleri yapabilir miyim?",
+        "answer": "Senet işlemleri için şubelerimizi ziyaret etmeniz gerekmektedir.",
+        "category": "basvuru"
+    },
+    {
+        "question": "Dekont nasıl alınır?",
+        "answer": "İşlem sonrası otomatik dekont oluşur. 'İşlem Geçmişi'nden tüm dekontlarınıza ulaşabilirsiniz.",
+        "category": "islem"
+    },
+    {
+        "question": "İşlem iptal ettirmek istiyorum",
+        "answer": "Henüz gerçekleşmemiş işlemler 'Bekleyen İşlemler' menüsünden iptal edilebilir.",
+        "category": "islem"
+    },
+    {
+        "question": "Yanlış hesaba para gönderdim ne yapmalıyım?",
+        "answer": "Hemen çağrı merkezimizi arayın. İade talebi oluşturulabilir ancak karşı tarafın onayı gerekir.",
+        "category": "islem"
+    },
+    {
+        "question": "Şubeli işlem yapmam gerekiyor, randevu alabilir miyim?",
+        "answer": "'Şube/ATM' menüsünden size en yakın şubeyi bulup randevu alabilirsiniz.",
+        "category": "sube"
+    },
+    {
+        "question": "En yakın ATM nerede?",
+        "answer": "'Şube/ATM' menüsünden konumunuza göre en yakın ATM'leri harita üzerinde görebilirsiniz.",
+        "category": "sube"
+    },
+    {
+        "question": "Hafta sonu açık şube var mı?",
+        "answer": "'Şube/ATM' menüsünden hafta sonu açık şubeleri filtreleyerek görebilirsiniz.",
+        "category": "sube"
+    },
+    {
+        "question": "Engelli dostu ATM nerede bulabilirim?",
+        "answer": "'Şube/ATM' menüsünde 'Engelli Dostu' filtresini kullanarak bulabilirsiniz.",
+        "category": "sube"
+    },
+    {
+        "question": "Bilgilerimi nasıl güncellerim?",
+        "answer": "'Profil' veya 'Ayarlar' menüsünden kişisel bilgilerinizi güncelleyebilirsiniz.",
+        "category": "profil"
+    },
+    {
+        "question": "E-posta adresimi değiştirmek istiyorum",
+        "answer": "'Profil' menüsünden 'İletişim Bilgileri' seçeneği ile e-posta adresinizi güncelleyebilirsiniz.",
+        "category": "profil"
+    },
+    {
+        "question": "Adres değişikliği nasıl yapılır?",
+        "answer": "'Profil' menüsünden adres bilgilerinizi güncelleyebilirsiniz. Bazı işlemler şube onayı gerektirir.",
+        "category": "profil"
+    },
+    {
+        "question": "SMS bildirimleri nasıl açılır/kapatılır?",
+        "answer": "'Ayarlar' menüsünden 'Bildirim Tercihleri' ile SMS bildirimlerinizi yönetebilirsiniz.",
+        "category": "bildirim"
+    },
+    {
+        "question": "E-ekstre nasıl alınır?",
+        "answer": "'Hesaplarım' veya 'Kartlarım' menüsünden 'E-Ekstre' seçeneğini aktif edebilirsiniz.",
+        "category": "bildirim"
+    },
+    {
+        "question": "Anlık bildirimler gelmiyor",
+        "answer": "Telefon ayarlarından uygulama bildirimlerinin açık olduğundan emin olun. 'Ayarlar' menüsünden kontrol edin.",
+        "category": "bildirim"
+    },
+    {
+        "question": "Kampanyaları nereden görebilirim?",
+        "answer": "'Kampanyalar' menüsünden size özel kampanya ve fırsatları görebilirsiniz.",
+        "category": "kampanya"
+    },
+    {
+        "question": "Puan kazandıran kampanyalar var mı?",
+        "answer": "'Kampanyalar' menüsünden puan ve mil kazandıran güncel kampanyaları görebilirsiniz.",
+        "category": "kampanya"
+    },
+    {
+        "question": "Sigorta yaptırabilir miyim?",
+        "answer": "'Sigorta ve Emeklilik' menüsünden kasko, sağlık, konut sigortası başvurusu yapabilirsiniz.",
+        "category": "sigorta"
+    },
+    {
+        "question": "Kasko ödemesi nasıl yapılır?",
+        "answer": "'Ödemeler' menüsünden 'Sigorta Ödemeleri' seçeneği ile kasko taksitinizi ödeyebilirsiniz.",
+        "category": "sigorta"
+    },
+    {
+        "question": "Seyahat sigortası yapabilir miyim?",
+        "answer": "'Sigorta ve Emeklilik' menüsünden seyahat sigortası başvurusu yapabilirsiniz.",
+        "category": "sigorta"
+    },
+    {
+        "question": "HGS bakiye yükleme nasıl yapılır?",
+        "answer": "'Ödemeler' menüsünden 'HGS/OGS' seçeneği ile bakiye yükleyebilirsiniz.",
+        "category": "odeme"
+    },
+    {
+        "question": "OGS borcu sorgulama ve ödeme",
+        "answer": "'Ödemeler' menüsünden 'HGS/OGS' seçeneği ile borç sorgulama ve ödeme yapabilirsiniz.",
+        "category": "odeme"
+    },
+    {
+        "question": "Trafik cezası ödeyebilir miyim?",
+        "answer": "'Ödemeler' menüsünden 'Trafik Cezası' seçeneği ile T.C. kimlik numaranızla sorgulama ve ödeme yapabilirsiniz.",
+        "category": "odeme"
+    },
+    {
+        "question": "Bağış nasıl yapılır?",
+        "answer": "'Ödemeler' menüsünden 'Bağış ve Yardım' seçeneği ile çeşitli kurumlara bağış yapabilirsiniz.",
+        "category": "odeme"
+    },
+    {
+        "question": "Okul ödemeleri yapabilir miyim?",
+        "answer": "'Ödemeler' menüsünden 'Eğitim Ödemeleri' ile okul taksit ve ücretlerini ödeyebilirsiniz.",
+        "category": "odeme"
+    },
+    {
+        "question": "Kira ödemesi otomatik talimat verebilir miyim?",
+        "answer": "'Ödemeler' menüsünden 'Düzenli Ödemeler' ile aylık kira ödemesi talimatı verebilirsiniz.",
+        "category": "odeme"
+    },
+    {
+        "question": "Uygulama dili nasıl değiştirilir?",
+        "answer": "'Ayarlar' menüsünden 'Dil Tercihi' seçeneği ile uygulama dilini değiştirebilirsiniz.",
+        "category": "ayar"
+    },
+    {
+        "question": "Karanlık mod nasıl açılır?",
+        "answer": "'Ayarlar' menüsünden 'Görünüm' seçeneği ile karanlık modu aktif edebilirsiniz.",
+        "category": "ayar"
+    },
+    {
+        "question": "Biyometrik giriş nasıl ayarlanır?",
+        "answer": "'Ayarlar' menüsünden 'Güvenlik' seçeneği ile parmak izi veya yüz tanıma özelliğini aktif edebilirsiniz.",
+        "category": "ayar"
+    },
+    {
+        "question": "Parmak izi ile giriş yapamıyorum",
+        "answer": "Cihaz ayarlarından parmak izinizi yeniden tanımlayın ve uygulamada tekrar aktif edin.",
+        "category": "hata"
+    },
+    {
+        "question": "Face ID çalışmıyor",
+        "answer": "Cihaz ayarlarından Face ID'yi kontrol edin ve uygulama güvenlik ayarlarından yeniden aktif edin.",
+        "category": "hata"
+    },
+    {
+        "question": "İşlem onay kodu kaç dakika geçerlidir?",
+        "answer": "SMS ile gelen onay kodları güvenlik nedeniyle 3 dakika geçerlidir. Süre dolmuşsa yeni kod isteyin.",
+        "category": "guvenlik"
+    },
+    {
+        "question": "Şüpheli bir SMS aldım ne yapmalıyım?",
+        "answer": "Kesinlikle linke tıklamayın ve bilgi girmeyin. Hemen çağrı merkezimizi arayarak durumu bildirin.",
+        "category": "guvenlik"
+    },
+    {
+        "question": "Hesabımdan izinsiz para çekilmiş",
+        "answer": "Hemen kartınızı bloke edin ve çağrı merkezini arayın. 'Kartlarım' menüsünden anında bloke edebilirsiniz.",
+        "category": "guvenlik"
+    },
+    {
+        "question": "Müşteri numaramı unuttum",
+        "answer": "T.C. kimlik numaranız ile giriş yapabilir veya çağrı merkezinden müşteri numaranızı öğrenebilirsiniz.",
+        "category": "profil"
+    },
+    {
+        "question": "Hesap kesim tarihim ne zaman?",
+        "answer": "'Kartlarım' menüsünden kartınızı seçtiğinizde hesap kesim ve son ödeme tarihlerini görebilirsiniz.",
+        "category": "kart"
+    },
+    {
+        "question": "Taksit seçenekleri nasıl görüntülenir?",
+        "answer": "Alışveriş yaparken POS cihazında taksit seçenekleri sunulur. 'Kartlarım' menüsünden anlaşmalı taksitleri görebilirsiniz.",
+        "category": "kart"
+    },
+    {
+        "question": "Nakit avans çekebilir miyim?",
+        "answer": "Kredi kartınızla ATM'den nakit avans çekebilirsiniz. Faiz ve komisyon uygulanır.",
+        "category": "kart"
+    },
+    {
+        "question": "Döviz hesabı nasıl açılır?",
+        "answer": "'Hesaplarım' menüsünden 'Yeni Hesap Aç' seçeneği ile USD, EUR veya diğer döviz hesapları açabilirsiniz.",
+        "category": "hesap"
+    },
+    {
+        "question": "IBAN'ımı paylaşmak güvenli mi?",
+        "answer": "IBAN'ınızı para alacağınız kişilerle paylaşabilirsiniz. IBAN ile hesabınızdan para çekilemez.",
+        "category": "guvenlik"
+    },
+    {
+        "question": "Otomatik fatura ödeme talimatım neden çalışmadı?",
+        "answer": "Hesap bakiyeniz yetersiz olabilir veya limit aşımı olmuş olabilir. 'Otomatik Ödemeler' menüsünden kontrol edin.",
+        "category": "odeme"
+    },
+    {
+        "question": "Yatırım fonları hakkında bilgi alabilir miyim?",
+        "answer": "'Yatırım' menüsünden fon çeşitlerini, getiri oranlarını görebilir ve fon alım-satımı yapabilirsiniz.",
+        "category": "yatirim"
+    },
+    {
+        "question": "Hisse senedi alım satımı yapabilir miyim?",
+        "answer": "'Yatırım' menüsünden yatırım hesabı açarak hisse senedi alım-satım işlemlerinizi yapabilirsiniz.",
+        "category": "yatirim"
+    },
+    {
+        "question": "Eurobond nedir nasıl alınır?",
+        "answer": "'Yatırım' menüsünden Eurobond hakkında bilgi alabilir ve yatırım yapabilirsiniz.",
+        "category": "yatirim"
+    }
+]
