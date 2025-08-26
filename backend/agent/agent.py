@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import re
 import os
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from integrations.fastmcp_client import call_mcp_tool
 from llmadapter import LLMAdapter
@@ -45,7 +45,6 @@ _BALANCE_WORDS = (
 _CARD_WORDS = ("kart", "kredi kartı", "kartım", "kart bilgisi", "kart detayı", 
                "limit", "borç", "son ödeme", "kesim", "kullanılabilir limit", "kart borcu"
 )
-_TRANSACTION_WORDS = ("işlem", "transaction", "hesap hareketi", "geçmiş", "past transactions", "transaction history")
 _FX_WORDS   = ("kur", "döviz", "doviz", "usd", "eur", "dolar", "euro", "sterlin", "rate")
 _INT_WORDS  = ("faiz", "oran", "interest", "yatırım", "mevduat", "kredi faizi", "kredi")
 _CARD_DEBT_TRIGGERS = ("kart borcu", "kart borcum", "kredi kartı borcu", "kredi karti borcu", "ekstre", "borç")
@@ -500,82 +499,6 @@ def _fmt_atm_search(res: Dict[str, Any]) -> Dict[str, Any]:
         "ui_component": ui_component
     }
 
-def _fmt_transactions(res: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Transaction history cevabının formatını UI'a uygun döndürür.
-    """
-    if not isinstance(res, dict) or res.get("error"):
-        return {"text": "İşlem geçmişi alınamadı.", "ui_component": None}
-
-    transactions = res.get("transactions", [])
-    ui_component = res.get("ui_component")  # UI component from MCP
-
-    if not transactions:
-        return {"text": "Bu hesap için işlem geçmişi bulunamadı.", "ui_component": None}
-
-    transaction_details = []
-    for t in transactions[:5]:  # Limit to first 5 transactions
-        date = t.get("date", "N/A")
-        trans_type = t.get("type", "Bilinmeyen")
-        amount = t.get("amount", 0.0)
-        currency = t.get("currency", "TRY")
-        status = t.get("status", "Bilinmiyor")
-
-        formatted_amount = (
-            f"{amount:,.2f} {currency}".replace(",", "X")
-            .replace(".", ",")
-            .replace("X", ".")
-        )
-
-        transaction_details.append(
-            f"• {date}: {trans_type} - {formatted_amount} ({status})"
-        )
-
-    if len(transactions) > 5:
-        transaction_details.append(f"({len(transactions) - 5} daha işlem bulundu.)")
-
-    text = "İşlem geçmişiniz:\n" + "\n".join(transaction_details)
-
-    if not ui_component:
-        ui_component = {"type": "transactions_card", "transactions": transactions}
-
-    return {"text": text, "ui_component": ui_component}
-
-
-def extract_date_and_limit(user_text: str) -> Tuple[Optional[str], Optional[str], int]:
-    """
-    From_date, to_date, and limit alır.
-        - from_date (str or None)
-        - to_date (str or None)
-        - limit (int)
-        döndürür
-    """
-    # Default değerler
-    from_date = None
-    to_date = None
-    limit = 50  # Default limit
-
-    # Query'den limiti al
-    limit_match = re.search(r"limit\s*(\d+)", user_text, re.IGNORECASE)
-    if limit_match:
-        limit = int(limit_match.group(1))
-        if limit > 500:
-            limit = 500  # Ensure limit does not exceed 500
-
-    # Data range al
-    date_match = re.findall(
-        r"\b(\d{4}-\d{2}-\d{2}(?: \d{2}:\d{2}:\d{2})?)\b", user_text
-    )
-    if date_match:
-        # İlki from_date ikincisi to_date
-        if len(date_match) > 0:
-            from_date = date_match[0]
-        if len(date_match) > 1:
-            to_date = date_match[1]
-
-    return from_date,to_date,limit
-
-
 
 def _llm_flow(user_text: str) -> Dict[str, Any]:
     adapter = LLMAdapter()
@@ -943,56 +866,6 @@ def handle_message(user_text: str) -> Dict[str, Any]:
         if ui_component:
             result["ui_component"] = ui_component
         return result
-    
-    # (recent transactions)
-    if any(w in low for w in _TRANSACTION_WORDS):
-        # Account ID al
-        acc = _acc_id(user_text)
-        if acc is None:
-            return {
-                "YANIT": "Lütfen geçerli bir hesap numarası girin. Örnek: 'Hesap 1234'."
-            }
-
-        # data range ve limit al
-        from_date, to_date, limit = extract_date_and_limit(user_text)
-
-        # toolu çağır
-        res = call_mcp_tool(
-            MCP_URL,
-            "transactions_list",
-            {
-                "account_id": acc,
-                "from_date": from_date,
-                "to_date": to_date,
-                "limit": limit,
-            },
-        )
-
-        # cevabın formatını değiştir
-        transaction_result = _fmt_transactions(res)
-        ui_component = transaction_result.get("ui_component")
-
-        result = {
-            "YANIT": "" if ui_component else transaction_result["text"],
-            "toolOutputs": [
-                {
-                    "name": "transactions_list",
-                    "args": {
-                        "account_id": acc,
-                        "from_date": from_date,
-                        "to_date": to_date,
-                        "limit": limit,
-                    },
-                    "result": res,
-                    "ok": res.get("ok", True),
-                }
-            ],
-        }
-
-        if ui_component:
-            result["ui_component"] = ui_component
-        return result
-
 
     # Interest (faiz)
     if any(w in low for w in _INT_WORDS):
