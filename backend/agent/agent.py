@@ -9,7 +9,6 @@ from typing import Any, Dict, List, Optional
 from integrations.fastmcp_client import call_mcp_tool
 from llmadapter import LLMAdapter
 from tools.schemas import get_tool_catalog
-from tools.faq_tool import get_faq_tool
 
 USE_MCP = 0
 MCP_URL = "http://127.0.0.1:8081/sse"
@@ -626,25 +625,6 @@ def _llm_flow(user_text: str) -> Dict[str, Any]:
 
 
 def handle_message(user_text: str) -> Dict[str, Any]:
-        # SSS kontrolü - EN BAŞTA
-    try:
-        faq_tool = get_faq_tool()
-        faq_results = faq_tool.search(user_text, top_k=3, threshold=0.65)
-        
-        if faq_results and faq_results[0]['similarity_score'] >= 0.65:
-            return {
-                "YANIT": faq_results[0]['answer'],
-                "kaynak": "SSS",
-                "toolOutputs": [{
-                    "name": "faq_search",
-                    "args": {"query": user_text},
-                    "result": {"matches": faq_results},
-                    "ok": True
-                }]
-            }
-    except Exception as e:
-        print(f"SSS hatası: {e}")
-        # Hata durumunda normal akışa devam et
     low = user_text.lower()
 
     code = _service_code(user_text)
