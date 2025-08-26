@@ -13,8 +13,10 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..",".."))
 if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 
-from backend.config_local import DB_PATH ## bu import yukarıdaki kodun altında olmak zorunda yoksa çalışmaz
+from backend.config_local import DB_PATH as CFG_DB_PATH ## bu import yukarıdaki kodun altında olmak zorunda yoksa çalışmaz
 from common.mcp_decorators import log_tool
+
+DB_PATH = os.environ.get("BANK_DB_PATH", CFG_DB_PATH)
 
 # === Initialize MCP server ===
 mcp = FastMCP("Fortuna Banking Services")
@@ -22,6 +24,7 @@ mcp = FastMCP("Fortuna Banking Services")
 # === Initialize tool classes ===
 repo = SQLiteRepository(db_path=DB_PATH)
 general_tools = GeneralTools(repo)
+print(f"[MCP] Using DB: {repo.db_path}")
 
 
 @mcp.tool()
@@ -91,6 +94,26 @@ def get_card_info(card_id: int) -> dict:
         If the card is not found, it returns a dictionary with an 'error' key.
     """
     return general_tools.get_card_info(card_id=card_id)
+
+# eklendi
+@mcp.tool()
+def list_fees(limit: int = 50) -> dict:
+    # normalize & cap
+    if not isinstance(limit, int) or limit <= 0:
+        limit = 50
+    if limit > 200:
+        limit = 200
+    return general_tools.list_fees(limit=limit)
+
+# eklendi
+@mcp.tool()
+def list_cards(customer_id: int) -> dict:
+    return general_tools.list_cards(customer_id=customer_id)
+
+# eklendi
+@mcp.tool()
+def get_primary_card_summary(customer_id: int) -> dict:
+    return general_tools.get_primary_card_summary(customer_id=customer_id)
 
 
 @mcp.tool()
