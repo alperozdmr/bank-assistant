@@ -13,10 +13,9 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..",".."))
 if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 
-from backend.config_local import DB_PATH as CFG_DB_PATH ## bu import yukarıdaki kodun altında olmak zorunda yoksa çalışmaz
+from backend.config_local import DB_PATH  ## bu import yukarıdaki kodun altında olmak zorunda yoksa çalışmaz
 from common.mcp_decorators import log_tool
 
-DB_PATH = os.environ.get("BANK_DB_PATH", CFG_DB_PATH)
 
 # === Initialize MCP server ===
 mcp = FastMCP("Fortuna Banking Services")
@@ -94,27 +93,6 @@ def get_card_info(card_id: int) -> dict:
         If the card is not found, it returns a dictionary with an 'error' key.
     """
     return general_tools.get_card_info(card_id=card_id)
-
-# eklendi
-@mcp.tool()
-def list_fees(limit: int = 50) -> dict:
-    # normalize & cap
-    if not isinstance(limit, int) or limit <= 0:
-        limit = 50
-    if limit > 200:
-        limit = 200
-    return general_tools.list_fees(limit=limit)
-
-# eklendi
-@mcp.tool()
-def list_cards(customer_id: int) -> dict:
-    return general_tools.list_cards(customer_id=customer_id)
-
-# eklendi
-@mcp.tool()
-def get_primary_card_summary(customer_id: int) -> dict:
-    return general_tools.get_primary_card_summary(customer_id=customer_id)
-
 
 @mcp.tool()
 @log_tool
@@ -216,15 +194,6 @@ def get_interest_rates() -> dict:
 
 @mcp.tool()
 @log_tool
-def get_fee(service_code: str) -> dict:
-    """
-    Tek bir hizmet kodu için ücret bilgisini döndürür.
-    Örn kullanım: get_fee("eft"), get_fee("havale")
-    """
-    return general_tools.get_fee(service_code=service_code)
-
-@mcp.tool()
-@log_tool
 def branch_atm_search(city: str, district: str | None = None, type: str | None = None, limit: int = 3) -> dict:
     """
     Finds nearby bank branches/ATMs for a given location.
@@ -262,7 +231,120 @@ def branch_atm_search(city: str, district: str | None = None, type: str | None =
         type = "branch"
     return general_tools.search(city=city, district=district, type=type, limit=limit)
 
+@mcp.tool()
+@log_tool
+def list_fees(limit: int = 50) -> dict:
+    """
+    Retrieves a list of service fees and commission rates.
+
+    This tool queries the `fees` table and returns normalized fee records,
+    including fee codes, descriptions, and amounts. It is read-only and
+    intended for display and selection in chat/agent flows.
+
+    Parameters:
+        limit (int): Maximum number of fee records to return. Defaults to 50,
+        capped at 200.
+
+    Returns:
+        A dictionary containing:
+        - fee_code (str): Unique identifier for the fee
+        - description (str): Human-readable description of the fee
+        - amount (float): Monetary value of the fee
+        - currency (str): Currency code (TRY | USD | EUR)
+        - category (str): Fee category (transfer | card | account | other)
+        If no fees are found or the input is invalid, returns:
+        - error (str) with an explanatory message
+    """
+    if not isinstance(limit, int) or limit <= 0:
+        limit = 50
+    if limit > 200:
+        limit = 200
+    return general_tools.list_fees(limit=limit)
+
+
+@mcp.tool()
+@log_tool
+def list_cards(customer_id: int) -> dict:
+    """
+    Retrieves all cards belonging to a specific customer.
+
+    This tool queries the `cards` table and returns normalized card records,
+    including limits, balances, and card types. It is read-only and intended
+    for overview and display in chat/agent flows.
+
+    Parameters:
+        customer_id (int): Unique customer identifier in the banking system.
+
+    Returns:
+        A dictionary containing one or more card records with:
+        - card_id (int): Unique identifier for the card
+        - card_number (str, masked): Masked card number (e.g., "****1234")
+        - card_type (credit | debit | prepaid)
+        - limit (float): Card limit (if applicable)
+        - balance (float): Current balance/usage
+        - status (active | frozen | closed)
+        - expiry_date (ISO-8601 string: "YYYY-MM-DD")
+        If the customer has no cards or the input is invalid, returns:
+        - error (str) with an explanatory message
+    """
+    return general_tools.list_cards(customer_id=customer_id)
+
+
+@mcp.tool()
+@log_tool
+def get_primary_card_summary(customer_id: int) -> dict:
+    """
+    Retrieves a summary of the customer's primary card.
+
+    This tool queries the `cards` table and selects the primary card record,
+    returning essential attributes for quick display. It is read-only and
+    intended for summary views in chat/agent flows.
+
+    Parameters:
+        customer_id (int): Unique customer identifier in the banking system.
+
+    Returns:
+        A dictionary containing the primary card summary with:
+        - card_id (int): Unique identifier for the card
+        - card_number (str, masked): Masked card number (e.g., "****5678")
+        - card_type (credit | debit | prepaid)
+        - limit (float): Card limit (if applicable)
+        - balance (float): Current balance/usage
+        - due_date (ISO-8601 string: "YYYY-MM-DD") for credit cards
+        - status (active | frozen | closed)
+        If no primary card exists or the input is invalid, returns:
+        - error (str) with an explanatory message
+    """
+    return general_tools.get_primary_card_summary(customer_id=customer_id)
+
+
+@mcp.tool()
+@log_tool
+def get_fee(service_code: str) -> dict:
+    """
+    Retrieves the details of a specific service fee.
+
+    This tool queries the `fees` table and returns a single fee record,
+    including amount, currency, and description. It is read-only and
+    intended for validation or explanation in chat/agent flows.
+
+    Parameters:
+        service_code (str): Unique service/fee identifier.
+
+    Returns:
+        A dictionary containing:
+        - fee_code (str): Unique identifier for the fee
+        - description (str): Human-readable description of the fee
+        - amount (float): Monetary value of the fee
+        - currency (str): Currency code (TRY | USD | EUR)
+        - category (str): Fee category (transfer | card | account | other)
+        If the fee is not found or the input is invalid, returns:
+        - error (str) with an explanatory message
+    """
+    return general_tools.get_fee(service_code=service_code)
+
+
 if __name__ == "__main__":
     # Varsayılan port ile başlat (kütüphanen ne destekliyorsa)
     # mcp.run() veya mcp.run(port=8001)
-    mcp.run("sse", host="127.0.0.1", port=8081)
+    mcp.run("sse", host="127.0.0.1", port=8082)

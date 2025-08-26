@@ -12,8 +12,8 @@ from llmadapter import LLMAdapter
 from tools.schemas import get_tool_catalog
 
 
-USE_MCP = 1
-MCP_URL = "http://127.0.0.1:8081/sse"
+USE_MCP = 0
+MCP_URL = "http://127.0.0.1:8082/sse"
 
 def _default_customer_id() -> Optional[int]:
     v = os.getenv("DEFAULT_CUSTOMER_ID")
