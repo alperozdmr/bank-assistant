@@ -235,6 +235,41 @@ class GeneralTools:
                 "son_odeme_tarihi": card_data["due_day"]
             }
         }
+    
+    # eklenen
+    def list_cards(self, customer_id: int) -> dict:
+        try:
+            cid = int(customer_id)
+        except (TypeError, ValueError):
+            return {"error": "invalid_customer_id"}
+        cards = self.repo.get_cards_by_customer(cid)
+        return {"customer_id": cid, "cards": cards}
+
+    # [eklenen
+    def get_primary_card_summary(self, customer_id: int) -> dict:
+        """
+        Tek kart varsa borç/son ödeme özetini, çok kart varsa liste döndürür.
+        """
+        try:
+            cid = int(customer_id)
+        except (TypeError, ValueError):
+            return {"error": "invalid_customer_id"}
+
+        cards = self.repo.get_cards_by_customer(cid)
+        if not cards:
+            return {"error": "no_cards"}
+
+        if len(cards) == 1:
+            c = cards[0]
+            return {
+                "customer_id": cid,
+                "card": c,
+                "summary": {
+                    "current_debt": c.get("current_debt"),
+                    "due_day": c.get("due_day"),
+                },
+            }
+        return {"customer_id": cid, "cards": cards}
 
     def list_recent_transactions(self, customer_id: int, n: int = 5) -> Dict[str, Any]:
         """
@@ -335,7 +370,43 @@ class GeneralTools:
             return result
         except Exception as e:
             return {"error": f"Okuma hatası: {e}"}
-        
+
+    #tüm ücretler listesi    
+    def list_fees(self, limit: int = 50) -> Dict[str, Any]:
+        """fees tablosundaki tüm ücretleri döndürür (limit ≤200)."""
+        if not isinstance(limit, int) or limit <= 0:
+            limit = 50
+        if limit > 200:
+            limit = 200
+
+        try:
+            rows = self.repo.list_fees()  # [{service_code, description, pricing_json, updated_at}, ...]
+        except Exception as e:
+            return {"error": f"okuma hatası: {e}"}
+
+        fees: list[dict] = []
+        import json as _json
+        for r in rows[:limit]:
+            pr = r.get("pricing_json")
+            try:
+                pr = _json.loads(pr) if isinstance(pr, str) else (pr or {})
+            except Exception:
+                pr = {"raw": r.get("pricing_json")}
+            fees.append({
+                "service_code": r.get("service_code"),
+                "description": r.get("description"),
+                "pricing": pr,
+                "updated_at": r.get("updated_at"),
+            })
+
+        result = {"fees": fees}
+        if fees:
+            result["ui_component"] = {
+                "type": "fees_list",
+                "items": fees
+            }
+        return result
+
     def get_fee(self, service_code: str) -> Dict[str, Any]:
         """
         Ücret tablosundan tek bir hizmet kodunun (service_code) JSON ücretlerini döndürür.
