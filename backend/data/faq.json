@@ -324,7 +324,11 @@
         "answer": "Evet, 'Döviz İşlemleri' menüsünden güncel kurlardan döviz alım-satım işlemi yapabilirsiniz.",
         "category": "doviz"
     },
-
+    {
+        "question": "Dolar veya Euro nasıl alabilirim?",
+        "answer": "'Döviz İşlemleri' menüsünden istediğiniz döviz cinsini seçerek alım-satım yapabilirsiniz.",
+        "category": "doviz"
+    },
     {
         "question": "Yatırım işlemleri yapabilir miyim?",
         "answer": "Evet, 'Yatırım' menüsünden altın, döviz, fon ve hisse senedi işlemlerinizi yapabilirsiniz.",

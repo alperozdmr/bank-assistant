@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional
 from integrations.fastmcp_client import call_mcp_tool
 from llmadapter import LLMAdapter
 from tools.schemas import get_tool_catalog
-from tools.faq_tool import get_faq_tool
+from tools.faq import get_faq_tool
 
 USE_MCP = 1
 MCP_URL = "http://127.0.0.1:8081/sse"
