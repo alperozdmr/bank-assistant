@@ -4,14 +4,35 @@ from __future__ import annotations
 
 import json
 import re
+import os
 from typing import Any, Dict, List, Optional
 
 from integrations.fastmcp_client import call_mcp_tool
 from llmadapter import LLMAdapter
 from tools.schemas import get_tool_catalog
 
-USE_MCP = 0
+
+USE_MCP = 1
 MCP_URL = "http://127.0.0.1:8081/sse"
+
+def _default_customer_id() -> Optional[int]:
+    v = os.getenv("DEFAULT_CUSTOMER_ID")
+    if not v:
+        return None
+    try:
+        return int(v)
+    except Exception:
+        return None
+
+# MCP ayarları, default müşteri kimliği
+import os
+DEFAULT_CUSTOMER_ID = None
+try:
+    _dc = os.getenv("DEFAULT_CUSTOMER_ID")
+    if _dc:
+        DEFAULT_CUSTOMER_ID = int(_dc)
+except Exception:
+    DEFAULT_CUSTOMER_ID = None
 
 _BALANCE_WORDS = (
     "bakiye",
@@ -22,11 +43,13 @@ _BALANCE_WORDS = (
     "bakiyem"
 )
 _CARD_WORDS = ("kart", "kredi kartı", "kartım", "kart bilgisi", "kart detayı", 
-               "limit", "borç", "son ödeme", "kesim", "kullanılabilir limit"
+               "limit", "borç", "son ödeme", "kesim", "kullanılabilir limit", "kart borcu"
 )
 _FX_WORDS   = ("kur", "döviz", "doviz", "usd", "eur", "dolar", "euro", "sterlin", "rate")
 _INT_WORDS  = ("faiz", "oran", "interest", "yatırım", "mevduat", "kredi faizi", "kredi")
+_CARD_DEBT_TRIGGERS = ("kart borcu", "kart borcum", "kredi kartı borcu", "kredi karti borcu", "ekstre", "borç")
 _FEE_WORDS  = ("ücret", "ucret", "masraf", "komisyon", "aidat", "fee")
+_ALL_FEES_TRIGGERS = ("tüm ücret", "tüm ücretler", "tum ucret", "ucretler", "ücretler", "all fees")
 _ACC_STRICT = re.compile(r"\b(hesap|account)\s*(no|id)?\s*(\d{1,10})\b", re.IGNORECASE)
 _CUST_RE = re.compile(r"\b(müşteri|customer)\s*(no|id)?\s*(\d{1,10})\b", re.IGNORECASE)
 _ACC_RE = re.compile(r"\b\d{1,10}\b")
@@ -49,6 +72,14 @@ def _service_code(txt: str) -> Optional[str]:
     if s.startswith("KART"): s = "KART_AIDATI"
     if s.startswith("KREDI"): s = "KREDI_TAHSIS"
     return s
+
+def _fmt_try_amount(x: Any) -> str:
+    try:
+        v = float(str(x).replace(",", "."))
+    except Exception:
+        return str(x)
+    s = f"{v:,.2f}"
+    return s.replace(",", "X").replace(".", ",").replace("X", ".")
 
 
 def _fmt_balance(res: Dict[str, Any], fallback_id: Optional[int] = None) -> Dict[str, Any]:
@@ -212,20 +243,73 @@ def _fmt_interest(res: Dict[str, Any]) -> Dict[str, Any]:
 
 def _fmt_fees(res: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Fees response'unu hem text hem de UI component data olarak döndürür
+    Fees response'unu hem text hem de UI component data olarak döndürür.
+    - get_fee (tek kayıt) ve list_fees (liste) ikisini de destekler.
+    Return: {"text": str, "ui_component": {...} | None}
     """
     d = res.get("data") if isinstance(res.get("data"), dict) else res
     if not isinstance(d, dict) or d.get("error"):
+        return {"text": "Ücret bilgisi bulunamadı.", "ui_component": None}
+
+    # liste desteği
+    if isinstance(d.get("fees"), list):
+        fees = d.get("fees") or []
+
+        def fmt_try(x: float) -> str:
+            s = f"{float(x):,.2f}"
+            return s.replace(",", "X").replace(".", ",").replace("X", ".")
+
+        def one_line(item: Dict[str, Any]) -> str:
+            desc = item.get("description") or item.get("service_code") or "Bilinmeyen"
+            pr = item.get("pricing") or {}
+            t = (pr.get("type") or "").lower() if isinstance(pr, dict) else ""
+            cur = (pr.get("currency") or "TRY").upper() if isinstance(pr, dict) else "TRY"
+
+            if t == "flat" and pr.get("amount") is not None:
+                return f"{desc}: {fmt_try(pr['amount'])} {cur}"
+
+            if t == "percent" and pr.get("rate") is not None:
+                extras = []
+                if pr.get("min") is not None:
+                    extras.append(f"min {fmt_try(pr['min'])} {cur}")
+                if pr.get("max") is not None:
+                    extras.append(f"max {fmt_try(pr['max'])} {cur}")
+                tail = f" ({'; '.join(extras)})" if extras else ""
+                return f"{desc}: %{round(100*float(pr['rate']), 2)}{tail}"
+
+            if t == "tiered" and isinstance(pr.get("tiers"), list):
+                parts = []
+                for tier in pr["tiers"][:4]:
+                    thr = tier.get("threshold")
+                    fee = tier.get("fee")
+                    if fee is None:
+                        continue
+                    if thr is None:
+                        parts.append(f"{fmt_try(fee)} {cur}")
+                    else:
+                        parts.append(f"≤{int(thr):,}".replace(",", ".") + f": {fmt_try(fee)} {cur}")
+                if parts:
+                    return f"{desc}: " + "; ".join(parts)
+
+            return f"{desc}: (detay yok)"
+
+        lines = ["- " + one_line(f) for f in fees[:20]]
+        if len(fees) > 20:
+            lines.append(f"... (+{len(fees)-20} diğer)")
+
+        # UI component — liste
+        ui_component = {
+            "type": "fees_list",
+            "items": fees,  # Dilersen map'leyip sadeleştirebilirsin
+        }
         return {
-            "text": "Ücret bilgisi bulunamadı.",
-            "ui_component": None
+            "text": "Güncel ücretlerden özet:\n" + "\n".join(lines),
+            "ui_component": ui_component,
         }
 
+    # ---------- TEK KAYIT (get_fee) DESTEĞİ ----------
     if "service_code" not in d:
-        return {
-            "text": "Ücret bilgisi bulunamadı.",
-            "ui_component": None
-        }
+        return {"text": "Ücret bilgisi bulunamadı.", "ui_component": None}
 
     desc = (d.get("description") or d.get("service_code") or "").strip()
     pr = d.get("pricing") or {}
@@ -238,7 +322,7 @@ def _fmt_fees(res: Dict[str, Any]) -> Dict[str, Any]:
             "service_code": d.get("service_code"),
             "description": desc,
             "pricing": pr,
-            "updated_at": d.get("updated_at")
+            "updated_at": d.get("updated_at"),
         }
 
     def fmt_try(x: float) -> str:
@@ -261,7 +345,7 @@ def _fmt_fees(res: Dict[str, Any]) -> Dict[str, Any]:
             extras.append(f"max {fmt_try(pr['max'])} {cur}")
         tail = f" ({'; '.join(extras)})" if extras else ""
         text = f"Güncel {desc} ücreti: %{round(100*float(pr['rate']), 2)}{tail}."
-    # 3) Tierli
+    # 3) Dilimli
     elif t == "tiered" and isinstance(pr.get("tiers"), list):
         parts = []
         for tier in pr["tiers"][:4]:
@@ -280,11 +364,7 @@ def _fmt_fees(res: Dict[str, Any]) -> Dict[str, Any]:
     else:
         text = f"{desc} ücreti için detay bulunamadı."
 
-    return {
-        "text": text,
-        "ui_component": ui_component
-    }
-
+    return {"text": text, "ui_component": ui_component}
 
 def _fmt_card_info(res: Dict[str, Any]) -> Dict[str, Any]:
     """
@@ -324,6 +404,41 @@ def _fmt_card_info(res: Dict[str, Any]) -> Dict[str, Any]:
         "ui_component": ui_component
     }
 
+def _fmt_card_summary(res: Dict[str, Any]) -> str:
+    d = res.get("data") if isinstance(res.get("data"), dict) else res
+    if not isinstance(d, dict):
+        return "Kart bilgisi okunamadı."
+    if d.get("error") == "no_cards":
+        return "Bu müşteri için kayıtlı kart bulunamadı."
+    if isinstance(d.get("summary"), dict) and isinstance(d.get("card"), dict):
+        s, c = d["summary"], d["card"]
+        debt = s.get("current_debt")
+        cur  = (c.get("currency") or "TRY").upper()
+        try:
+            val = float(debt or 0.0)
+        except Exception:
+            return "Kart borcu okunamadı."
+        amt = f"{abs(val):,.2f}"
+        if cur == "TRY":
+            amt = amt.replace(",", "X").replace(".", ",").replace("X", ".")
+        tail = f" Son ödeme günü: {s.get('due_day')}" if s.get("due_day") else ""
+        return f"Kart borcunuz: {amt} {cur}{tail}"
+    cards = d.get("cards") or []
+    if cards:
+        head = []
+        for c in cards[:5]:
+            cur = (c.get("currency") or "TRY").upper()
+            try:
+                val = float(c.get("current_debt") or 0.0)
+            except Exception:
+                val = 0.0
+            amt = f"{abs(val):,.2f}"
+            if cur == "TRY":
+                amt = amt.replace(",", "X").replace(".", ",").replace("X", ".")
+            head.append(f"#{c.get('card_id')} → borç {amt} {cur}")
+        more = f" (+{len(cards)-5} daha)" if len(cards) > 5 else ""
+        return "Birden fazla kart bulundu:\n- " + "\n- ".join(head) + more + "\nLütfen bir card_id seçin."
+    return "Kart bilgisi bulunamadı."
 
 def _fmt_atm_search(res: Dict[str, Any]) -> Dict[str, Any]:
     """
@@ -627,156 +742,323 @@ def _llm_flow(user_text: str) -> Dict[str, Any]:
 def handle_message(user_text: str) -> Dict[str, Any]:
     low = user_text.lower()
 
+    # --- TÜM ÜCRETLER ---
+    if any(k in low for k in ("tüm ücret", "tum ucret", "ücretler", "ucretler", "all fees", "tüm ücretler", "tum ucretler")):
+        res = call_mcp_tool(MCP_URL, "list_fees", {"limit": 200})
+        try:
+            fees_out = _fmt_fees(res)
+        except Exception:
+            fees_out = None
+        if isinstance(fees_out, dict) and ("text" in fees_out or "ui_component" in fees_out):
+            ui_component = fees_out.get("ui_component")
+            result = {
+                "YANIT": "" if ui_component else fees_out.get("text", "Ücret bilgisi bulunamadı."),
+                "toolOutputs": [{"name": "list_fees", "args": {"limit": 200}, "result": res, "ok": res.get("ok", True)}],
+            }
+            if ui_component:
+                result["ui_component"] = ui_component
+            return result
+
+        d = res.get("data") if isinstance(res.get("data"), dict) else res
+        fees = (d or {}).get("fees") or []
+        if not fees:
+            return {
+                "YANIT": "Ücret bilgisi bulunamadı.",
+                "toolOutputs": [{"name": "list_fees", "args": {"limit": 200}, "result": res, "ok": res.get("ok", True)}],
+            }
+
+        def _fmt_try(x: float) -> str:
+            s = f"{float(x):,.2f}"
+            return s.replace(",", "X").replace(".", ",").replace("X", ".")
+
+        def _one_line(desc: str, pr: Dict[str, Any]) -> str:
+            t = (pr.get("type") or "").lower()
+            cur = (pr.get("currency") or "TRY").upper()
+            if t == "flat" and pr.get("amount") is not None:
+                return f"{desc}: {_fmt_try(pr['amount'])} {cur}"
+            if t == "percent" and pr.get("rate") is not None:
+                extras = []
+                if pr.get("min") is not None:
+                    extras.append(f"min {_fmt_try(pr['min'])} {cur}")
+                if pr.get("max") is not None:
+                    extras.append(f"max {_fmt_try(pr['max'])} {cur}")
+                tail = f" ({'; '.join(extras)})" if extras else ""
+                return f"{desc}: %{round(100*float(pr['rate']), 2)}{tail}"
+            if t == "tiered" and isinstance(pr.get("tiers"), list):
+                parts = []
+                for tier in pr["tiers"][:4]:
+                    thr = tier.get("threshold")
+                    fee = tier.get("fee")
+                    if fee is None:
+                        continue
+                    if thr is None:
+                        parts.append(f"{_fmt_try(fee)} TRY")
+                    else:
+                        parts.append(f"≤{int(thr):,}".replace(",", ".") + f": {_fmt_try(fee)} TRY")
+                if parts:
+                    return f"{desc}: " + "; ".join(parts)
+            return f"{desc}: (detay bulunamadı)"
+
+        lines = []
+        for f in fees[:20]:
+            desc = f.get("description") or f.get("service_code") or "Bilinmeyen"
+            pr = f.get("pricing") or {}
+            if isinstance(pr, str):
+                try:
+                    import json as _json
+                    pr = _json.loads(pr)
+                except Exception:
+                    pr = {}
+            lines.append("- " + _one_line(desc, pr if isinstance(pr, dict) else {}))
+        if len(fees) > 20:
+            lines.append(f"... (+{len(fees)-20} diğer)")
+
+        return {
+            "YANIT": "Güncel ücretlerden özet:\n" + "\n".join(lines),
+            "toolOutputs": [{"name": "list_fees", "args": {"limit": 200}, "result": res, "ok": res.get("ok", True)}],
+        }
+
+    # --- Tek hizmet kodu varsa: get_fee ---
     code = _service_code(user_text)
     if code:
         res = call_mcp_tool(MCP_URL, "get_fee", {"service_code": code})
         if res.get("error") and res.get("available_codes"):
             opts = ", ".join(res["available_codes"])
             return {"YANIT": f"'{code}' bulunamadı. Desteklenenler: {opts}. Hangisini istersiniz?"}
-        
         fees_result = _fmt_fees(res)
-        ui_component = fees_result.get("ui_component")
-        
+        ui_component = fees_result.get("ui_component") if isinstance(fees_result, dict) else None
         result = {
-            "YANIT": "" if ui_component else fees_result["text"],
+            "YANIT": "" if ui_component else (fees_result.get("text") if isinstance(fees_result, dict) else str(fees_result)),
             "toolOutputs": [{"name":"get_fee","args":{"service_code": code}, "result":res, "ok":res.get("ok", True)}]
         }
         if ui_component:
             result["ui_component"] = ui_component
         return result
-    
-    # (kur ve döviz için)
+
+    # === YENİ: Doğrudan "hesap <id>" yazıldıysa → get_balance ===
+    m = _ACC_STRICT.search(user_text)
+    if m:
+        acc = int(m.group(3))
+        res = call_mcp_tool(MCP_URL, "get_balance", {"account_id": acc})
+        bal_out = _fmt_balance(res, acc)
+        ui_component = bal_out.get("ui_component") if isinstance(bal_out, dict) else None
+        text = (bal_out.get("text") if isinstance(bal_out, dict) else str(bal_out)) or ""
+        out = {
+            "YANIT": "" if ui_component else text,
+            "toolOutputs": [{"name": "get_balance", "args": {"account_id": acc}, "result": res, "ok": res.get("ok", True)}],
+        }
+        if ui_component:
+            out["ui_component"] = ui_component
+        return out
+
+    # (kur ve döviz)
     if any(w in low for w in _FX_WORDS):
-        # Belirli bir kur sorulup sorulmadığını kontrol et
         import re
         currency_match = re.search(r'\b(usd|dolar|euro|eur|gbp|sterlin|pound|jpy|yen|chf|frank|cny|yuan|ruble|rub|sar|riyal|aed|dirhem|cad|kanada)\b', low)
-        
         res = call_mcp_tool(MCP_URL, "get_exchange_rates", {})
-        
-        # Eğer belirli bir kur istendiyse sadece onu filtrele
         requested_currency = currency_match.group(1) if currency_match else None
         fx_result = _fmt_fx(res, requested_currency)
-        ui_component = fx_result.get("ui_component")
-        
+        ui_component = fx_result.get("ui_component") if isinstance(fx_result, dict) else None
         result = {
-            "YANIT": "" if ui_component else fx_result["text"],
+            "YANIT": "" if ui_component else (fx_result.get("text") if isinstance(fx_result, dict) else str(fx_result)),
             "toolOutputs": [{"name":"get_exchange_rates","args":{}, "result":res, "ok":res.get("ok", True)}]
         }
         if ui_component:
             result["ui_component"] = ui_component
         return result
-    
-     # Interest (faiz)
+
+    # Interest (faiz)
     if any(w in low for w in _INT_WORDS):
         res = call_mcp_tool(MCP_URL, "get_interest_rates", {})
         interest_result = _fmt_interest(res)
-        ui_component = interest_result.get("ui_component")
-        
+        ui_component = interest_result.get("ui_component") if isinstance(interest_result, dict) else None
         result = {
-            "YANIT": "" if ui_component else interest_result["text"],
+            "YANIT": "" if ui_component else (interest_result.get("text") if isinstance(interest_result, dict) else str(interest_result)),
             "toolOutputs": [{"name":"get_interest_rates","args":{}, "result":res, "ok":res.get("ok", True)}]
         }
         if ui_component:
             result["ui_component"] = ui_component
         return result
-    
-    # Ücretler
+
+    # Ücret kelimesi geçti ama kod belirtilmedi
     if any(w in low for w in _FEE_WORDS):
-        code = _service_code(user_text)
-        if not code:
-            return {"YANIT": "Hangi hizmetin ücreti? Örnek: EFT, FAST, HAVALE, KART_AIDATI, KREDI_TAHSIS"}
-        res = call_mcp_tool(MCP_URL, "get_fee", {"service_code": code})
-        # bilinmiyorsa desteklenenleri listele ve tekrar sor
-        if res.get("error") and res.get("supported"):
-            opts = ", ".join(res["supported"])
-            return {"YANIT": f"'{code}' tanınmadı. Desteklenenler: {opts}. Hangisini istersiniz?"}
-        
-        fees_result = _fmt_fees(res)
-        ui_component = fees_result.get("ui_component")
-        
-        result = {
-            "YANIT": "" if ui_component else fees_result["text"],
-            "toolOutputs": [{"name":"get_fee","args":{"service_code": code}, "result":res, "ok":res.get("ok", True)}]
+        return {"YANIT": "Hangi hizmetin ücreti? Örnek: EFT, FAST, HAVALE, KART_AIDATI, KREDI_TAHSIS"}
+
+    # === YENİ: Basit ATM/Şube tetikleyici ===
+    if any(k in low for k in ("atm", "şube", "sube", "branch")):
+        import re
+        city = district = None
+
+        # "izmir atm" / "istanbul kadıköy atm"
+        m = re.search(r'([a-zçğıöşü]+)(?:\s+([a-zçğıöşü]+))?\s+(atm|şube|sube)\b', low)
+        if not m:
+            # "atm izmir" / "şube ankara çankaya"
+            m = re.search(r'(atm|şube|sube)\s+([a-zçğıöşü]+)(?:\s+([a-zçğıöşü]+))?', low)
+
+        def _title(s): 
+            return s.capitalize() if s else None
+
+        if m:
+            g = m.groups()
+            if g[0] in ("atm","şube","sube"):
+                city, district = _title(g[1]), _title(g[2] if len(g) > 2 else None)
+            else:
+                city, district = _title(g[0]), _title(g[1])
+
+        if not city:
+            return {"YANIT": "Lütfen şehir adıyla birlikte sorar mısınız? Örn: 'İzmir ATM' ya da 'Şube Ankara Çankaya'."}
+
+        payload = {"city": city}
+        if district:
+            payload["district"] = district
+        if "atm" in low:
+            payload["type"] = "atm"
+
+        res = call_mcp_tool(MCP_URL, "branch_atm_search", payload)
+        atm_out = _fmt_atm_search(res)
+        ui_component = atm_out.get("ui_component") if isinstance(atm_out, dict) else None
+        text = (atm_out.get("text") if isinstance(atm_out, dict) else str(atm_out)) or ""
+        ret = {
+            "YANIT": "" if ui_component else text,
+            "toolOutputs": [{"name":"branch_atm_search","args": payload, "result": res, "ok": res.get("ok", True)}],
         }
         if ui_component:
-            result["ui_component"] = ui_component
-        return result
-    
-    # Kart bilgileri
+            ret["ui_component"] = ui_component
+        return ret
+
+    # Kart borcu / ekstre (müşteri kimliği fallback ile)
+    import re as _re
+    wants_card_debt = bool(_re.search(r"(kredi\s*kart[ıi]|kart).*(bor[cç]|borcu|borcum|ekstre|son\s*ödeme)", low))
+    if wants_card_debt:
+        cid = _cust_id(user_text) or _default_customer_id()
+        if not cid:
+            return {"YANIT": "Kart borcunuzu gösterebilmem için müşteri numaranızı yazın (örn: müşteri 24)."}
+        res = call_mcp_tool(MCP_URL, "get_primary_card_summary", {"customer_id": int(cid)})
+        summary_text = _fmt_card_summary(res) if 'error' not in res else "Kart bilgisi bulunamadı."
+        return {
+            "YANIT": summary_text,
+            "toolOutputs": [{"name":"get_primary_card_summary","args":{"customer_id": int(cid)}, "result":res, "ok":res.get("ok", True)}]
+        }
+
+    # Kart bilgileri (card_id verildiyse)
     if any(w in low for w in _CARD_WORDS):
-        # Kart ID'sini çıkar
         import re
         card_match = re.search(r'\b(\d{1,3})\b', user_text)
         if not card_match:
             return {"YANIT": "Hangi kartın bilgilerini istiyorsunuz? Örnek: Kart 101 bilgilerini göster"}
-        
         card_id = int(card_match.group(1))
-        
-        res = call_mcp_tool(MCP_URL, "get_card_info", {
-            "card_id": card_id
-        })
-        
+        res = call_mcp_tool(MCP_URL, "get_card_info", {"card_id": card_id})
         card_result = _fmt_card_info(res)
-        ui_component = card_result.get("ui_component")
-        
+        if isinstance(card_result, dict):
+            ui_component = card_result.get("ui_component")
+            text = card_result.get("text", "Kart bilgisi alınamadı.")
+        else:
+            ui_component, text = None, (str(card_result) if card_result else "Kart bilgisi alınamadı.")
         result = {
-            "YANIT": "" if ui_component else card_result["text"],
+            "YANIT": "" if ui_component else text,
             "toolOutputs": [{"name":"get_card_info","args":{"card_id": card_id}, "result":res, "ok":res.get("ok", True)}]
         }
         if ui_component:
             result["ui_component"] = ui_component
         return result
-    
-    # Hesap bakiyesi
+
+    # Hesap bakiyesi (genel tetikleyiciler)
     if USE_MCP and any(w in low for w in _BALANCE_WORDS):
         cid = _cust_id(user_text)
         if cid is not None:
             res = call_mcp_tool(MCP_URL, "get_accounts", {"customer_id": cid})
             balance_result = _fmt_balance(res)
-            ui_component = balance_result.get("ui_component")
-            
+            if isinstance(balance_result, dict):
+                ui_component = balance_result.get("ui_component")
+                text = balance_result.get("text") or "Bakiye bilgisi bulunamadı."
+            else:
+                ui_component, text = None, str(balance_result)
             result = {
-                "YANIT": "" if ui_component else balance_result["text"],
-                "toolOutputs": [
-                    {
-                        "name": "get_balance",
-                        "args": {"customer_id": cid},
-                        "result": res,
-                        "ok": res.get("ok", True),
-                    }
-                ],
+                "YANIT": "" if ui_component else text,
+                "toolOutputs": [{"name": "get_balance","args": {"customer_id": cid},"result": res,"ok": res.get("ok", True)}],
             }
             if ui_component:
                 result["ui_component"] = ui_component
             return result
-            
+
         acc = _acc_id(user_text)
         if acc is not None:
             res = call_mcp_tool(MCP_URL, "get_balance", {"account_id": acc})
             balance_result = _fmt_balance(res, acc)
-            ui_component = balance_result.get("ui_component")
-            
+            if isinstance(balance_result, dict):
+                ui_component = balance_result.get("ui_component")
+                text = balance_result.get("text") or "Bakiye bilgisi bulunamadı."
+            else:
+                ui_component, text = None, str(balance_result)
             result = {
-                "YANIT": "" if ui_component else balance_result["text"],
-                "toolOutputs": [
-                    {
-                        "name": "get_balance",
-                        "args": {"account_id": acc},
-                        "result": res,
-                        "ok": res.get("ok", True),
-                    }
-                ],
+                "YANIT": "" if ui_component else text,
+                "toolOutputs": [{"name": "get_balance","args": {"account_id": acc},"result": res,"ok": res.get("ok", True)}],
             }
             if ui_component:
                 result["ui_component"] = ui_component
             return result
-    return _llm_flow(user_text)
+        def_cid = _default_customer_id()
+    if def_cid is not None:
+        res = call_mcp_tool(MCP_URL, "get_accounts", {"customer_id": def_cid})
+        balance_result = _fmt_balance(res)
+        if isinstance(balance_result, dict):
+            ui_component = balance_result.get("ui_component")
+            text = balance_result.get("text") or "Bakiye bilgisi bulunamadı."
+        else:
+            ui_component, text = None, str(balance_result)
 
+        out = {
+            "YANIT": "" if ui_component else text,
+            "toolOutputs": [{
+                "name": "get_balance",
+                "args": {"customer_id": def_cid},
+                "result": res,
+                "ok": res.get("ok", True),
+            }],
+        }
+        if ui_component:
+            out["ui_component"] = ui_component
+        return out
+
+    # Fallback → LLM
+    return _llm_flow(user_text)
 
 if __name__ == "__main__":
     print("Minimal Agent — LLM tool-calling + MCP (Ctrl+C to exit)")
     try:
         while True:
-            print("YANIT:", handle_message(input("> "))["YANIT"])
+            user_inp = input("> ")
+            out = handle_message(user_inp)
+
+            msg = out.get("YANIT") or ""
+            if not msg:
+                try:
+                    outs = out.get("toolOutputs") or []
+                    if outs:
+                        name = outs[0].get("name")
+                        res0 = outs[0].get("result")
+
+                        if name in ("get_balance", "get_accounts", "AccountBalanceTool_get_balance"):
+                            msg = (_fmt_balance(res0) or {}).get("text", "")
+                        elif name == "get_exchange_rates":
+                            msg = (_fmt_fx(res0) or {}).get("text", "")
+                        elif name == "get_interest_rates":
+                            msg = (_fmt_interest(res0) or {}).get("text", "")
+                        elif name == "get_fee":
+                            msg = (_fmt_fees(res0) or {}).get("text", "")
+                        elif name == "list_fees":
+                            msg = (_fmt_fees(res0) or {}).get("text", "")
+                        elif name == "get_card_info":
+                            card = _fmt_card_info(res0) or {}
+                            msg = card.get("text", "")
+                        elif name == "branch_atm_search":
+                            msg = (_fmt_atm_search(res0) or {}).get("text", "")
+                except Exception:
+                    pass
+
+            if not msg:
+                msg = "(UI bileşeni üretildi; CLI için metin özeti yok.)"
+
+            print("YANIT:", msg)
     except KeyboardInterrupt:
         pass
