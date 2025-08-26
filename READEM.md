@@ -143,12 +143,3 @@ python -m agent.agent
 # llm ve mcp server beraber çalışıyor
 # öncemli!!!
 # config local'de app key boş, test etmek için sitesinden yenisini almalısınız huggingface'den
-
-
-##### DEFAULT CUSTOMER KODU
-# default customer belirleyip sadece "bakiyem" veya "kart borcum" yazıldığında onun bilgilerinin çağırılması için aşağıdaki kodu agent'ı çalıştırmadan önce terminale kopyalayabilirsiniz (sayıyı değiştirebilirsiniz)
-export DEFAULT_CUSTOMER_ID=24
-
-
-
-
