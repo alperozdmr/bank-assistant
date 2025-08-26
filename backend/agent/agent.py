@@ -296,14 +296,17 @@ def _fmt_card_info(res: Dict[str, Any]) -> Dict[str, Any]:
             "ui_component": None
         }
     
+    # Bazı MCP cevapları {ok, data:{...}} şeklinde gelebilir → aç
+    d = res.get("data") if isinstance(res, dict) and isinstance(res.get("data"), dict) else res
+
     # UI component oluştur
     ui_component = {
         "type": "card_info_card",
-        "card_id": res.get("card_id"),
-        "limit": res.get("limit"),
-        "borc": res.get("borc"),
-        "kesim_tarihi": res.get("kesim_tarihi"),
-        "son_odeme_tarihi": res.get("son_odeme_tarihi")
+        "card_id": d.get("card_id"),
+        "limit": d.get("limit"),
+        "borc": d.get("borc"),
+        "kesim_tarihi": d.get("kesim_tarihi"),
+        "son_odeme_tarihi": d.get("son_odeme_tarihi")
     }
     
     # Text oluştur
