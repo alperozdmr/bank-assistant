@@ -152,56 +152,6 @@ TOOL_SPEC_GET_INTEREST_RATES: Dict[str, Any] = {
     },
 }
 
-# Tüm ücretler listesi tool’u
-TOOL_SPEC_LIST_FEES = {
-    "type": "function",
-    "function": {
-        "name": "list_fees",
-        "description": "fees tablosundaki tüm ücretleri (opsiyonel limit ile) döndürür.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "limit": {"type": "integer", "minimum": 1, "maximum": 200},
-            },
-            "additionalProperties": False,
-        },
-    },
-}
-
-# kart listesi tool’u
-TOOL_SPEC_LIST_CARDS = {
-    "type": "function",
-    "function": {
-        "name": "list_cards",
-        "description": "Müşterinin kartlarını listeler.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "customer_id": {"type": "integer", "description": "Müşteri kimliği"},
-            },
-            "required": ["customer_id"],
-            "additionalProperties": False,
-        },
-    },
-}
-
-# default kart tool’u
-TOOL_SPEC_PRIMARY_CARD_SUMMARY = {
-    "type": "function",
-    "function": {
-        "name": "get_primary_card_summary",
-        "description": "Tek kart ise borç/özet, çok kart ise liste döndürür.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "customer_id": {"type": "integer", "description": "Müşteri kimliği"},
-            },
-            "required": ["customer_id"],
-            "additionalProperties": False,
-        },
-    },
-}
-
 # Ücret bilgisi tool’u
 TOOL_SPEC_GET_FEE: Dict[str, Any] = {
     "type": "function",
@@ -278,8 +228,5 @@ def get_tool_catalog() -> Dict[str, List[Dict[str, Any]]]:
             TOOL_SPEC_GET_INTEREST_RATES,
             TOOL_SPEC_GET_FEE,
             TOOL_SPEC_BRANCH_ATM_SEARCH,
-            TOOL_SPEC_LIST_FEES,
-            TOOL_SPEC_LIST_CARDS,
-            TOOL_SPEC_PRIMARY_CARD_SUMMARY,
         ]
     }

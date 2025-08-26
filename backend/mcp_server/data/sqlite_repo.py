@@ -112,40 +112,6 @@ class SQLiteRepository:
         finally:
             con.close()
 
-    # eklendi
-    def get_cards_by_customer(self, customer_id: int) -> list[dict]:
-        """
-        Müşterinin kartlarını accounts ile join ederek döndürür.
-        - cards.customer_id olmadığı için accounts üstünden filtreleriz.
-        """
-        import sqlite3
-        con = sqlite3.connect(self.db_path)
-        con.row_factory = sqlite3.Row
-        try:
-            cur = con.cursor()
-            cur.execute(
-                """
-                SELECT
-                c.card_id,
-                c.account_id,
-                c.credit_limit,
-                c.current_debt,
-                c.statement_day,
-                c.due_day,
-                a.customer_id,
-                a.currency
-                FROM cards c
-                JOIN accounts a ON a.account_id = c.account_id
-                WHERE a.customer_id = ?
-                ORDER BY c.card_id
-                """,
-                (customer_id,),
-            )
-            rows = cur.fetchall()
-            return [dict(r) for r in rows]
-        finally:
-            con.close()
-
     def get_transactions_by_customer(
         self, customer_id: int, limit: int = 5
     ) -> List[Dict]:
