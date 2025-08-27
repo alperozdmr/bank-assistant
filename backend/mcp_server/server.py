@@ -338,33 +338,74 @@ def transactions_list(
 ) -> dict:
     """
     Belirli bir hesap için, isteğe bağlı tarih aralığında işlemleri listeler.
-
-    Veri kaynağı:
-        - transactions tablosundan okuma yapar.
-        - İşlem anlık görüntülerini txn_snapshots tablosuna yazar.
-
-    Parametreler:
-        account_id (int): Zorunlu. Benzersiz hesap kimliği.
-        from_date (str, optional): Alt tarih sınırı ("YYYY-AA-GG" veya "YYYY-AA-GG SS:DD:SS").
-        to_date (str, optional): Üst tarih sınırı ("YYYY-AA-GG" veya "YYYY-AA-GG SS:DD:SS").
-        limit (int, optional): Maksimum kayıt sayısı (varsayılan 50, en fazla 500).
-
-    Dönen değer:
-        dict türünde:
-        - account_id (int)
-        - range {from, to}
-        - limit (int)
-        - count (int)
-        - snapshot (object: snapshot bilgisi veya hata)
-        - transactions (işlem kayıtları listesi) VEYA {"error": str} (hata durumunda)
+    Tarih verilmezse tüm zamanlar sorgulanır. Erişim için hesap sahibinin customer_id’si
+    accounts tablosundan alınır ve repo.list_transactions doğru parametre sırası ile çağrılır.
+    Ayrıca snapshot kaydı yapılır.
     """
+    # account_id
+    try:
+        acc_id = int(account_id)
+    except Exception:
+        return {"error": "account_id geçersiz (int olmalı)"}
 
-    return general_tools.transactions_list(
-        account_id=account_id,
-        from_date=from_date,
-        to_date=to_date,
-        limit=limit
-    )
+    # hesabı ve customer_id’yi al
+    acc = repo.get_account(acc_id)
+    if not acc:
+        return {"error": f"Hesap bulunamadı: {acc_id}"}
+    cust_id = int(acc["customer_id"])
+
+    # limit güvenliği
+    try:
+        lim = int(limit)
+    except Exception:
+        lim = 50
+    if lim <= 0:
+        lim = 50
+    if lim > 500:
+        lim = 500
+
+    # boş tarihleri uç tarihlere çevir ki repo BETWEEN filtresi kaçırmasın
+    f = from_date.strip() if isinstance(from_date, str) and from_date.strip() else None
+    t = to_date.strip() if isinstance(to_date, str) and to_date.strip() else None
+    if f is None and t is None:
+        f, t = "1970-01-01 00:00:00", "9999-12-31 23:59:59"
+    elif f is None:
+        f = "1970-01-01 00:00:00"
+    elif t is None:
+        t = "9999-12-31 23:59:59"
+
+    # işlemleri çek  DOĞRU parametre sırası çok önemli
+    try:
+        rows = repo.list_transactions(
+            account_id=acc_id,
+            customer_id=cust_id,
+            from_date=f,
+            to_date=t,
+            limit=lim,
+        )
+    except Exception as e:
+        return {"error": f"okuma hatası: {e}"}
+
+    # snapshot kaydı
+    try:
+        snap = repo.save_transaction_snapshot(
+            account_id=acc_id,
+            from_date=f,  # kullanıcıdan gelen ham değerleri yazalım
+            to_date=t,
+            limit=lim,
+            transactions=rows,
+        )
+    except Exception as e:
+        snap = {"error": f"snapshot yazılamadı: {e}", "saved": 0}
+
+    return {
+        "account_id": acc_id,
+        "range": {"from": f, "to": t},
+        "limit": lim,
+        "count": len(rows),
+        "snapshot": snap,
+        "transactions": rows,
+    }
 
 if __name__ == "__main__":
     # Varsayılan port ile başlat (kütüphanen ne destekliyorsa)

@@ -248,32 +248,37 @@ TOOL_SPEC_BRANCH_ATM_SEARCH: Dict[str, Any] = {
     },
 }
 
-# Son işlemler listesi tool’u (MCP’de transactions_list)
+# transactions_list tool’u
 TOOL_SPEC_TRANSACTIONS_LIST: Dict[str, Any] = {
     "type": "function",
     "function": {
-        "name": "transactions_list",  # MCP fonksiyon adıyla birebir eşleşmeli
-        "description": "Bir hesap için belirli tarihler arasındaki işlemleri döndürür (limit ile).",
+        "name": "transactions_list",
+        "description": (
+            "Belirli bir hesap için isteğe bağlı tarih aralığında işlemleri listeler. "
+            "from_date ve to_date ISO benzeri biçimde string olmalıdır  örn  2025-07-01 veya 2025-07-01 09:30:00. "
+            "Tarih verilmezse sistem son 30 günü kullanabilir. Limit 1 ile 500 arasıdır."
+        ),
         "parameters": {
             "type": "object",
             "properties": {
                 "account_id": {
                     "type": "integer",
-                    "description": "Hesap kimliği (örn: 1)",
+                    "description": "Hesap kimliği  örn  12",
                 },
                 "from_date": {
                     "type": "string",
-                    "description": "Başlangıç tarihi YYYY-MM-DD veya YYYY-MM-DD HH:MM:SS",
+                    "description": "Alt tarih sınırı  YYYY-AA-GG veya YYYY-AA-GG SS:DD:SS",
                 },
                 "to_date": {
                     "type": "string",
-                    "description": "Bitiş tarihi YYYY-MM-DD veya YYYY-MM-DD HH:MM:SS",
+                    "description": "Üst tarih sınırı  YYYY-AA-GG veya YYYY-AA-GG SS:DD:SS",
                 },
                 "limit": {
                     "type": "integer",
-                    "description": "Döndürülecek işlem sayısı (default 50)",
+                    "description": "Maksimum kayıt sayısı  varsayılan 50  en fazla 500",
                     "minimum": 1,
-                    "maximum": 500
+                    "maximum": 500,
+                    "default": 50,
                 },
             },
             "required": ["account_id"],
@@ -281,9 +286,6 @@ TOOL_SPEC_TRANSACTIONS_LIST: Dict[str, Any] = {
         },
     },
 }
-
-
-
 
 def get_tool_catalog() -> Dict[str, List[Dict[str, Any]]]:
     """LLM adapter'a verilecek tool listesi (OpenAI-compatible)."""
