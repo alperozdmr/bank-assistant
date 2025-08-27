@@ -44,7 +44,11 @@ TOOL_SPEC_GET_BALANCE: Dict[str, Any] = {
     "type": "function",
     "function": {
         "name": "get_balance",  # MCP tool name
-        "description": "Verilen account_id için güncel bakiyeyi döndürür.",
+        "description": (
+            "Belirtilen account_id için güncel bakiyeyi döndürür. "
+            "Eğer kullanıcı spesifik bir hesap kimliği belirtmezse, "
+            "tüm hesapları listelemek için 'get_accounts' aracını 'customer_id' ile kullanın."
+        ),
         "parameters": {
             "type": "object",
             "properties": {
@@ -64,13 +68,19 @@ TOOL_SPEC_GET_ACCOUNTS: Dict[str, Any] = {
     "type": "function",
     "function": {
         "name": "get_accounts",
-        "description": "customer_id ile müşterinin hesap(lar)ını döndürür. Tek hesap ise özet nesne, çok hesap ise liste döner.",
+        "description": (
+            "Giriş yapmış kullanıcının kendi hesap bakiyesini veya tüm hesaplarını görmek istediğinde kullanılır. "
+            "'Hesap bakiyem', 'hesaplarım', 'bakiyem', 'hesabımda ne kadar var' gibi genel sorgularda, "
+            "eğer kullanıcı belirli bir hesap kimliği belirtmezse, bu aracı doğrudan kullanın. "
+            "Gerekli olan 'customer_id' bilgisi, kullanıcının mevcut oturumundan alınır. "
+            "Tek hesap bulunursa özet nesne, birden fazla hesap bulunursa liste döner."
+        ),
         "parameters": {
             "type": "object",
             "properties": {
                 "customer_id": {
                     "type": "integer",
-                    "description": "Müşteri kimliği (örn: 7)",
+                    "description": "Müşteri kimliği (örn: 7) - Giriş yapmış kullanıcının kimliğini kullanın.",
                 },
             },
             "required": ["customer_id"],
@@ -94,6 +104,31 @@ TOOL_SPEC_GET_CARD_INFO: Dict[str, Any] = {
                 },
             },
             "required": ["card_id"],
+            "additionalProperties": False,
+        },
+    },
+}
+
+TOOL_SPEC_LIST_CUSTOMER_CARDS: Dict[str, Any] = {
+    "type": "function",
+    "function": {
+        "name": "list_customer_cards",
+        "description": (
+            "Giriş yapmış kullanıcının kendi kredi kartı bilgilerini veya tüm kartlarını görmek istediğinde kullanılır. "
+            "'Kart bilgilerim', 'tüm kartlarım', 'kredi kartlarımı listele' gibi genel sorgularda, "
+            "eğer kullanıcı belirli bir kart kimliği belirtmezse, bu aracı doğrudan kullanın. "
+            "Gerekli olan 'customer_id' bilgisi, kullanıcının mevcut oturumundan alınır. "
+            "Tek kart bulunursa özet nesne, birden fazla kart bulunursa liste döner."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "customer_id": {
+                    "type": "integer",
+                    "description": "Müşteri kimliği (örn: 7) - Giriş yapmış kullanıcının kimliğini kullanın.",
+                },
+            },
+            "required": ["customer_id"],
             "additionalProperties": False,
         },
     },
@@ -258,6 +293,7 @@ def get_tool_catalog() -> Dict[str, List[Dict[str, Any]]]:
             TOOL_SPEC_GET_BALANCE,
             TOOL_SPEC_GET_ACCOUNTS,
             TOOL_SPEC_GET_CARD_INFO,
+            TOOL_SPEC_LIST_CUSTOMER_CARDS, # Yeni eklenen kart listeleme aracı
             TOOL_SPEC_LIST_RECENT_TXNS,
             TOOL_SPEC_GET_EXCHANGE_RATES,
             TOOL_SPEC_GET_INTEREST_RATES,

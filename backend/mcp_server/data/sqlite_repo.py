@@ -88,8 +88,8 @@ class SQLiteRepository:
         finally:
             con.close()
 
-    def get_card_details(self, card_id: int) -> Optional[Dict]:
-        """Verilen card_id'ye ait kart detaylarını veritabanından çeker."""
+    def get_card_details(self, card_id: int, customer_id: int) -> Optional[Dict]:
+        """Verilen card_id'ye ait kart detaylarını veritabanından çeker ve müşteri kimliği ile doğrular."""
         con = sqlite3.connect(self.db_path)
         con.row_factory = sqlite3.Row  # dict benzeri erişim için
         try:
@@ -97,18 +97,44 @@ class SQLiteRepository:
             cur.execute(
                 """
                 SELECT
-                    card_id,
-                    credit_limit,
-                    current_debt,
-                    statement_day,
-                    due_day
-                FROM cards
-                WHERE card_id = ?;
+                    c.card_id,
+                    c.credit_limit,
+                    c.current_debt,
+                    c.statement_day,
+                    c.due_day
+                FROM cards c
+                JOIN accounts a ON c.account_id = a.account_id
+                WHERE c.card_id = ? AND a.customer_id = ?;
                 """,
-                (card_id,),
+                (card_id, customer_id),
             )
             row = cur.fetchone()
             return dict(row) if row else None
+        finally:
+            con.close()
+
+    def get_all_cards_for_customer(self, customer_id: int) -> List[Dict]:
+        """Belirli bir müşteriye ait tüm kartların detaylarını veritabanından çeker."""
+        con = sqlite3.connect(self.db_path)
+        con.row_factory = sqlite3.Row
+        try:
+            cur = con.cursor()
+            cur.execute(
+                """
+                SELECT
+                    c.card_id,
+                    c.credit_limit,
+                    c.current_debt,
+                    c.statement_day,
+                    c.due_day
+                FROM cards c
+                JOIN accounts a ON c.account_id = a.account_id
+                WHERE a.customer_id = ?;
+                """,
+                (customer_id,),
+            )
+            rows = cur.fetchall()
+            return [dict(row) for row in rows]
         finally:
             con.close()
 
@@ -269,12 +295,13 @@ class SQLiteRepository:
     def list_transactions(
         self,
         account_id: int,
+        customer_id: int, # customer_id eklendi
         from_date: str | None = None,
         to_date: str | None = None,
         limit: int = 50,
     ) -> list[dict]:
         """
-        Belirli hesabın işlem kayıtlarını tarih filtresiyle getirir.
+        Belirli hesabın işlem kayıtlarını tarih filtresiyle getirir ve müşteri kimliği ile doğrular.
         Tarih alanı: txns.txn_date (TEXT/DATETIME). 'YYYY-MM-DD' veya
         'YYYY-MM-DD HH:MM:SS' formatları desteklenir.
         """
@@ -283,8 +310,8 @@ class SQLiteRepository:
         try:
             cur = con.cursor()
 
-            where = ["t.account_id = ?"]
-            params: list[Any] = [account_id]
+            where = ["t.account_id = ?", "a.customer_id = ?"]
+            params: list[Any] = [account_id, customer_id]
 
             if from_date:
                 where.append("t.txn_date >= ?")
@@ -299,6 +326,7 @@ class SQLiteRepository:
                     t.txn_id, t.account_id, t.amount, t.txn_type,
                     t.txn_date, t.description
                 FROM txns t
+                JOIN accounts a ON t.account_id = a.account_id
                 WHERE {where_sql}
                 ORDER BY t.txn_date DESC
                 LIMIT ?

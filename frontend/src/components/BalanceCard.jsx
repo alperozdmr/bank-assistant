@@ -76,7 +76,7 @@ const BalanceCard = ({ cardData }) => {
           </div>
           {cardData.total_count > 0 && (
             <div className="balance-summary">
-              {cardData.total_count} hesap bulundu
+              {cardData.total_count} hesap gösteriliyor
             </div>
           )}
         </div>

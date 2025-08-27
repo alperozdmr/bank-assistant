@@ -443,10 +443,13 @@ function App() {
       // FastAPI backend çağrısı
       const response = await fetch("http://127.0.0.1:8000/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${userInfo.token}` // Authorization başlığı eklendi
+        },
         body: JSON.stringify({
           message: inputMessage,
-          user_id: "user123" // istediğin kullanıcı ID
+          user_id: userInfo.userId // userInfo.userId kullanıldı
         })
       })
 
@@ -583,10 +586,13 @@ function App() {
     try {
       const response = await fetch("http://127.0.0.1:8000/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${userInfo.token}` // Authorization başlığı eklendi
+        },
         body: JSON.stringify({
           message: actions[actionKey].user,
-          user_id: "user123" // istediğin kullanıcı ID
+          user_id: userInfo.userId // userInfo.userId kullanıldı
         })
       })
 

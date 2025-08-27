@@ -13,17 +13,10 @@ from tools.schemas import get_tool_catalog
 USE_MCP = 0
 MCP_URL = "http://127.0.0.1:8081/sse"
 
-_BALANCE_WORDS = (
-    "bakiye",
-    "balance",
-    "ne kadar var",
-    "kalan para",
-    "hesabımda ne kadar",
-    "bakiyem"
-)
+_BALANCE_WORDS = ("bakiye", "balance", "ne kadar var", "kalan para", "hesabımda ne kadar", 
+                  "bakiyem", "hesaplarım", "hesap", "hesabım", "hesaplarımda ne kadar")
 _CARD_WORDS = ("kart", "kredi kartı", "kartım", "kart bilgisi", "kart detayı", 
-               "limit", "borç", "son ödeme", "kesim", "kullanılabilir limit"
-)
+               "limit", "borç", "son ödeme", "kesim", "kullanılabilir limit")
 _FX_WORDS   = ("kur", "döviz", "doviz", "usd", "eur", "dolar", "euro", "sterlin", "rate")
 _INT_WORDS  = ("faiz", "oran", "interest", "yatırım", "mevduat", "kredi faizi", "kredi")
 _FEE_WORDS  = ("ücret", "ucret", "masraf", "komisyon", "aidat", "fee")
@@ -63,7 +56,7 @@ def _fmt_balance(res: Dict[str, Any], fallback_id: Optional[int] = None) -> Dict
         }
     if res.get("error"):
         return {
-            "text": f"Hata: {res['error']}",
+            "text": str(res["error"]),
             "ui_component": None
         }
     
@@ -329,6 +322,71 @@ def _fmt_card_info(res: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def _fmt_cards_list(res: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Müşteriye ait kartların listesi response'unu hem text hem de UI component data olarak döndürür.
+    """
+    if not isinstance(res, dict) or res.get("error"):
+        return {
+            "text": res.get("error", "Kart bilgileri bulunamadı."),
+            "ui_component": None
+        }
+    
+    d = res["data"] if isinstance(res.get("data"), dict) else res
+    
+    ui_component = d.get("ui_component")
+    cards = d.get("cards")
+
+    if not cards:
+        return {
+            "text": "Bu müşteri için kart bulunamadı.",
+            "ui_component": None
+        }
+    
+    if len(cards) == 1:
+        # Tek kart: list_customer_cards formatını get_card_info formatına çevir
+        one = cards[0]
+        converted_card = {
+            "card_id": one.get("card_id"),
+            "limit": one.get("credit_limit"),
+            "borc": one.get("current_debt"),
+            "kesim_tarihi": one.get("statement_day"),
+            "son_odeme_tarihi": one.get("due_day")
+        }
+        return _fmt_card_info(converted_card) # Tek kart için mevcut formatlama fonksiyonunu kullan
+    else:
+        # Birden fazla kart: özet metin ve UI component oluştur
+        preview_texts = []
+        for c in cards[:3]: # İlk 3 kartı göster
+            card_id = c.get("card_id", "N/A")
+            available = c.get("credit_limit", 0) - c.get("current_debt", 0)
+            preview_texts.append(f"Kart #{card_id} (Kullanılabilir: {available:,.2f} TRY)")
+        
+        more_text = f" (+{len(cards)-3} daha)" if len(cards) > 3 else ""
+        text = f"{len(cards)} kart bulundu: {'; '.join(preview_texts)}{more_text}."
+
+        if not ui_component:
+            ui_component = {
+                "type": "card_info_card",
+                "card_type": "multiple_cards",
+                "total_count": len(cards),
+                "cards": [
+                    {
+                        "card_id": card["card_id"],
+                        "limit": card["credit_limit"],
+                        "borc": card["current_debt"],
+                        "kesim_tarihi": card["statement_day"],
+                        "son_odeme_tarihi": card["due_day"],
+                    }
+                    for card in cards
+                ]
+            }
+        
+        return {
+            "text": text,
+            "ui_component": ui_component
+        }
+
 def _fmt_atm_search(res: Dict[str, Any]) -> Dict[str, Any]:
     """
     ATM/Branch search response'unu hem text hem de UI component data olarak döndürür
@@ -466,7 +524,7 @@ def extract_date_and_limit(user_text: str) -> Tuple[Optional[str], Optional[str]
 
     return from_date,to_date,limit
 
-def _llm_flow(user_text: str) -> Dict[str, Any]:
+def _llm_flow(user_text: str, customer_id: int) -> Dict[str, Any]: # customer_id eklendi
     adapter = LLMAdapter()
     msgs: List[Dict[str, str]] = adapter.system_messages() + [
         {"role": "user", "content": user_text}
@@ -492,7 +550,7 @@ def _llm_flow(user_text: str) -> Dict[str, Any]:
         call_id = c.get("id")
         if name == "get_balance" and "account_id" in args:
             try:
-                payload = {"account_id": int(args["account_id"])}
+                payload = {"account_id": int(args["account_id"]), "customer_id": customer_id} # customer_id eklendi
                 res = call_mcp_tool(MCP_URL, "get_balance", payload)
                 out = {
                     "name": "get_balance",
@@ -507,9 +565,10 @@ def _llm_flow(user_text: str) -> Dict[str, Any]:
                     "result": {"ok": False, "error": str(e)},
                     "ok": False,
                 }
-        elif name == "get_accounts" and "customer_id" in args:
+        elif name == "get_accounts": # customer_id in args kontrolü kaldırıldı
             try:
-                payload = {"customer_id": int(args["customer_id"])}
+                # LLM'den gelen customer_id'yi tamamen yoksay ve doğru customer_id'yi kullan
+                payload = {"customer_id": customer_id}
                 res = call_mcp_tool(MCP_URL, "get_accounts", payload)
                 out = {
                     "name": "get_accounts",
@@ -620,6 +679,40 @@ def _llm_flow(user_text: str) -> Dict[str, Any]:
                     "result": {"ok": False, "error": str(e)},
                     "ok": False,
                 }
+        elif name == "get_card_info" and "card_id" in args:
+            try:
+                payload = {"card_id": int(args["card_id"]), "customer_id": customer_id} # customer_id eklendi
+                res = call_mcp_tool(MCP_URL, "get_card_info", payload)
+                out = {
+                    "name": "get_card_info",
+                    "args": payload,
+                    "result": res,
+                    "ok": res.get("ok", True),
+                }
+            except Exception as e:
+                out = {
+                    "name": "get_card_info",
+                    "args": args,
+                    "result": {"ok": False, "error": str(e)},
+                    "ok": False,
+                }
+        elif name == "list_customer_cards":
+            try:
+                payload = {"customer_id": customer_id}
+                res = call_mcp_tool(MCP_URL, "list_customer_cards", payload)
+                out = {
+                    "name": "list_customer_cards",
+                    "args": payload,
+                    "result": res,
+                    "ok": res.get("ok", True),
+                }
+            except Exception as e:
+                out = {
+                    "name": "list_customer_cards",
+                    "args": args,
+                    "result": {"ok": False, "error": str(e)},
+                    "ok": False,
+                }
         else:
             out = {
                 "name": name,
@@ -701,6 +794,14 @@ def _llm_flow(user_text: str) -> Dict[str, Any]:
             final_text = ""
         else:
             final_text = card_result["text"]
+    elif outs and outs[0].get("name") == "list_customer_cards": # Yeni eklenen kısım
+        cards_list_result = _fmt_cards_list(outs[0]["result"])
+        ui_component = cards_list_result.get("ui_component")
+
+        if ui_component:
+            final_text = ""
+        else:
+            final_text = cards_list_result["text"]
     elif outs and outs[0].get("name") == "branch_atm_search":
         atm_result = _fmt_atm_search(outs[0]["result"])
         ui_component = atm_result.get("ui_component")
@@ -734,7 +835,7 @@ def _llm_flow(user_text: str) -> Dict[str, Any]:
     return result
 
 
-def handle_message(user_text: str) -> Dict[str, Any]:
+def handle_message(user_text: str, customer_id: int) -> Dict[str, Any]: # customer_id: int olarak güncellendi
     low = user_text.lower()
 
     code = _service_code(user_text)
@@ -844,12 +945,31 @@ def handle_message(user_text: str) -> Dict[str, Any]:
         import re
         card_match = re.search(r'\b(\d{1,3})\b', user_text)
         if not card_match:
-            return {"YANIT": "Hangi kartın bilgilerini istiyorsunuz? Örnek: Kart 101 bilgilerini göster"}
+            # Kart ID'si belirtilmediğinde tüm kartları listele
+            res = call_mcp_tool(MCP_URL, "list_customer_cards", {"customer_id": customer_id})
+            cards_list_result = _fmt_cards_list(res)
+            ui_component = cards_list_result.get("ui_component")
+
+            result = {
+                "YANIT": "" if ui_component else cards_list_result["text"],
+                "toolOutputs": [
+                    {
+                        "name": "list_customer_cards",
+                        "args": {"customer_id": customer_id},
+                        "result": res,
+                        "ok": res.get("ok", True),
+                    }
+                ],
+            }
+            if ui_component:
+                result["ui_component"] = ui_component
+            return result
         
         card_id = int(card_match.group(1))
         
         res = call_mcp_tool(MCP_URL, "get_card_info", {
-            "card_id": card_id
+            "card_id": card_id,
+            "customer_id": customer_id # customer_id eklendi
         })
         
         card_result = _fmt_card_info(res)
@@ -857,7 +977,7 @@ def handle_message(user_text: str) -> Dict[str, Any]:
         
         result = {
             "YANIT": "" if ui_component else card_result["text"],
-            "toolOutputs": [{"name":"get_card_info","args":{"card_id": card_id}, "result":res, "ok":res.get("ok", True)}]
+            "toolOutputs": [{"name":"get_card_info","args":{"card_id": card_id, "customer_id": customer_id}, "result":res, "ok":res.get("ok", True)}],
         }
         if ui_component:
             result["ui_component"] = ui_component
@@ -865,9 +985,13 @@ def handle_message(user_text: str) -> Dict[str, Any]:
     
     # Hesap bakiyesi
     if USE_MCP and any(w in low for w in _BALANCE_WORDS):
-        cid = _cust_id(user_text)
-        if cid is not None:
-            res = call_mcp_tool(MCP_URL, "get_accounts", {"customer_id": cid})
+        cid_from_text = _cust_id(user_text)
+        if cid_from_text is not None:
+            # LLM'in yanlış bir müşteri ID'si döndürmesini engelle
+            if cid_from_text != customer_id:
+                return {"YANIT": f"Bu müşteri numarasına ({cid_from_text}) erişim izniniz yok.", "status_code": 403}
+
+            res = call_mcp_tool(MCP_URL, "get_accounts", {"customer_id": cid_from_text})
             balance_result = _fmt_balance(res)
             ui_component = balance_result.get("ui_component")
             
@@ -876,7 +1000,7 @@ def handle_message(user_text: str) -> Dict[str, Any]:
                 "toolOutputs": [
                     {
                         "name": "get_balance",
-                        "args": {"customer_id": cid},
+                        "args": {"customer_id": cid_from_text},
                         "result": res,
                         "ok": res.get("ok", True),
                     }
@@ -888,7 +1012,7 @@ def handle_message(user_text: str) -> Dict[str, Any]:
             
         acc = _acc_id(user_text)
         if acc is not None:
-            res = call_mcp_tool(MCP_URL, "get_balance", {"account_id": acc})
+            res = call_mcp_tool(MCP_URL, "get_balance", {"account_id": acc, "customer_id": customer_id}) # customer_id doğrudan iletildi
             balance_result = _fmt_balance(res, acc)
             ui_component = balance_result.get("ui_component")
             
@@ -897,7 +1021,7 @@ def handle_message(user_text: str) -> Dict[str, Any]:
                 "toolOutputs": [
                     {
                         "name": "get_balance",
-                        "args": {"account_id": acc},
+                        "args": {"account_id": acc, "customer_id": customer_id},
                         "result": res,
                         "ok": res.get("ok", True),
                     }
@@ -906,13 +1030,32 @@ def handle_message(user_text: str) -> Dict[str, Any]:
             if ui_component:
                 result["ui_component"] = ui_component
             return result
-    return _llm_flow(user_text)
+        else: # Hesap ID'si belirtilmediğinde tüm hesapları listele
+            res = call_mcp_tool(MCP_URL, "get_accounts", {"customer_id": customer_id})
+            balance_result = _fmt_balance(res)
+            ui_component = balance_result.get("ui_component")
+
+            result = {
+                "YANIT": "" if ui_component else balance_result["text"],
+                "toolOutputs": [
+                    {
+                        "name": "get_accounts",
+                        "args": {"customer_id": customer_id},
+                        "result": res,
+                        "ok": res.get("ok", True),
+                    }
+                ],
+            }
+            if ui_component:
+                result["ui_component"] = ui_component
+            return result
+    return _llm_flow(user_text, customer_id)
 
 
 if __name__ == "__main__":
     print("Minimal Agent — LLM tool-calling + MCP (Ctrl+C to exit)")
     try:
         while True:
-            print("YANIT:", handle_message(input("> "))["YANIT"])
+            print("YANIT:", handle_message(input("> "), 1)["YANIT"])
     except KeyboardInterrupt:
         pass

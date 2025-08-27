@@ -14,7 +14,7 @@ class GeneralTools:
     def __init__(self, repo):
         self.repo = repo
 
-    def get_balance(self, account_id: int) -> Dict[str, Any]:
+    def get_balance(self, account_id: int, customer_id: int) -> Dict[str, Any]:
         """
         Repository üzerinden `accounts` tablosunu okuyarak hesap bakiyesini ve
         temel hesap alanlarını döndürür; UI/agent katmanının doğrudan tüketmesi
@@ -22,6 +22,7 @@ class GeneralTools:
 
         Args:
             account_id (int): Bankacılık sistemindeki benzersiz sayısal hesap kimliği.
+            customer_id (int): Hesap sahibinin müşteri kimliği.
 
         Returns:
             Dict containing:
@@ -44,18 +45,22 @@ class GeneralTools:
             - Döviz bozdurma/kur bilgisi isteyen akışlarda kaynak bakiye verisini sağlamak
         """
 
-        if account_id is None:
+        if account_id is None or customer_id is None:
             return {"error": "parametre eksik: account_id veya customer_id verin"}
 
         if account_id is not None:
             try:
                 acc_id = int(account_id)
+                cust_id = int(customer_id)
             except (TypeError, ValueError):
-                return {"error": "account_id geçersiz (int olmalı)"}
+                return {"error": "account_id veya customer_id geçersiz (int olmalı)"}
 
             acc = self.repo.get_account(acc_id)
             if not acc:
                 return {"error": f"Hesap bulunamadı: {acc_id}"}
+            
+            if acc["customer_id"] != cust_id:
+                return {"error": "Hesap bilgisi bulunamadı."} # Müşteri kendine ait olmayan hesap sorduğunda
 
             # Format balance for display
             balance_formatted = f"{float(acc['balance']):,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
@@ -191,28 +196,106 @@ class GeneralTools:
             }
         }
 
-    def get_card_info(self, card_id: int) -> Dict[str, Any]:
+    def list_customer_cards(self, customer_id: int) -> Dict[str, Any]:
         """
-        Kredi kartı detaylarını (limit, borç, ödeme günleri) döndürür.
+        Müşteri kimliğine göre `cards` tablosunu sorgulayarak müşterinin sahip olduğu
+        tüm kartları döndürür. Girdi doğrulaması yapar ve sonuç nesnesini UI/agent
+        katmanının doğrudan tüketebilmesi için normalize eder. Kayıt bulunamazsa ya da
+        geçersiz girdi varsa hata bilgisini döndürür.
+
+        Args:
+            customer_id (int): Bankacılık sistemindeki müşterinin sayısal kimliği.
+
+        Returns:
+            Dict containing (duruma göre):
+            - Hata durumu:
+                - error (str): "customer_id geçersiz (int olmalı)" veya
+                               "Müşteri bulunamadı veya kart yok: <id>"
+            - Kartlar bulunduysa (liste yapısı):
+                - customer_id (int): Müşteri kimliği
+                - cards (List[Dict]): Her bir öğe için:
+                    - card_id (int)
+                    - credit_limit (float)
+                    - current_debt (float)
+                    - statement_day (int)
+                    - due_day (int)
+
+        Use cases:
+            - Müşterinin tüm kartlarını listeleyip kullanıcıya seçim yaptırmak
+            - Kartları UI’da filtrelemek veya uyarı vermek
+            - Sonraki adımda kart bilgisi/doğrulama gerektiren tool’lara girdi sağlamak
+        """
+        try:
+            cid = int(customer_id)
+        except (TypeError, ValueError):
+            return {"error": "customer_id geçersiz (int olmalı)"}
+
+        rows = self.repo.get_all_cards_for_customer(cid)
+        if not rows:
+            return {"error": f"Müşteri bulunamadı veya kart yok: {cid}"}
+
+        def norm_card(c: Dict[str, Any]) -> Dict[str, Any]:
+            limit_formatted = f"{float(c['credit_limit']):,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+            borc_formatted = f"{float(c['current_debt']):,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+            available_formatted = f"{float(c['credit_limit'] - c['current_debt']):,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+
+            return {
+                "card_id": c["card_id"],
+                "credit_limit": c["credit_limit"],
+                "current_debt": c["current_debt"],
+                "statement_day": c["statement_day"],
+                "due_day": c["due_day"],
+                "limit_formatted": limit_formatted,
+                "borc_formatted": borc_formatted,
+                "available_formatted": available_formatted,
+            }
+
+        normalized_cards = [norm_card(c) for c in rows]
+
+        return {
+            "customer_id": cid,
+            "cards": normalized_cards,
+            "ui_component": {
+                "type": "card_info_card",
+                "card_type": "multiple_cards",
+                "total_count": len(normalized_cards),
+                "cards": [
+                    {
+                        "card_id": card["card_id"],
+                        "limit": card["credit_limit"],
+                        "borc": card["current_debt"],
+                        "kesim_tarihi": card["statement_day"],
+                        "son_odeme_tarihi": card["due_day"],
+                    }
+                    for card in normalized_cards
+                ]
+            }
+        }
+
+    def get_card_info(self, card_id: int, customer_id: int) -> Dict[str, Any]:
+        """
+        Kredi kartı detaylarını (limit, borç, ödeme günleri) döndürür ve müşteri kimliği ile doğrular.
 
         Args:
             card_id (int): Bankacılık sistemindeki benzersiz sayısal kart kimliği.
+            customer_id (int): Kart sahibinin müşteri kimliği.
 
         Returns:
             Dict containing card details or an error message.
         """
-        if card_id is None:
-            return {"error": "parametre eksik: card_id verin"}
+        if card_id is None or customer_id is None:
+            return {"error": "parametre eksik: card_id ve customer_id verin"}
 
         try:
             c_id = int(card_id)
+            cust_id = int(customer_id)
         except (TypeError, ValueError):
-            return {"error": "card_id geçersiz (int olmalı)"}
+            return {"error": "card_id veya customer_id geçersiz (int olmalı)"}
 
-        card_data = self.repo.get_card_details(c_id)
+        card_data = self.repo.get_card_details(c_id, cust_id)
 
         if not card_data:
-            return {"error": f"Kart bulunamadı: {c_id}"}
+            return {"error": f"Kart bulunamadı veya bu müşteriye ait değil: {c_id}"}
 
         # Format currency values for display
         limit_formatted = f"{float(card_data['credit_limit']):,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")

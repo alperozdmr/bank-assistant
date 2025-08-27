@@ -9,6 +9,28 @@
   transition: all 0.2s ease;
   max-width: 600px;
   width: 100%;
+  box-sizing: border-box;
+}
+
+/* Liste wrapper: genişliği kısıtla ve taşmayı önle */
+.card-info-card.list-wrapper {
+  max-width: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* Çoklu kart liste container'ı */
+.card-info-card .card-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  align-items: stretch;
+}
+
+/* Çoklu kart tek tek eleman stili - genişlik kısıtını kaldır */
+.card-info-card.multiple {
+  max-width: none;
+  width: 100%;
 }
 
 .card-info-card:hover {
@@ -28,7 +50,7 @@
 .card-info-card-icon {
   width: 40px;
   height: 40px;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #1789dc 0%, #58167d 100%);
   border-radius: 10px;
   display: flex;
   align-items: center;
@@ -65,6 +87,7 @@
   border-radius: 10px;
   border: 1px solid rgba(59, 130, 246, 0.1);
   transition: all 0.2s ease;
+  min-width: 0; /* grid item içi taşmayı önle */
 }
 
 .card-info-item:hover {
@@ -86,6 +109,7 @@
   font-weight: 700;
   color: #2c3e50;
   line-height: 1.2;
+  word-break: break-word; /* uzun değerlerde taşmayı engelle */
 }
 
 .card-info-value.limit {
@@ -199,6 +223,12 @@
 }
 
 /* Mobile responsiveness for card info cards */
+@media (max-width: 1024px) {
+  .card-info-card .card-list {
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  }
+}
+
 @media (max-width: 768px) {
   .card-info-card {
     padding: 16px;
@@ -237,6 +267,10 @@
   .card-usage-bar {
     padding: 12px;
   }
+
+  .card-info-card .card-list {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 480px) {
@@ -256,4 +290,22 @@
   .card-info-value {
     font-size: 14px;
   }
+}
+
+/* Card list alt metni */
+.card-list-footer {
+  text-align: center;
+  margin-top: 8px;
+  padding: 8px;
+  font-size: 13px;
+  color: #666;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.dark-theme .card-list-footer {
+  background: rgba(255, 255, 255, 0.1);
+  color: #999;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }

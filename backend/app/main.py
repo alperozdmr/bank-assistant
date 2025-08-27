@@ -2,7 +2,7 @@ import re ,sys ,os ,time,uuid
 from anyio import to_thread
 from datetime import datetime
 from typing import Optional
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -14,7 +14,7 @@ from common.logging_setup import get_logger
 from common.http_middleware import install_http_logging
 from common.pii import mask_text
 
-from .auth import router as auth_router
+from .auth import router as auth_router, get_current_user
 from chat.chat_history import router as chat_router
 from agent.agent import handle_message as agent_handle_message
 
@@ -62,7 +62,7 @@ class ChatResponse(BaseModel):
     session_id: str
     message_id: str
     response: str
-    timestamp: datetime
+    timestamp: str # datetime yerine str olarak güncellendi
     ui_component: Optional[dict] = None
 
 
@@ -82,47 +82,8 @@ async def health_check():
 
 
 @app.post("/chat", response_model=ChatResponse)
-async def chat_endpoint(request: ChatRequest):
-    # """ "
-    # Chat endpoint'i
-    # """
-
-    # # Session ID oluştur veya mevcut olanı kullan
-    # session_id = request.session_id or str(uuid.uuid4())
-
-    # # Message ID oluştur
-    # message_id = str(uuid.uuid4())
-
-    # # LLM Ajanından yanıt al
-    # try:
-    #     agent_result = await to_thread.run_sync(agent_handle_message, request.message)
-    #     final_text = (
-    #         agent_result.get("YANIT")
-    #         if isinstance(agent_result, dict)
-    #         else None
-    #     )
-    # except Exception as exc:
-    #     final_text = None
-
-    # if not final_text:
-    #     final_text = "Şu anda yanıt veremiyorum, lütfen tekrar deneyin."
-
-    # # Yanıttaki <think>...</think> bloklarını temizle
-    # def _strip_think(text: str) -> str:
-    #     if not isinstance(text, str):
-    #         return text
-    #     cleaned = re.sub(r"<think\b[\s\S]*?</think>", "", text, flags=re.IGNORECASE)
-    #     return cleaned.strip()
-
-    # final_text = _strip_think(final_text)
-
-    # response = ChatResponse(
-    #     session_id=session_id,
-    #     message_id=message_id,
-    #     response=final_text,
-    #     timestamp=datetime.now(),
-    # )
-    # return response
+async def chat_endpoint(request: ChatRequest, current_user: str = Depends(get_current_user)):
+    request.user_id = current_user # Token'dan gelen user_id'yi request'e atama
     """
     Sade /chat:
     - middleware KULLANMADAN yerel corr_id üretir
@@ -145,7 +106,7 @@ async def chat_endpoint(request: ChatRequest):
     # agent/LLM çağrısı
     agent_t0 = time.perf_counter()
     try:
-        agent_result = await to_thread.run_sync(agent_handle_message, request.message)
+        agent_result = await to_thread.run_sync(agent_handle_message, request.message, request.user_id) # request.user_id eklendi
         agent_dur = int((time.perf_counter() - agent_t0) * 1000)
         log.info("agent_response_raw", extra={
             "event": "agent_response_raw",
@@ -186,16 +147,20 @@ async def chat_endpoint(request: ChatRequest):
     def _strip_think(text: str) -> str:
         if not isinstance(text, str):
             return text
+        # <think> bloklarını temizle
         cleaned = re.sub(r"<think\b[\s\S]*?</think>", "", text, flags=re.IGNORECASE)
+        # <ask> bloklarını temizle
+        cleaned = re.sub(r"<ask\b[\s\S]*?</ask>", "", cleaned, flags=re.IGNORECASE)
         return cleaned.strip()
 
     final_text = _strip_think(final_text)
    
 
-    return ChatResponse(
+    response = ChatResponse(
         session_id=session_id,
         message_id=message_id,
         response=final_text,
-        timestamp=datetime.now(),
+        timestamp=datetime.now().isoformat(), # isoformat() eklendi
         ui_component=ui_component,
     )
+    return response

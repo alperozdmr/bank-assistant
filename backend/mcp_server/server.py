@@ -28,9 +28,9 @@ calc_tools = CalculationTools()
 
 @mcp.tool()
 @log_tool
-def get_balance(account_id: int) -> dict:
+def get_balance(account_id: int, customer_id: int) -> dict:
     """
-    Retrieves current balance information for a specific account.
+    Retrieves current balance information for a specific account, ensuring it belongs to the specified customer.
 
     This tool reads from the `accounts` table and returns normalized account data
     including monetary balance with currency and core account attributes. It is
@@ -38,6 +38,7 @@ def get_balance(account_id: int) -> dict:
 
     Parameters:
         account_id (int): Unique account identifier in the banking system.
+        customer_id (int): The unique identifier for the customer.
 
     Returns:
         Account record containing:
@@ -46,10 +47,10 @@ def get_balance(account_id: int) -> dict:
         - balance (float) and currency (TRY | USD | EUR)
         - status (active | frozen | closed)
         - created_at (ISO-8601 string: "YYYY-MM-DD HH:MM:SS")
-        If the account is not found or the input is invalid, returns:
+        If the account is not found, the input is invalid, or the account does not belong to the customer, returns:
         - error (str) with an explanatory message
     """
-    return general_tools.get_balance(account_id)
+    return general_tools.get_balance(account_id, customer_id)
 
 
 @mcp.tool()
@@ -76,9 +77,10 @@ def get_accounts(customer_id: int) -> dict:
 
 @mcp.tool()
 @log_tool
-def get_card_info(card_id: int) -> dict:
+def get_card_info(card_id: int, customer_id: int) -> dict:
     """
-    Fetches a financial summary for a credit card, including its limit, current debt, statement date, and due date.
+    Fetches a financial summary for a credit card, including its limit, current debt, statement date, and due date,
+    ensuring the card belongs to the specified customer.
 
     When to use:
     - This tool is ideal for answering specific questions about a credit card's financial state.
@@ -87,12 +89,32 @@ def get_card_info(card_id: int) -> dict:
 
     Args:
         card_id (int): The unique numerical identifier for the credit card.
+        customer_id (int): The unique identifier for the customer.
 
     Returns:
         A dictionary containing the financial summary of the card.
-        If the card is not found, it returns a dictionary with an 'error' key.
+        If the card is not found, the input is invalid, or the card does not belong to the customer, it returns a dictionary with an 'error' key.
     """
-    return general_tools.get_card_info(card_id=card_id)
+    return general_tools.get_card_info(card_id=card_id, customer_id=customer_id)
+
+
+@mcp.tool()
+@log_tool
+def list_customer_cards(customer_id: int) -> dict:
+    """
+    Müşteri kimliğine göre tüm kredi kartlarını listeler.
+
+    Ne zaman kullanılır:
+    - "Kart bilgilerimi göster", "Tüm kartlarım", "Kredi kartlarımı listele" gibi genel kart sorguları için kullanılır.
+    - Kullanıcı belirli bir kart kimliği belirtmediğinde, ancak kart bilgisi talep ettiğinde bu araç çağrılır.
+
+    Argümanlar:
+        customer_id (int): Müşterinin benzersiz sayısal kimliği. Bu bilgi oturumdan alınır, kullanıcıdan istenmez.
+
+    Dönüş:
+        Kartların listesini veya bir hata mesajını içeren bir sözlük döndürür.
+    """
+    return general_tools.list_customer_cards(customer_id=customer_id)
 
 
 @mcp.tool()
