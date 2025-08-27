@@ -213,6 +213,41 @@ TOOL_SPEC_BRANCH_ATM_SEARCH: Dict[str, Any] = {
     },
 }
 
+# Son işlemler listesi tool’u (MCP’de transactions_list)
+TOOL_SPEC_TRANSACTIONS_LIST: Dict[str, Any] = {
+    "type": "function",
+    "function": {
+        "name": "transactions_list",  # MCP fonksiyon adıyla birebir eşleşmeli
+        "description": "Bir hesap için belirli tarihler arasındaki işlemleri döndürür (limit ile).",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "account_id": {
+                    "type": "integer",
+                    "description": "Hesap kimliği (örn: 1)",
+                },
+                "from_date": {
+                    "type": "string",
+                    "description": "Başlangıç tarihi YYYY-MM-DD veya YYYY-MM-DD HH:MM:SS",
+                },
+                "to_date": {
+                    "type": "string",
+                    "description": "Bitiş tarihi YYYY-MM-DD veya YYYY-MM-DD HH:MM:SS",
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": "Döndürülecek işlem sayısı (default 50)",
+                    "minimum": 1,
+                    "maximum": 500
+                },
+            },
+            "required": ["account_id"],
+            "additionalProperties": False,
+        },
+    },
+}
+
+
 
 
 def get_tool_catalog() -> Dict[str, List[Dict[str, Any]]]:
@@ -228,5 +263,6 @@ def get_tool_catalog() -> Dict[str, List[Dict[str, Any]]]:
             TOOL_SPEC_GET_INTEREST_RATES,
             TOOL_SPEC_GET_FEE,
             TOOL_SPEC_BRANCH_ATM_SEARCH,
+            TOOL_SPEC_TRANSACTIONS_LIST,
         ]
     }

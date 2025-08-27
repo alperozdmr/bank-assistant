@@ -305,6 +305,45 @@ def loan_amortization_schedule(
         currency=currency,
         export=export,
     )
+
+@mcp.tool()
+@log_tool
+def transactions_list(
+    account_id: int,
+    from_date: str | None = None,
+    to_date: str | None = None,
+    limit: int = 50
+) -> dict:
+    """
+    Belirli bir hesap için, isteğe bağlı tarih aralığında işlemleri listeler.
+
+    Veri kaynağı:
+        - transactions tablosundan okuma yapar.
+        - İşlem anlık görüntülerini txn_snapshots tablosuna yazar.
+
+    Parametreler:
+        account_id (int): Zorunlu. Benzersiz hesap kimliği.
+        from_date (str, optional): Alt tarih sınırı ("YYYY-AA-GG" veya "YYYY-AA-GG SS:DD:SS").
+        to_date (str, optional): Üst tarih sınırı ("YYYY-AA-GG" veya "YYYY-AA-GG SS:DD:SS").
+        limit (int, optional): Maksimum kayıt sayısı (varsayılan 50, en fazla 500).
+
+    Dönen değer:
+        dict türünde:
+        - account_id (int)
+        - range {from, to}
+        - limit (int)
+        - count (int)
+        - snapshot (object: snapshot bilgisi veya hata)
+        - transactions (işlem kayıtları listesi) VEYA {"error": str} (hata durumunda)
+    """
+
+    return general_tools.transactions_list(
+        account_id=account_id,
+        from_date=from_date,
+        to_date=to_date,
+        limit=limit
+    )
+
 if __name__ == "__main__":
     # Varsayılan port ile başlat (kütüphanen ne destekliyorsa)
     # mcp.run() veya mcp.run(port=8001)
