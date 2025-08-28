@@ -28,6 +28,7 @@ class SQLiteRepository:
                 SELECT
                   account_id,
                   customer_id,
+                  account_number,
                   account_type,
                   balance,
                   currency,
@@ -46,6 +47,7 @@ class SQLiteRepository:
             return {
                 "account_id": int(row["account_id"]),
                 "customer_id": int(row["customer_id"]),
+                "account_number": row["account_number"],
                 "account_type": str(row["account_type"]),
                 "balance": float(row["balance"]),
                 "currency": str(row["currency"]),
@@ -62,7 +64,7 @@ class SQLiteRepository:
             cur = con.cursor()
             cur.execute(
                 """
-                SELECT account_id, customer_id, account_type, balance, currency, created_at, status
+                SELECT account_id, customer_id, account_number, account_type, balance, currency, created_at, status
                 FROM accounts
                 WHERE customer_id = ?
                 ORDER BY account_id
@@ -77,6 +79,7 @@ class SQLiteRepository:
                     {
                         "account_id": int(r["account_id"]),
                         "customer_id": int(r["customer_id"]),
+                        "account_number": r["account_number"],
                         "account_type": str(r["account_type"]),
                         "balance": float(r["balance"]),
                         "currency": str(r["currency"]),

@@ -378,3 +378,51 @@
     font-size: 13px;
   }
 }
+
+/* IBAN styles */
+.account-iban {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+.account-iban .label {
+  font-size: 12px;
+  color: #999;
+  font-weight: 500;
+}
+.account-iban .value {
+  font-size: 12px;
+  color: #58167d;
+  font-weight: 600;
+  background: rgba(88, 22, 125, 0.12);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.account-iban-small {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+.account-iban-small .label {
+  font-size: 11px;
+  color: #999;
+  font-weight: 500;
+}
+.account-iban-small .value {
+  font-size: 11px;
+  color: #58167d;
+  font-weight: 500;
+  background: rgba(88, 22, 125, 0.12);
+  padding: 1px 6px;
+  border-radius: 3px;
+}
+
+/* Dark theme for IBAN badges */
+.dark-theme .account-iban .value,
+.dark-theme .account-iban-small .value {
+  background: rgba(192, 132, 252, 0.18);
+  color: #c084fc;
+}

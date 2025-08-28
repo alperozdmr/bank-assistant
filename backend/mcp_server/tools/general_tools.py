@@ -74,6 +74,7 @@ class GeneralTools:
                 "currency": acc["currency"],
                 "status": acc["status"],
                 "created_at": acc["created_at"],
+                "account_number": acc.get("account_number"),
                 # Frontend BalanceCard component için structured data
                 "ui_component": {
                     "type": "balance_card",
@@ -82,7 +83,8 @@ class GeneralTools:
                     "account_type": acc["account_type"],
                     "balance": balance_formatted,
                     "currency": acc["currency"],
-                    "status": acc["status"]
+                    "status": acc["status"],
+                    "account_number": acc.get("account_number")
                 }
             }
             return result
@@ -148,6 +150,7 @@ class GeneralTools:
                 "currency": acc["currency"],
                 "status": acc["status"],
                 "created_at": acc["created_at"],
+                "account_number": acc.get("account_number"),
                 # Frontend BalanceCard component için structured data
                 "ui_component": {
                     "type": "balance_card",
@@ -156,7 +159,8 @@ class GeneralTools:
                     "account_type": acc["account_type"],
                     "balance": balance_formatted,
                     "currency": acc["currency"],
-                    "status": acc["status"]
+                    "status": acc["status"],
+                    "account_number": acc.get("account_number")
                 }
             }
 
@@ -171,6 +175,7 @@ class GeneralTools:
                 "currency": a["currency"],
                 "status": a["status"],
                 "created_at": a["created_at"],
+                "account_number": a.get("account_number"),
             }
 
         normalized_accounts = [norm(a) for a in rows]
@@ -189,7 +194,8 @@ class GeneralTools:
                         "account_type": acc["account_type"],
                         "balance": acc["balance_formatted"],
                         "currency": acc["currency"],
-                        "status": acc["status"]
+                        "status": acc["status"],
+                        "account_number": acc.get("account_number")
                     }
                     for acc in normalized_accounts
                 ]

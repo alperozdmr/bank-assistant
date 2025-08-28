@@ -1,9 +1,38 @@
 import './BalanceCard.css'
+import { useState } from 'react'
+import { createPortal } from 'react-dom'
+
+const InfoButton = ({ onClick, className = '' }) => (
+  <button
+    className={`account-info-btn ${className}`.trim()}
+    onClick={(e) => { e.stopPropagation(); onClick(); }}
+    title="Detay"
+    aria-label="Hesap detayı"
+  >
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+      <path d="M12 10v7" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+      <path d="M12 7h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+    </svg>
+  </button>
+)
 
 const BalanceCard = ({ cardData }) => {
+  const [selectedAccount, setSelectedAccount] = useState(null)
   if (!cardData || cardData.type !== 'balance_card') return null
 
   if (cardData.card_type === 'single_account') {
+    const acc = {
+      account_id: cardData.account_id,
+      customer_id: cardData.customer_id,
+      account_number: cardData.account_number,
+      iban: cardData.iban,
+      account_type: cardData.account_type,
+      status: cardData.status,
+      balance: cardData.balance,
+      currency: cardData.currency,
+      created_at: cardData.created_at,
+    }
     return (
       <div className="balance-card">
         <div className="balance-card-header">
@@ -31,6 +60,12 @@ const BalanceCard = ({ cardData }) => {
                 </span>
               </div>
             </div>
+            {(acc.iban || acc.account_number) && (
+              <div className="account-iban">
+                <span className="label">IBAN:</span>
+                <span className="value">{acc.iban || acc.account_number}</span>
+              </div>
+            )}
           </div>
           <div className="balance-amount">
             <span className="amount">{cardData.balance}</span>
@@ -66,6 +101,12 @@ const BalanceCard = ({ cardData }) => {
                       {account.status}
                     </span>
                   </div>
+                  {(account.iban || account.account_number) && (
+                    <div className="account-iban-small">
+                      <span className="label">IBAN:</span>
+                      <span className="value">{account.iban || account.account_number}</span>
+                    </div>
+                  )}
                 </div>
                 <div className="account-balance">
                   <span className="amount">{account.balance}</span>
