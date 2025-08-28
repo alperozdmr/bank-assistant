@@ -7,7 +7,7 @@
   margin: 8px 0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   transition: all 0.2s ease;
-  max-width: 1200px;
+  max-width: 700px;
   width: 100%;
 }
 
@@ -53,13 +53,6 @@
   color: #666;
 }
 
-.customer-id, .account-id {
-  background: rgba(23, 137, 220, 0.1);
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-weight: 500;
-}
-
 .transactions-content {
   display: flex;
   flex-direction: column;
@@ -70,7 +63,7 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 16px;
-  max-height: 600px;
+  max-height: calc((90px + 16px) * 3);
   overflow-y: auto;
   padding-right: 8px;
 }
@@ -108,7 +101,8 @@
   border: 1px solid rgba(23, 137, 220, 0.08);
   transition: all 0.3s ease;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
+  min-height: auto;
 }
 
 .transaction-item::before {
@@ -275,11 +269,6 @@
   color: #999;
 }
 
-.dark-theme .customer-id, .dark-theme .account-id {
-  background: rgba(100, 181, 246, 0.1);
-  color: #64b5f6;
-}
-
 .dark-theme .transaction-item {
   background: rgba(255, 255, 255, 0.05);
   border-color: rgba(255, 255, 255, 0.1);
@@ -359,11 +348,27 @@
   background: rgba(255, 255, 255, 0.5);
 }
 
+/* Tablet breakpoint to avoid clipping on ~800-1024px widths */
+@media (max-width: 1024px) {
+  .transactions-list {
+    grid-template-columns: 1fr;
+    max-height: 60vh;
+    overflow-y: auto;
+    padding-right: 6px;
+  }
+  .transaction-item {
+    min-height: auto;
+    overflow: visible;
+  }
+}
+
 /* Mobile responsiveness for transactions cards */
 @media (max-width: 768px) {
   .transactions-list {
     grid-template-columns: 1fr;
-    max-height: 500px;
+    max-height: 60vh;
+    overflow-y: auto;
+    padding-right: 6px;
   }
   
   .transactions-list.single-item {
@@ -380,6 +385,8 @@
   
   .transaction-item {
     padding: 14px;
+    min-height: auto;
+    overflow: visible;
   }
   
   .transaction-header {
@@ -438,6 +445,8 @@
 
   .transaction-item {
     padding: 12px;
+    min-height: auto;
+    overflow: visible;
   }
 
   .transaction-header {

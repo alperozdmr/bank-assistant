@@ -7,6 +7,7 @@ import InterestRatesCard from './components/InterestRatesCard'
 import FeesCard from './components/FeesCard'
 import ATMCard from './components/ATMCard'
 import CardInfoCard from './components/CardInfoCard'
+import TransactionsCard from './components/TransactionsCard'
 
 function App() {
   // Login state
@@ -771,7 +772,7 @@ function App() {
               >
                 <div className="message-content">
                   {/* Text varsa göster */}
-                  {message.text && message.text.trim() && (
+                  {message.text && message.text.trim() && !(message.sender === 'bot' && message.ui_component) && (
                     <div className="message-text">{message.text}</div>
                   )}
                   {/* UI component varsa göster */}
@@ -794,6 +795,27 @@ function App() {
                       )}
                       {message.ui_component.type === 'card_info_card' && (
                         <CardInfoCard cardData={message.ui_component} />
+                      )}
+                      {message.ui_component.type === 'transactions_list' && (
+                        (() => {
+                          const ui = message.ui_component
+                          const mapped = {
+                            account_id: ui.account_id,
+                            customer_id: ui.customer_id,
+                            transactions: (ui.items || []).map((it, idx) => ({
+                              transaction_id: it.id ?? idx,
+                              transaction_date: it.datetime || it.date,
+                              amount: it.amount,
+                              amount_formatted: it.amount_formatted,
+                              currency: it.currency || 'TRY',
+                              type: it.type,
+                              description: it.description,
+                              balance_after: it.balance_after,
+                              account_id: it.account_id || ui.account_id,
+                            }))
+                          }
+                          return <TransactionsCard data={mapped} />
+                        })()
                       )}
                     </div>
                   )}
