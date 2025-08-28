@@ -3,6 +3,20 @@ import './InterestRatesCard.css'
 const InterestRatesCard = ({ cardData }) => {
   if (!cardData || cardData.type !== 'interest_rates_card') return null
 
+  const normalize = (s) => (s || '').toString().trim().toLocaleLowerCase('tr-TR')
+
+  const allowedMap = new Map([
+    ['mevduat', 'Mevduat'],
+    ['ihtiyaç kredisi', 'İhtiyaç Kredisi'],
+    ['ihtiyac kredisi', 'İhtiyaç Kredisi'],
+    ['kredi kartı', 'Kredi Kartı'],
+    ['kredi karti', 'Kredi Kartı'],
+  ])
+
+  const filteredRates = (cardData.rates || []).filter(r => allowedMap.has(normalize(r.product)))
+
+  const productDisplayName = (product) => allowedMap.get(normalize(product)) || product
+
   return (
     <div className="interest-rates-card">
       <div className="interest-rates-card-header">
@@ -23,15 +37,11 @@ const InterestRatesCard = ({ cardData }) => {
       </div>
       <div className="interest-rates-card-content">
         <div className="interest-rates-list">
-          {cardData.rates && cardData.rates.map((rate, index) => (
+          {filteredRates && filteredRates.map((rate, index) => (
             <div key={index} className="interest-rate-item">
               <div className="interest-rate-info">
                 <div className="product-name">
-                  {rate.product === 'savings' ? 'Mevduat' : 
-                   rate.product === 'loan' ? 'Kredi' :
-                   rate.product === 'mortgage' ? 'Konut Kredisi' :
-                   rate.product === 'auto_loan' ? 'Taşıt Kredisi' :
-                   rate.product}
+                  {productDisplayName(rate.product)}
                 </div>
                 <div className="rate-updated">
                   {rate.updated_at && new Date(rate.updated_at).toLocaleString('tr-TR')}
@@ -46,9 +56,9 @@ const InterestRatesCard = ({ cardData }) => {
             </div>
           ))}
         </div>
-        {cardData.rates && cardData.rates.length > 0 && (
+        {filteredRates && filteredRates.length > 0 && (
           <div className="interest-rates-summary">
-            {cardData.rates.length} faiz oranı gösteriliyor
+            {filteredRates.length} faiz oranı gösteriliyor
           </div>
         )}
       </div>
