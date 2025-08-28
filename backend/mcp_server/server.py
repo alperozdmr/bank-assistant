@@ -407,6 +407,81 @@ def transactions_list(
         "transactions": rows,
     }
 
+@mcp.tool()
+@log_tool
+def interest_compute(
+    type: str,
+    principal: float,
+    term: float,
+    compounding: str,
+    rate: float | None = None,
+    product: str | None = None,
+    term_unit: str = "years",
+    currency: str = "TRY",
+    schedule: bool = False,
+    schedule_limit: int = 24,
+    rounding: int | None = None,
+) -> dict:
+    """
+        Belirtilen anapara, faiz oranı veya repo/DB’den alınan oran kullanılarak
+        **mevduat getirisi** (deposit) veya **eşit taksitli kredi** (loan) ödemelerini hesaplar.
+
+        type='deposit':
+            - Bileşik faiz formülü uygulanır:
+              FV = P * (1 + r/m)^(m * t)
+              i = dönemsel faiz oranı = yıllık faiz / m
+              n = toplam dönem sayısı = m * t
+              Getiri = FV - P
+            - "continuous" seçilirse sürekli bileşik formülü kullanılır: FV = P * e^(r*t)
+
+        type='loan':
+            - Anapara ve faiz üzerinden eşit taksit (annuity) hesaplanır:
+              installment = P * [ i(1+i)^n / ((1+i)^n - 1) ], i = r/m
+              Her dönemde faiz = kalan_anapara * i
+              Anapara ödemesi  = installment - faiz
+              Toplam ödeme     = installment * n
+              Toplam faiz      = toplam ödeme - P
+            - schedule=True verilirse, amortisman tablosu (her dönem için faiz, anapara, bakiye) döndürülür.
+              schedule_limit ile tablodaki maksimum satır sayısı belirlenebilir.
+
+        Parametreler:
+            type (str)        : "deposit" veya "loan"
+            principal (float) : Anapara tutarı (>0)
+            term (float)      : Vade (term_unit'e göre yıl ya da ay cinsinden)
+            compounding (str) : Faiz dönemi ("annual", "semiannual", "quarterly", "monthly", "weekly", "daily", "continuous")
+            rate (float, opt) : Yıllık nominal faiz oranı (örn. 0.30 = %30). None ise repo/DB’den alınır.
+            product (str)     : Faiz oranı almak için ürün kodu/anahtar.
+            repo (Any, opt)   : Oranı almak için kullanılacak repository nesnesi.
+            db_path (str, opt): Oranı DB’den çekmek için kullanılacak path.
+            as_of (str, opt)  : Oranın geçerli olduğu tarih ("YYYY-AA-GG").
+            schedule (bool)   : True ise, kredi için amortisman tablosu döner.
+            schedule_limit(int): Amortisman tablosunda gösterilecek maksimum satır.
+
+        Dönüş:
+            dict
+              - "summary": Genel özet (FV, toplam ödeme, toplam faiz vb.)
+              - "ui_component": UI’de gösterilecek özet
+              - "rate_meta": Oran bilgisinin kaynağı
+              - (Opsiyonel) "schedule": Amortisman satırları listesi
+              - veya {"error": "..."} hata durumunda
+    """
+    return calc_tools.interest_compute(
+        type=type,
+        principal=principal,
+        term=term,
+        compounding=compounding,
+        rate=rate,
+        product=product,
+        term_unit=term_unit,
+        currency=currency,
+        schedule=schedule,
+        schedule_limit=schedule_limit,
+        rounding=rounding,
+        repo=repo,                 # <<< repo’dan oran çek
+        db_path=None,              # gerekirse burayı sabitleyebilirsin
+    )
+
+
 if __name__ == "__main__":
     # Varsayılan port ile başlat (kütüphanen ne destekliyorsa)
     # mcp.run() veya mcp.run(port=8001)

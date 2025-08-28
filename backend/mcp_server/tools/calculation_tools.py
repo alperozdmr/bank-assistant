@@ -4,7 +4,146 @@ import base64
 import csv
 import io
 import math
-from typing import Dict, Any, List, Optional
+import sqlite3
+from datetime import datetime
+from typing import Dict, Any, List, Optional, Tuple, Literal
+
+# ---- interest helpers (module-level) ----
+Compounding = Literal["annual","semiannual","quarterly","monthly","weekly","daily","continuous"]
+
+def _normalize_compounding(value: str) -> Compounding:
+    v = (value or "").strip().lower()
+    aliases = {
+        "annual":"annual","a":"annual","annually":"annual",
+        "semiannual":"semiannual","semi-annual":"semiannual","sa":"semiannual",
+        "quarterly":"quarterly","quarter":"quarterly","q":"quarterly",
+        "monthly":"monthly","month":"monthly","m":"monthly","mo":"monthly",
+        "weekly":"weekly","week":"weekly","w":"weekly",
+        "daily":"daily","day":"daily","d":"daily",
+        "continuous":"continuous","cont":"continuous","c":"continuous",
+    }
+    if v not in aliases:
+        raise ValueError("Unsupported compounding. Use: annual|semiannual|quarterly|monthly|weekly|daily|continuous")
+    return aliases[v]  # type: ignore[return-value]
+
+def _periods_per_year(c: Compounding) -> Optional[int]:
+    return {
+        "annual":1, "semiannual":2, "quarterly":4,
+        "monthly":12, "weekly":52, "daily":365,
+        "continuous":None,
+    }[c]
+
+def _resolve_rate_via_repo_or_db(
+    *,
+    provided_rate: Optional[float],
+    repo: Any = None,
+    db_path: Optional[str] = None,
+    product: Optional[str],
+    product_fallback: str,   # "savings" (deposit) | "loan" (loan)
+    currency: str = "TRY",
+    as_of: Optional[str] = None,
+) -> Tuple[float, dict]:
+    """
+    1) provided_rate verilmişse onu kullanır.
+    2) repo.get_interest_rate(product) varsa onu kullanır.
+    3) Yoksa sqlite DB'de interest_rates benzeri tablodan çeker.
+       - Tablo adı: interest_rates | rates | deposit_rates | loan_rates ... (esnek)
+       - Oran sütunu: annual_rate | rate_apy | rate | apr (esnek)
+       - Ürün sütunu: product | product_type (esnek)
+       - Para birimi: currency | ccy (esnek)
+       - Tarih: effective_date | valid_from | updated_at | date (en güncel satır)
+    """
+    # 1) Manuel
+    if provided_rate is not None:
+        return float(provided_rate), {"source": "manual"}
+
+    # 2) Repo
+    prod = product or product_fallback
+    if repo is not None and hasattr(repo, "get_interest_rate"):
+        r = float(repo.get_interest_rate(prod))
+        return r, {"source": "db:get_interest_rate", "product": prod}
+
+    # 3) SQLite fallback
+    if not db_path:
+        raise ValueError("rate not provided; repo yok; db_path verilmedi")
+
+    as_of_date = None
+    if as_of:
+        try:
+            as_of_date = datetime.fromisoformat(as_of).date()
+        except Exception:
+            raise ValueError("as_of must be ISO date YYYY-MM-DD")
+
+    con = sqlite3.connect(db_path)
+    con.row_factory = sqlite3.Row
+    try:
+        # Aday tablolar
+        tbls = [r[0] for r in con.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND (lower(name) LIKE '%interest%' OR lower(name) LIKE '%rate%')"
+        ).fetchall()]
+        if not tbls:
+            raise ValueError("No interest/rate tables found in DB")
+
+        preferred = ["interest_rates", "rates", "deposit_rates", "loan_rates", "bank_interest_rates", "interest"]
+        tbls_sorted = sorted(tbls, key=lambda t: (preferred.index(t) if t in preferred else 999, t))
+
+        best_row, best_tbl, meta = None, None, {}
+        best_score = -1
+
+        for tbl in tbls_sorted:
+            cols = {r[1] for r in con.execute(f"PRAGMA table_info('{tbl}')").fetchall()}
+            def pick(cands):
+                for c in cands:
+                    if c in cols: return c
+                return None
+
+            rate_col     = pick(["annual_rate","rate_apy","rate","apr"])
+            product_col  = pick(["product","product_type","category"])
+            currency_col = pick(["currency","ccy","iso_currency"])
+            eff_col      = pick(["effective_date","valid_from","updated_at","date"])
+
+            if not rate_col:
+                continue
+
+            where, params, score = [], [], 0
+            if product_col:
+                where.append(f"LOWER({product_col}) = LOWER(?)")
+                params.append(prod)
+                score += 1
+            if currency_col:
+                where.append(f"UPPER({currency_col}) = UPPER(?)")
+                params.append(currency)
+                score += 1
+            if as_of_date and eff_col:
+                where.append(f"date({eff_col}) <= date(?)")
+                params.append(as_of_date.isoformat())
+
+            sql = f"SELECT * FROM '{tbl}'"
+            if where: sql += " WHERE " + " AND ".join(where)
+            if eff_col:
+                sql += f" ORDER BY date({eff_col}) DESC, rowid DESC LIMIT 1"
+            else:
+                sql += " ORDER BY rowid DESC LIMIT 1"
+
+            row = con.execute(sql, params).fetchone()
+            if row is not None and score > best_score:
+                best_score, best_row, best_tbl = score, row, tbl
+                meta = {
+                    "source": "db",
+                    "table": tbl,
+                    "matched_columns": {
+                        "rate": rate_col, "product": product_col,
+                        "currency": currency_col, "effective": eff_col
+                    }
+                }
+
+        if not best_row:
+            raise ValueError(f"Could not resolve rate for product={prod}, currency={currency}")
+
+        return float(best_row[meta["matched_columns"]["rate"]]), meta
+    finally:
+        con.close()
+
 
 
 class CalculationTools:
@@ -129,5 +268,185 @@ class CalculationTools:
 
         except Exception as e:
             return self._err(f"loan_amortization_schedule_error: {str(e)}")
+        
+    # ------------- S6: InterestCalculatorTool (deposit|loan) -------------
+    def interest_compute(
+        self,
+        *,
+        type: Literal["deposit","loan"],
+        principal: float,
+        term: float,
+        compounding: str,
+        # Oran çözümleme
+        rate: Optional[float] = None,       # Manuel oran (0.30 = %30)
+        product: Optional[str] = None,      # Repo/DB ürün anahtarı (ör: "savings", "loan")
+        currency: str = "TRY",
+        term_unit: Literal["years","months"] = "years",
+        # Kaynaklar
+        repo: Any = None,                   # SQLiteRepository örneği (opsiyonel)
+        db_path: Optional[str] = None,      # /mnt/data/dummy_bank.db (opsiyonel)
+        as_of: Optional[str] = None,        # "YYYY-MM-DD"
+        # UI/çıktı
+        schedule: bool = False,             # (ileride detay tablo istersen açarız)
+        schedule_limit: int = 24,
+        rounding: Optional[int] = None,
+    ) -> Dict[str, Any]:
+        
+        """
+        InterestCalculatorTool (mevduat / kredi)
+
+        type='deposit'  → Bileşik mevduat getirisi hesaplar:
+            FV = P * (1 + r/m)^(m*t),  i = r/m, n = m*t
+            Sürekli bileşik için: FV = P * e^(r*t)
+            Getiri = FV - P
+
+        type='loan'     → Eşit taksitli (annuity) kredi ödemesi hesaplar:
+            installment = P * [ i(1+i)^n / ((1+i)^n - 1) ],  i = r/m, n = m*t
+            Her dönem: interest = remaining * i
+                        principal_part = installment - interest
+            Toplam ödeme = installment * n
+            Toplam faiz  = toplam ödeme - P
+
+        Parametreler:
+            principal   : Anapara (>0)
+            rate        : Yıllık nominal faiz oranı (0.30 = %30). 
+                          Eğer None ise repo/DB’den otomatik bulunur.
+            term        : Vade (yıl ya da ay cinsinden, term_unit ile belirlenir)
+            compounding : annual|semiannual|quarterly|monthly|weekly|daily|continuous
+            product     : Repo/DB için ürün anahtarı (örn: "savings" veya "loan")
+            repo/db_path: Faiz oranını DB’den almak için kaynak
+            schedule    : loan için amortizasyon tablosu (önizleme) oluşturulsun mu
+            schedule_limit: tablodaki max satır sayısı
+
+        Dönüş:
+            Başarı: {"summary": {...}, "ui_component": {...}, "rate_meta": {...}, ["schedule": [...]]}
+            Hata  : {"error": "..."}
+        """
+        
+        try:
+            mode = (type or "").strip().lower()
+            if mode not in {"deposit","loan"}:
+                return self._err("type must be 'deposit' or 'loan'")
+            if principal is None or principal <= 0:
+                return self._err("principal must be > 0")
+            if term is None or term <= 0:
+                return self._err("term must be > 0")
+
+            comp = _normalize_compounding(compounding)
+            m = _periods_per_year(comp)
+            years = term / 12.0 if term_unit == "months" else float(term)
+
+            # Oran çözümleme (repo→db→manuel sırası yukarıdaki helper’da)
+            product_fallback = "savings" if mode == "deposit" else "loan"
+            resolved_rate, rate_meta = _resolve_rate_via_repo_or_db(
+                provided_rate=rate, repo=repo, db_path=db_path,
+                product=product, product_fallback=product_fallback,
+                currency=currency, as_of=as_of,
+            )
+            if resolved_rate < 0:
+                return self._err("rate cannot be negative")
+
+            r = self._round2 if rounding in (None, 2) else (lambda x: round(float(x), int(rounding)))
+
+            if mode == "deposit":
+                if comp == "continuous":
+                    FV = principal * math.e ** (resolved_rate * years)
+                else:
+                    assert m is not None
+                    FV = principal * (1 + resolved_rate / m) ** (m * years)
+                total_interest = FV - principal
+                return {
+                    "summary": {
+                        "mode": "deposit",
+                        "principal": r(principal),
+                        "annual_rate": resolved_rate,
+                        "term_years": years,
+                        "compounding": comp,
+                        "future_value": r(FV),
+                        "total_interest": r(total_interest),
+                        "currency": currency or "",
+                    },
+                    "ui_component": {
+                        "type": "interest_quote_card",
+                        "quote_type": "deposit",
+                        "principal": r(principal),
+                        "annual_rate": resolved_rate,
+                        "term_years": years,
+                        "compounding": comp,
+                        "future_value": r(FV),
+                        "total_interest": r(total_interest),
+                        "currency": currency or "",
+                    },
+                    "rate_meta": rate_meta,
+                }
+
+            # loan
+            if comp == "continuous":
+                comp, m = "monthly", 12
+            assert m is not None
+            n = int(round(m * years))
+            if n <= 0:
+                return self._err("loan term results in zero periods; increase term")
+            i = resolved_rate / m
+            installment = principal / n if resolved_rate == 0 else principal * i / (1 - (1 + i) ** (-n))
+            total_payment = installment * n if resolved_rate != 0 else principal
+            total_interest = total_payment - principal
+
+            payload = {
+                "summary": {
+                    "mode": "loan",
+                    "principal": r(principal),
+                    "annual_rate": resolved_rate,
+                    "periodic_rate": round(i, 10),
+                    "periods": n,
+                    "term_years": years,
+                    "compounding": comp,
+                    "installment": r(installment),
+                    "total_payment": r(total_payment),
+                    "total_interest": r(total_interest),
+                    "currency": currency or "",
+                },
+                "ui_component": {
+                    "type": "interest_quote_card",
+                    "quote_type": "loan",
+                    "principal": r(principal),
+                    "annual_rate": resolved_rate,
+                    "periodic_rate": round(i, 10),
+                    "periods": n,
+                    "installment": r(installment),
+                    "total_payment": r(total_payment),
+                    "total_interest": r(total_interest),
+                    "currency": currency or "",
+                },
+                "rate_meta": rate_meta,
+            }
+
+            if schedule:
+                rows = []
+                remaining = float(principal)
+                for k in range(1, n + 1):
+                    interest = remaining * i
+                    principal_part = installment - interest if resolved_rate != 0 else installment
+                    if k == n:
+                        principal_part = remaining
+                        pay_k = principal_part + interest
+                    else:
+                        pay_k = installment
+                    remaining = max(0.0, remaining - principal_part)
+                    if len(rows) < int(schedule_limit):
+                        rows.append({
+                            "period": k,
+                            "payment": r(pay_k),
+                            "interest": r(interest),
+                            "principal": r(principal_part),
+                            "remaining": r(remaining),
+                        })
+                payload["schedule"] = rows
+
+            return payload
+
+        except Exception as e:
+            return self._err(f"interest_compute_error: {e}")
+
 
   

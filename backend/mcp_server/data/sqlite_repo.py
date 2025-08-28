@@ -400,3 +400,35 @@ class SQLiteRepository:
             return {"snapshot_at": now, "saved": len(transactions)}
         finally:
             con.close()
+
+    
+    def get_interest_rate(self, product: str) -> float:
+        """
+        interest_rates tablosundan tek ürün için en güncel oranı döner.
+        Şema uyarlaması:
+          - Oran kolonu annual_rate varsa onu, yoksa rate_apy'yi kullanır.
+          - Tarih kolonu effective_date varsa onu, yoksa updated_at'ı kullanır.
+        """
+        con = sqlite3.connect(self.db_path)
+        con.row_factory = sqlite3.Row
+        try:
+            # kolon keşfi
+            cols = {r[1] for r in con.execute("PRAGMA table_info('interest_rates')")}
+            rate_col = "annual_rate" if "annual_rate" in cols else "rate_apy"
+            date_col = "effective_date" if "effective_date" in cols else "updated_at"
+
+            sql = f"""
+                SELECT {rate_col} AS rate_value
+                FROM interest_rates
+                WHERE product = ? COLLATE NOCASE
+                ORDER BY
+                  COALESCE(datetime({date_col}), datetime('1970-01-01')) DESC,
+                  rowid DESC
+                LIMIT 1
+            """
+            row = con.execute(sql, (product,)).fetchone()
+            if not row or row["rate_value"] is None:
+             raise ValueError(f"Interest rate not found for product={product}")
+            return float(row["rate_value"])
+        finally:
+            con.close()
