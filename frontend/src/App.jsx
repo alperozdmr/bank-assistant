@@ -28,10 +28,105 @@ function App() {
   const [showQuickActionsModal, setShowQuickActionsModal] = useState(false)
   const [showLogoutModal, setShowLogoutModal] = useState(false)
   const [isDarkTheme, setIsDarkTheme] = useState(false)
+  const [isLoadingChats, setIsLoadingChats] = useState(false)
   const messagesEndRef = useRef(null)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }
+
+  // Backend'den chat sessions'ları yükle
+  const loadChatSessions = async () => {
+    if (!userInfo?.userId) return
+    
+    setIsLoadingChats(true)
+    try {
+      console.log('Chat sessions yükleniyor...', userInfo.userId)
+      const response = await fetch(`http://127.0.0.1:8000/chat/sessions/${userInfo.userId}`, {
+        headers: {
+          'Authorization': `Bearer ${userInfo.token}`
+        }
+      })
+      
+      console.log('Chat sessions response status:', response.status)
+      
+      if (response.ok) {
+        const sessions = await response.json()
+        console.log('Chat sessions loaded:', sessions)
+        
+        const formattedSessions = sessions.map(session => ({
+          id: session.chat_id,
+          title: session.title,
+          createdAt: new Date(session.created_at),
+          updatedAt: new Date(session.updated_at),
+          isNew: false
+        }))
+        
+        setChatList(formattedSessions)
+        console.log('Formatted sessions:', formattedSessions)
+        
+        // İlk session'ı seç
+        if (formattedSessions.length > 0 && !currentChatId) {
+          setCurrentChatId(formattedSessions[0].id)
+        }
+      } else {
+        console.error('Chat sessions response not ok:', response.status, response.statusText)
+      }
+    } catch (error) {
+      console.error('Chat sessions yükleme hatası:', error)
+    } finally {
+      setIsLoadingChats(false)
+    }
+  }
+
+  // Backend'den chat mesajlarını yükle
+  const loadChatMessages = async (chatId) => {
+    if (!userInfo?.userId || !chatId) return
+    
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/chat/messages/${userInfo.userId}/${chatId}`, {
+        headers: {
+          'Authorization': `Bearer ${userInfo.token}`
+        }
+      })
+      
+      if (response.ok) {
+        const messages = await response.json()
+        const formattedMessages = messages.map(msg => {
+          let ui_component = null
+          if (msg.ui_component) {
+            try {
+              ui_component = JSON.parse(msg.ui_component)
+            } catch (e) {
+              console.error('UI component parse hatası:', e)
+            }
+          }
+          
+          return {
+            id: msg.message_id,
+            text: msg.text,
+            sender: msg.sender,
+            timestamp: new Date(msg.timestamp),
+            ui_component: ui_component
+          }
+        })
+        
+        setMessages(formattedMessages)
+        setShowQuickActions(formattedMessages.length <= 1)
+        
+        // Chat history'yi güncelle
+        setChatHistory(prev => ({
+          ...prev,
+          [chatId]: {
+            id: chatId,
+            messages: formattedMessages,
+            isNew: false
+          }
+        }))
+      }
+    } catch (error) {
+      console.error('Chat messages yükleme hatası:', error)
+    }
   }
 
   // Yeni sohbet oluştur
@@ -63,7 +158,7 @@ function App() {
       isNew: true // Yeni sohbet olduğunu belirtmek için flag ekle
     }
 
-    // Sadece state'e ekle, localStorage'a kaydetme
+    // Sadece state'e ekle, backend'e kaydetme (ilk mesaj gönderildiğinde kaydedilecek)
     setChatHistory(prev => ({
       ...prev,
       [newChatId]: newChat
@@ -76,7 +171,7 @@ function App() {
     setShowSidebar(false)
   }
 
-  // LocalStorage'dan auth ve sohbet geçmişini yükle
+  // LocalStorage'dan sadece auth ve tema tercihini yükle
   useEffect(() => {
     // Oturumu geri yükle
     try {
@@ -92,108 +187,35 @@ function App() {
       console.error('Auth localStorage okuma hatası:', e)
     }
 
-    const savedChatHistory = localStorage.getItem('interChatHistory')
-    const savedChatList = localStorage.getItem('interChatList')
-    const savedCurrentChatId = localStorage.getItem('interCurrentChatId')
     const savedTheme = localStorage.getItem('interChatTheme')
-
-    if (savedChatHistory) {
-      const parsedHistory = JSON.parse(savedChatHistory)
-      // Timestamp'leri Date objelerine dönüştür
-      Object.keys(parsedHistory).forEach(chatId => {
-        const chat = parsedHistory[chatId]
-        chat.createdAt = new Date(chat.createdAt)
-        chat.updatedAt = new Date(chat.updatedAt)
-        chat.isNew = false // Kaydedilmiş sohbetler için isNew = false
-        if (chat.messages) {
-          chat.messages.forEach(message => {
-            message.timestamp = new Date(message.timestamp)
-          })
-        }
-      })
-      setChatHistory(parsedHistory)
-    }
-
-    if (savedChatList) {
-      const parsedList = JSON.parse(savedChatList)
-      // Timestamp'leri Date objelerine dönüştür
-      parsedList.forEach(chat => {
-        chat.createdAt = new Date(chat.createdAt)
-        chat.updatedAt = new Date(chat.updatedAt)
-        chat.isNew = false // Kaydedilmiş sohbetler için isNew = false
-      })
-      setChatList(parsedList)
-    }
-
-    if (savedCurrentChatId) {
-      setCurrentChatId(savedCurrentChatId)
-    }
     if (savedTheme) {
       setIsDarkTheme(JSON.parse(savedTheme))
     }
-
-    // Eğer hiç sohbet yoksa, yeni bir sohbet başlat
-    if (!savedChatList || JSON.parse(savedChatList).length === 0) {
-      const newChatId = `chat-${Date.now()}`
-      const welcomeMessage = {
-        id: 1,
-        text: "Merhaba! Ben InterChat, bankacılık işlemleriniz için buradayım. Size nasıl yardımcı olabilirim?",
-        sender: 'bot',
-        timestamp: new Date()
-      }
-
-      const newChat = {
-        id: newChatId,
-        title: 'Yeni Sohbet',
-        messages: [welcomeMessage],
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        isNew: true // Yeni sohbet olduğunu belirtmek için flag ekle
-      }
-
-      setChatHistory({ [newChatId]: newChat })
-      setChatList([newChat])
-      setCurrentChatId(newChatId)
-      setMessages([welcomeMessage])
-      setShowQuickActions(true)
-    }
   }, [])
+
+  // Kullanıcı giriş yaptığında chat sessions'ları yükle
+  useEffect(() => {
+    if (isLoggedIn && userInfo?.userId) {
+      loadChatSessions()
+    }
+  }, [isLoggedIn, userInfo])
 
   // Mevcut sohbetin mesajlarını yükle
   useEffect(() => {
-    if (currentChatId && chatHistory[currentChatId]) {
-      setMessages(chatHistory[currentChatId].messages || [])
-      setShowQuickActions(chatHistory[currentChatId].messages?.length <= 1)
-    }
-  }, [currentChatId, chatHistory])
-
-  // Sohbet geçmişini localStorage'a kaydet
-  useEffect(() => {
-    if (Object.keys(chatHistory).length > 0) {
-      try {
-        localStorage.setItem('interChatHistory', JSON.stringify(chatHistory))
-      } catch (e) {
-        console.error('ChatHistory localStorage kaydı başarısız:', e)
+    if (currentChatId && userInfo?.userId) {
+      // Eğer chat history'de yoksa backend'den yükle
+      if (!chatHistory[currentChatId] || chatHistory[currentChatId].isNew) {
+        if (!chatHistory[currentChatId]?.isNew) {
+          loadChatMessages(currentChatId)
+        }
+      } else {
+        setMessages(chatHistory[currentChatId].messages || [])
+        setShowQuickActions(chatHistory[currentChatId].messages?.length <= 1)
       }
     }
-  }, [chatHistory])
+  }, [currentChatId, userInfo])
 
-  useEffect(() => {
-    if (chatList.length > 0) {
-      try {
-        localStorage.setItem('interChatList', JSON.stringify(chatList))
-      } catch (e) {
-        console.error('ChatList localStorage kaydı başarısız:', e)
-      }
-    }
-  }, [chatList])
-
-  useEffect(() => {
-    if (currentChatId) {
-      localStorage.setItem('interCurrentChatId', currentChatId)
-    }
-  }, [currentChatId])
-
+  // Sadece tema tercihini localStorage'a kaydet
   useEffect(() => {
     localStorage.setItem('interChatTheme', JSON.stringify(isDarkTheme))
   }, [isDarkTheme])
@@ -212,7 +234,7 @@ function App() {
   }, [isDarkTheme])
 
   // Sohbet sil
-  const deleteChat = (chatId) => {
+  const deleteChat = async (chatId) => {
     if (chatList.length <= 1) return // Son sohbeti silmeyi engelle
 
     // Yeni sohbetleri silmeyi engelle
@@ -221,19 +243,32 @@ function App() {
       return
     }
 
-    setChatHistory(prev => {
-      const newHistory = { ...prev }
-      delete newHistory[chatId]
-      return newHistory
-    })
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/chat/session/${chatId}?user_id=${userInfo.userId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${userInfo.token}`
+        }
+      })
 
-    setChatList(prev => prev.filter(chat => chat.id !== chatId))
+      if (response.ok) {
+        setChatHistory(prev => {
+          const newHistory = { ...prev }
+          delete newHistory[chatId]
+          return newHistory
+        })
 
-    if (currentChatId === chatId) {
-      const remainingChats = chatList.filter(chat => chat.id !== chatId)
-      if (remainingChats.length > 0) {
-        switchToChat(remainingChats[0].id)
+        setChatList(prev => prev.filter(chat => chat.id !== chatId))
+
+        if (currentChatId === chatId) {
+          const remainingChats = chatList.filter(chat => chat.id !== chatId)
+          if (remainingChats.length > 0) {
+            switchToChat(remainingChats[0].id)
+          }
+        }
       }
+    } catch (error) {
+      console.error('Chat silme hatası:', error)
     }
   }
 
@@ -244,21 +279,34 @@ function App() {
   }
 
   // Sohbet başlığını güncelle
-  const updateChatTitle = (chatId, newTitle) => {
-    setChatHistory(prev => ({
-      ...prev,
-      [chatId]: {
-        ...prev[chatId],
-        title: newTitle,
-        updatedAt: new Date()
-      }
-    }))
+  const updateChatTitle = async (chatId, newTitle) => {
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/chat/session/${chatId}/title?title=${encodeURIComponent(newTitle)}&user_id=${userInfo.userId}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${userInfo.token}`
+        }
+      })
 
-    setChatList(prev => prev.map(chat =>
-      chat.id === chatId
-        ? { ...chat, title: newTitle, updatedAt: new Date() }
-        : chat
-    ))
+      if (response.ok) {
+        setChatHistory(prev => ({
+          ...prev,
+          [chatId]: {
+            ...prev[chatId],
+            title: newTitle,
+            updatedAt: new Date()
+          }
+        }))
+
+        setChatList(prev => prev.map(chat =>
+          chat.id === chatId
+            ? { ...chat, title: newTitle, updatedAt: new Date() }
+            : chat
+        ))
+      }
+    } catch (error) {
+      console.error('Chat başlığı güncelleme hatası:', error)
+    }
   }
 
   const toggleTheme = () => {
@@ -279,10 +327,6 @@ function App() {
       console.error('Auth localStorage kaydı başarısız:', e)
     }
 
-    // LocalStorage'dan mevcut sohbet geçmişini al
-    const savedChatHistory = localStorage.getItem('interChatHistory')
-    const savedChatList = localStorage.getItem('interChatList')
-
     // Yeni sohbet oluştur
     const newChatId = `chat-${Date.now()}`
     const welcomeMessage = {
@@ -301,47 +345,12 @@ function App() {
       isNew: true // Yeni sohbet olduğunu belirtmek için flag ekle
     }
 
-    // Mevcut sohbet geçmişini yükle ve yeni sohbeti ekle
-    if (savedChatHistory && savedChatList) {
-      const parsedHistory = JSON.parse(savedChatHistory)
-      const parsedList = JSON.parse(savedChatList)
-
-      // Timestamp'leri Date objelerine dönüştür
-      Object.keys(parsedHistory).forEach(chatId => {
-        const chat = parsedHistory[chatId]
-        chat.createdAt = new Date(chat.createdAt)
-        chat.updatedAt = new Date(chat.updatedAt)
-        chat.isNew = false // Kaydedilmiş sohbetler için isNew = false
-        if (chat.messages) {
-          chat.messages.forEach(message => {
-            message.timestamp = new Date(message.timestamp)
-          })
-        }
-      })
-
-      parsedList.forEach(chat => {
-        chat.createdAt = new Date(chat.createdAt)
-        chat.updatedAt = new Date(chat.updatedAt)
-        chat.isNew = false // Kaydedilmiş sohbetler için isNew = false
-      })
-
-      // Yeni sohbeti mevcut geçmişe ekle
-      const updatedHistory = { ...parsedHistory, [newChatId]: newChat }
-      const updatedList = [newChat, ...parsedList]
-
-      setChatHistory(updatedHistory)
-      setChatList(updatedList)
-      setCurrentChatId(newChatId)
-      setMessages([welcomeMessage])
-      setShowQuickActions(true)
-    } else {
-      // İlk giriş - sadece yeni sohbet
-      setChatHistory({ [newChatId]: newChat })
-      setChatList([newChat])
-      setCurrentChatId(newChatId)
-      setMessages([welcomeMessage])
-      setShowQuickActions(true)
-    }
+    // Yeni sohbeti state'e ekle
+    setChatHistory({ [newChatId]: newChat })
+    setChatList([newChat])
+    setCurrentChatId(newChatId)
+    setMessages([welcomeMessage])
+    setShowQuickActions(true)
   }
 
   const handleLogout = () => {
@@ -441,20 +450,29 @@ function App() {
     let finalMessages = updatedMessages
 
     try {
-      // FastAPI backend çağrısı
+      console.log('Mesaj gönderiliyor...', {
+        message: inputMessage,
+        user_id: userInfo.userId,
+        chat_id: currentChatId
+      })
+      
+      // FastAPI backend çağrısı - chat_id ile birlikte gönder
       const response = await fetch("http://127.0.0.1:8000/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${userInfo.token}` // Authorization başlığı eklendi
+          "Authorization": `Bearer ${userInfo.token}`
         },
         body: JSON.stringify({
           message: inputMessage,
-          user_id: userInfo.userId // userInfo.userId kullanıldı
+          user_id: userInfo.userId,
+          chat_id: currentChatId
         })
       })
 
+      console.log('Chat response status:', response.status)
       const data = await response.json()
+      console.log('Chat response data:', data)
 
       const botMessage = {
         id: messages.length + 2,
@@ -466,6 +484,12 @@ function App() {
 
       finalMessages = [...updatedMessages, botMessage]
       setMessages(finalMessages)
+
+      // Backend'den chat sessions'ları yeniden yükle (güncel liste için)
+      if (data.chat_id) {
+        console.log('Chat sessions yeniden yükleniyor...')
+        loadChatSessions()
+      }
 
     } catch (err) {
       console.error("API çağrısı başarısız:", err)
@@ -592,11 +616,12 @@ function App() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${userInfo.token}` // Authorization başlığı eklendi
+          "Authorization": `Bearer ${userInfo.token}`
         },
         body: JSON.stringify({
           message: actions[actionKey].user,
-          user_id: userInfo.userId // userInfo.userId kullanıldı
+          user_id: userInfo.userId,
+          chat_id: currentChatId
         })
       })
 
@@ -612,6 +637,11 @@ function App() {
 
       finalMessages = [...updatedMessages, botMessage]
       setMessages(finalMessages)
+
+      // Backend'den chat sessions'ları yeniden yükle (güncel liste için)
+      if (data.chat_id) {
+        loadChatSessions()
+      }
 
     } catch (err) {
       console.error("API çağrısı başarısız:", err)

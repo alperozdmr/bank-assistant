@@ -58,7 +58,7 @@ function Login({ onLogin }) {
       if (data?.success) {
         onLogin({
           customerNo,
-          userId: data.customer_no,
+          userId: data.customer_id,
           token: data.token
         })
       } else {

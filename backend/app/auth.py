@@ -67,6 +67,7 @@ class LoginRequest(BaseModel):
 class LoginResponse(BaseModel):
     success: bool
     customer_no: Optional[str] = None
+    customer_id: Optional[int] = None
     token: Optional[str] = None
     message: Optional[str] = None
 
@@ -127,6 +128,7 @@ def login(request: LoginRequest):
     return LoginResponse(
         success=True,
         customer_no=request.customer_no,
+        customer_id=customer_id,
         token=access_token,
         message="Giriş başarılı.",
     )
