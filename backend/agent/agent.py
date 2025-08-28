@@ -468,45 +468,27 @@ def _parse_iso_or_none(s: Optional[str]) -> Optional[datetime]:
         return None
 
 def _extract_txn_params(user_text: str) -> Dict[str, Any]:
-    """
-    Mesajdan account_id, from_date, to_date, limit çıkarır.
-    Kısa yollar: bugün, dün, son N gün, bu ay, geçen ay
-    Ayrıca açık tarih biçimleri: YYYY-MM-DD veya YYYY-MM-DD HH:MM:SS
-    Tarih belirtilmezse from_date ve to_date None kalır  tüm zamanlar olarak yorumlanır.
-    """
     txt = user_text.lower()
+    acc = None
+    acc_span = None
 
     # account_id
-    acc = None
     m = _ACC_STRICT.search(user_text)
     if m:
         acc = int(m.group(3))
+        acc_span = m.span(3)
     else:
         m2 = _ACC_RE.search(user_text)
         if m2:
             acc = int(m2.group())
-
-    # limit
-    limit = None
-    mlim = re.search(r"(ilk|limit)?\s*(\d{1,3})\s*(adet|kayıt|record)?", txt)
-    if mlim:
-        try:
-            val = int(mlim.group(2))
-            if 1 <= val <= 500:
-                limit = val
-        except Exception:
-            pass
-
-    # bütün eski transactionslar görülmek istenirse
-    ALL_WORDS=("tüm", "tum", "bütün", "hepsi", "hepsini", "tamamı", "tamamını")
-    if limit is None and any(w in txt for w in ALL_WORDS):
-        limit = 500
+            acc_span = m2.span()
 
     now = datetime.utcnow()
     start = None
     end = None
+    invalid_date=False
 
-    # kısa yollar varsa tarih ata, yoksa None bırak
+    # kısa yollar
     if "bugün" in txt or "bugun" in txt or "today" in txt:
         start = datetime(now.year, now.month, now.day)
         end = now
@@ -515,7 +497,7 @@ def _extract_txn_params(user_text: str) -> Dict[str, Any]:
         start = d
         end = d + timedelta(hours=23, minutes=59, seconds=59)
     else:
-        m7 = re.search(r"son\s+(\d{1,3})\s*gün", txt)
+        m7 = re.search(r"\bson\s+(\d{1,3})\s*gün\b", txt)
         if m7:
             days = int(m7.group(1))
             end = now
@@ -532,23 +514,88 @@ def _extract_txn_params(user_text: str) -> Dict[str, Any]:
     # açık tarih biçimleri
     date_tokens = re.findall(r"\d{4}-\d{2}-\d{2}(?:\s+\d{2}:\d{2}:\d{2})?", user_text)
     if date_tokens:
+        parsed_any=False
         if len(date_tokens) >= 1:
-            start = _parse_iso_or_none(date_tokens[0]) or start
+            p=_parse_iso_or_none(date_tokens[0])
+            if p is not None:
+                start=p
+                parsed_any=True
+            else:
+                invalid_date=True
         if len(date_tokens) >= 2:
-            end = _parse_iso_or_none(date_tokens[1]) or end
+            p=_parse_iso_or_none(date_tokens[1])
+            if p is not None:
+                end=p
+                parsed_any=True
+            else:
+                invalid_date=True
+            
+        if not parsed_any:
+            invalid_date=True
+    
+    else:
+        # Desteklemediğimiz ama tarihe benzeyen biçimleri yakala
+        # 1) İki haneli yıl: 25-07-15, 25/07/15, 25.07.15
+        if re.search(r"\b\d{2}[-/.]\d{2}[-/.]\d{2}\b", user_text):
+            invalid_date = True
 
-    # start ve end ikisinden sadece biri verilmişse diğeri boş kalsın  server tüm zamanlar tarafında yorumlayabilsin
+        # 2) Gün-Ay-YYYY veya YYYY-Ay-Gün: 01/02/2025, 01.02.2025, 2025/02/01, 2025.02.01
+        if re.search(r"\b(?:\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4}|\d{4}[-/.]\d{1,2}[-/.]\d{1,2})\b", user_text):
+            invalid_date = True
+
+        # 3) Türkçe ay isimli biçimler (yıl olsun olmasın): 7 temmuz 18 ağustos, 2 Ocak 2025
+        month_names = r"(ocak|şubat|subat|mart|nisan|mayıs|mayis|haziran|temmuz|ağustos|agustos|eylül|eylul|ekim|kasım|kasim|aralık|aralik)"
+        if re.search(rf"\b\d{{1,2}}\s+{month_names}(?:\s+\d{{4}})?\b", user_text, re.I):
+            invalid_date = True
+
+        # 4) Saniyesiz ISO saat: 2025-08-28 12:00
+        if re.search(r"\b\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}\b", user_text):
+            invalid_date = True
+
     if start and end and start > end:
         start, end = end, start
 
     def _fmt(dt: datetime) -> str:
         return dt.strftime("%Y-%m-%d %H:%M:%S")
 
+    # limit
+    limit = None
+    time_pat = re.compile(r"\b(?:son|geçen)?\s*(\d{1,3})\s*(?:gün|hafta|ay|day|week|month)\b", re.I)
+    time_spans = [m.span(1) for m in time_pat.finditer(txt)]
+
+    def spans_overlap(a, b):
+        return not (a[1] <= b[0] or b[1] <= a[0])
+
+    limit_pats = [
+        re.compile(r"\blimit\s*(?:=|:)?\s*(\d{1,3})\b", re.I),
+        re.compile(r"\b(?:son|ilk)\s*(\d{1,3})\s*(?:işlem|islem|kayıt|kayit|adet)\b", re.I),
+        re.compile(r"\b(\d{1,3})\s*(?:işlem|islem|kayıt|kayit|adet)\b", re.I),
+    ]
+
+    for pat in limit_pats:
+        for lm in pat.finditer(txt):
+            s = lm.span(1)
+            if acc_span and spans_overlap(s, acc_span):
+                continue
+            if any(spans_overlap(s, t) for t in time_spans):
+                continue
+            v = int(lm.group(1))
+            if 1 <= v <= 500:
+                limit = v
+                break
+        if limit is not None:
+            break
+
+    ALL_WORDS = ("tüm", "tum", "bütün", "hepsi", "hepsini", "tamamı", "tamamını")
+    if limit is None and any(w in txt for w in ALL_WORDS):
+        limit = 500
+
     return {
         "account_id": acc,
         "from_date": _fmt(start) if start else None,
         "to_date": _fmt(end) if end else None,
-        "limit": limit or 50,
+        "limit": limit,   # burada None kalabilir
+        "invalid_date": invalid_date,
     }
 
 def _fmt_transactions(res: Dict[str, Any], fallback_acc_id: Optional[int] = None) -> Dict[str, Any]:
@@ -600,7 +647,7 @@ def _fmt_transactions(res: Dict[str, Any], fallback_acc_id: Optional[int] = None
     
     # Eğer tüm işlemler metinde de listelensin isteniyorsa:
     details = []
-    for r in rows[:50]:  # çok uzun olmasın diye metin çıktısında ilk 50’yi gösterelim
+    for r in rows:
         dt = r.get("txn_date") or r.get("date") or r.get("created_at")
         amt = _fmt_amt(r.get("amount"))
         desc = r.get("description") or ""
@@ -623,7 +670,7 @@ def _fmt_transactions(res: Dict[str, Any], fallback_acc_id: Optional[int] = None
 
     # opsiyonel UI
     ui_items = []
-    for r in rows[:500]:
+    for r in rows:
         dt = r.get("txn_date") or r.get("created_at") or r.get("date")
         dt_iso = _parse_iso_or_none_local(dt)
         ui_items.append({
@@ -825,12 +872,21 @@ def _llm_flow(user_text: str, customer_id: int) -> Dict[str, Any]: # customer_id
 
         elif name == "transactions_list":
             try:
+                lim = args.get("limit")
+                fd=args.get("from_date")
+                td=args.get("to_date")
+                has_range = bool(fd or td)
+
                 payload = {
                     "account_id": int(args["account_id"]),
-                    "from_date": args.get("from_date"),
-                    "to_date": args.get("to_date"),
-                    "limit": int(args.get("limit", 50)),
+                    "from_date": fd,
+                    "to_date": td,
                 }
+                if isinstance(lim, int):
+                    payload["limit"]=lim
+                elif not has_range:
+                    payload["limit"]=1_000_000
+                    
                 res = call_mcp_tool(MCP_URL, "transactions_list", payload)
                 out = {
                     "name": "transactions_list",
@@ -853,7 +909,6 @@ def _llm_flow(user_text: str, customer_id: int) -> Dict[str, Any]: # customer_id
                 "result": {"ok": False, "error": "missing_account_id"},
                 "ok": False,
             }
-        
 
         outs.append(out)
         msgs.append(
@@ -977,6 +1032,8 @@ def handle_message(user_text: str, customer_id: int) -> Dict[str, Any]: # custom
 
     if any(w in low for w in _TRANSACTION_WORDS):
         params = _extract_txn_params(user_text)
+        if params.get("invalid_date"):
+            return {"YANIT": "Geçerli bir tarih formatı girin. Desteklenen biçimler: YYYY-MM-DD"}
         acc = params.get("account_id")
         if acc is None:
             return {"YANIT": "Hangi hesap için işlem listeleyelim? Lütfen account_id belirtin. Örnek: hesap 12 son 30 gün işlemleri"}
@@ -999,25 +1056,37 @@ def handle_message(user_text: str, customer_id: int) -> Dict[str, Any]: # custom
 
             # allowed_ids boşsa (biçim tanınmadıysa) engelleme yapma
             if allowed_ids and acc not in allowed_ids:
-                return {"YANIT": f"Bu hesap numarasına ({acc}) erişim izniniz yok.", "status_code": 403}
+                return {"YANIT": f"Hesap bulunamadı. Lütfen geçerli bir hesap numarası girin.", "status_code": 403}
             
         except Exception:
-            # repo.list_transactions içinde de müşteri doğrulaması var
+            # general_tools.list_transactions içinde de müşteri doğrulaması var
             pass
 
-        payload = {
-            "account_id": acc,
-            "from_date": params.get("from_date"),
-            "to_date": params.get("to_date"),
-            "limit": params.get("limit"),
-        }
+        # payload'ı sadece dolu alanlarla kur
+        payload: Dict[str, Any] = {"account_id": acc}
+
+        fd = params.get("from_date")
+        td = params.get("to_date")
+        if fd is not None:
+            payload["from_date"] = fd
+        if td is not None:
+            payload["to_date"] = td
+
+        raw_limit = params.get("limit") 
+        has_range = bool(fd or td)
+
+        if isinstance(raw_limit, int):
+            payload["limit"]=raw_limit
+        elif not has_range:
+            payload["limit"] = 1_000_000
+        #payload["limit"] = raw_limit if isinstance(raw_limit, int) else 1_000_000
         res = call_mcp_tool(MCP_URL, "transactions_list", payload)
         tx_result = _fmt_transactions(res, fallback_acc_id=acc)
         ui_component = tx_result.get("ui_component")
 
         out_item = {"name": "transactions_list", "args": payload, "result": res, "ok": res.get("ok", True)}
         result = {
-            "YANIT": tx_result["text"],  # UI olsa bile metni göster
+            "YANIT": tx_result["text"],  # UI yoksa metni göster
             "toolOutputs": [out_item],
         }
         if ui_component:
