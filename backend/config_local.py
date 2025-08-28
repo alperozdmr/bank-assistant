@@ -10,7 +10,7 @@ MCP_SSE_URL = "http://127.0.0.1:8081/sse"
 LLM_API_BASE = "https://router.huggingface.co/v1"
 LLM_CHAT_PATH = "/chat/completions"
 LLM_MODEL = "Qwen/Qwen3-30B-A3B:fireworks-ai"
-LLM_API_KEY = "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"  # Hugging Face API anahtarını sitesinden alabilirsiniz
+LLM_API_KEY = ""  # Hugging Face API anahtarını sitesinden alabilirsiniz
 
 # JWT Secret Key (Güvenli bir anahtar kullanın)
 SECRET_KEY = os.getenv("SECRET_KEY", "your_secret_key")
