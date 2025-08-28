@@ -1,7 +1,8 @@
 # data/sqlite_repo.py
 import os
 import sqlite3
-from typing import Any, Dict, List, Optional
+from datetime import datetime
+from typing import Any, Dict, List, Optional,Tuple
 
 
 class SQLiteRepository:
@@ -433,5 +434,115 @@ class SQLiteRepository:
             if not row or row["rate_value"] is None:
              raise ValueError(f"Interest rate not found for product={product}")
             return float(row["rate_value"])
+        finally:
+            con.close()
+
+    def _resolve_rate_via_repo_or_db(
+    self,
+    provided_rate: Optional[float],
+    product: Optional[str],
+    product_fallback: str,   # "savings" (deposit) | "loan" (loan)
+    currency: str = "TRY",
+    as_of: Optional[str] = None,
+    ) -> Tuple[float, dict]:
+        """
+        1) provided_rate verilmişse onu kullanır.
+        2) repo.get_interest_rate(product) varsa onu kullanır.
+        3) Yoksa sqlite DB'de interest_rates benzeri tablodan çeker.
+        - Tablo adı: interest_rates | rates | deposit_rates | loan_rates ... (esnek)
+        - Oran sütunu: annual_rate | rate_apy | rate | apr (esnek)
+        - Ürün sütunu: product | product_type (esnek)
+        - Para birimi: currency | ccy (esnek)
+        - Tarih: effective_date | valid_from | updated_at | date (en güncel satır)
+        """
+        # 1) Manuel
+        if provided_rate is not None:
+            return float(provided_rate), {"source": "manual"}
+
+        # 2) Repo
+        prod = product or product_fallback
+        #if repo is not None and hasattr(repo, "get_interest_rate"):
+        if prod is not None:
+            r = float(self.get_interest_rate(prod))
+            return r, {"source": "db:get_interest_rate", "product": prod}
+
+        # 3) SQLite fallback
+        if not self.db_path:
+            raise ValueError("rate not provided; repo yok; db_path verilmedi")
+
+        as_of_date = None
+        if as_of:
+            try:
+                as_of_date = datetime.fromisoformat(as_of).date()
+            except Exception:
+                raise ValueError("as_of must be ISO date YYYY-MM-DD")
+
+        con = sqlite3.connect(self.db_path)
+        con.row_factory = sqlite3.Row
+        try:
+            # Aday tablolar
+            tbls = [r[0] for r in con.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' AND (lower(name) LIKE '%interest%' OR lower(name) LIKE '%rate%')"
+            ).fetchall()]
+            if not tbls:
+                raise ValueError("No interest/rate tables found in DB")
+
+            preferred = ["interest_rates", "rates", "deposit_rates", "loan_rates", "bank_interest_rates", "interest"]
+            tbls_sorted = sorted(tbls, key=lambda t: (preferred.index(t) if t in preferred else 999, t))
+
+            best_row, best_tbl, meta = None, None, {}
+            best_score = -1
+
+            for tbl in tbls_sorted:
+                cols = {r[1] for r in con.execute(f"PRAGMA table_info('{tbl}')").fetchall()}
+                def pick(cands):
+                    for c in cands:
+                        if c in cols: return c
+                    return None
+
+                rate_col     = pick(["annual_rate","rate_apy","rate","apr"])
+                product_col  = pick(["product","product_type","category"])
+                currency_col = pick(["currency","ccy","iso_currency"])
+                eff_col      = pick(["effective_date","valid_from","updated_at","date"])
+
+                if not rate_col:
+                    continue
+
+                where, params, score = [], [], 0
+                if product_col:
+                    where.append(f"LOWER({product_col}) = LOWER(?)")
+                    params.append(prod)
+                    score += 1
+                if currency_col:
+                    where.append(f"UPPER({currency_col}) = UPPER(?)")
+                    params.append(currency)
+                    score += 1
+                if as_of_date and eff_col:
+                    where.append(f"date({eff_col}) <= date(?)")
+                    params.append(as_of_date.isoformat())
+
+                sql = f"SELECT * FROM '{tbl}'"
+                if where: sql += " WHERE " + " AND ".join(where)
+                if eff_col:
+                    sql += f" ORDER BY date({eff_col}) DESC, rowid DESC LIMIT 1"
+                else:
+                    sql += " ORDER BY rowid DESC LIMIT 1"
+
+                row = con.execute(sql, params).fetchone()
+                if row is not None and score > best_score:
+                    best_score, best_row, best_tbl = score, row, tbl
+                    meta = {
+                        "source": "db",
+                        "table": tbl,
+                        "matched_columns": {
+                            "rate": rate_col, "product": product_col,
+                            "currency": currency_col, "effective": eff_col
+                        }
+                    }
+
+            if not best_row:
+                raise ValueError(f"Could not resolve rate for product={prod}, currency={currency}")
+
+            return float(best_row[meta["matched_columns"]["rate"]]), meta
         finally:
             con.close()

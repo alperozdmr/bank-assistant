@@ -23,7 +23,7 @@ mcp = FastMCP("Fortuna Banking Services")
 # === Initialize tool classes ===
 repo = SQLiteRepository(db_path=DB_PATH)
 general_tools = GeneralTools(repo)
-calc_tools = CalculationTools()
+calc_tools = CalculationTools(repo)
 
 
 @mcp.tool()
@@ -477,8 +477,6 @@ def interest_compute(
         schedule=schedule,
         schedule_limit=schedule_limit,
         rounding=rounding,
-        repo=repo,                 # <<< repo’dan oran çek
-        db_path=None,              # gerekirse burayı sabitleyebilirsin
     )
 
 
