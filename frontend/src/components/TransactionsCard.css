@@ -112,7 +112,6 @@
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, #1789dc 0%, #58167d 100%);
   opacity: 0;
   transition: opacity 0.3s ease;
 }
