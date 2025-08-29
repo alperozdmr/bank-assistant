@@ -56,7 +56,7 @@ def _strip_think(text: str) -> str:
     if not isinstance(text, str):
         return text
     # <think> bloklarını temizle
-    cleaned = re.sub(r"<think\b[\s\S]*?</think>", "", text, flags=re.IGNORECASE)
+    cleaned = re.sub(r"<think\b[^>]*>[\s\S]*", "", text, flags=re.IGNORECASE)
     # <ask> bloklarının içeriğini koru, sadece etiketleri kaldır
     cleaned = re.sub(r"</?ask\b[^>]*>", "", cleaned, flags=re.IGNORECASE)
     return cleaned.strip()

@@ -95,6 +95,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  min-height: 0;
 }
 
 .chat-list::-webkit-scrollbar {
@@ -112,6 +113,96 @@ body {
 
 .chat-list::-webkit-scrollbar-thumb:hover {
   background: #999;
+}
+
+/* Sidebar Profil Bölümü */
+.sidebar-profile-section {
+  margin-top: auto;
+  padding: 16px;
+  border-top: 1px solid #e1e5e9;
+  background: transparent;
+}
+
+.dark-theme .sidebar-profile-section {
+  background: transparent;
+  border-top-color: #555;
+}
+
+.sidebar-profile-button {
+  width: 100%;
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.2s ease;
+  color: #495057;
+  text-decoration: none;
+}
+
+.dark-theme .sidebar-profile-button {
+  background: #3a3a3a;
+  border-color: #555;
+  color: #e1e8ed;
+}
+
+.sidebar-profile-button:hover {
+  background: #e3f2fd;
+  border-color: #1789dc;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.dark-theme .sidebar-profile-button:hover {
+  background: #444;
+  border-color: #1789dc;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.profile-button-icon {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #1789dc 0%, #58167d 100%);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: white;
+}
+
+.dark-theme .profile-button-icon {
+  background: linear-gradient(135deg, #1789dc 0%, #58167d 100%);
+}
+
+.profile-button-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  flex: 1;
+}
+
+.profile-button-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 2px;
+}
+
+.dark-theme .profile-button-title {
+  color: #e2e8f0;
+}
+
+.profile-button-subtitle {
+  font-size: 12px;
+  color: #6c757d;
+}
+
+.dark-theme .profile-button-subtitle {
+  color: #a0aec0;
 }
 
 .chat-item {
@@ -339,6 +430,8 @@ body {
   gap: 12px;
   flex-shrink: 0;
 }
+
+
 
 .theme-toggle-switch {
   width: 60px;
@@ -1160,6 +1253,42 @@ body {
   display: flex;
   flex-direction: column;
   animation: modalSlideIn 0.3s ease-out;
+}
+
+.profile-modal {
+  max-width: 600px;
+  width: 95%;
+}
+
+/* Mobil görünümde profil modalı genişliği */
+@media (max-width: 768px) {
+  .profile-modal {
+    max-width: 400px;
+    width: 95%;
+  }
+}
+
+.profile-loading-modal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  gap: 16px;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #1789dc;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .modal-header {

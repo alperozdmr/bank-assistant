@@ -72,6 +72,17 @@ class LoginResponse(BaseModel):
     message: Optional[str] = None
 
 
+class UserProfileResponse(BaseModel):
+    customer_id: int
+    name: str
+    surname: str
+    email: str
+    created_at: str
+    customer_no: str
+    address: str
+    phone: str
+
+
 # Veritabanı Bağlantısı
 def _get_engine():
     database_url = f"sqlite:///{DB_PATH}"
@@ -137,6 +148,46 @@ def login(request: LoginRequest):
 # Logout Endpoint'i (client tarafında token silme)
 @router.post("/logout")
 def logout():
-    # Bu endpoint'te sadece token’ın client tarafında silinmesi beklenir.
+    # Bu endpoint'te sadece token'ın client tarafında silinmesi beklenir.
     # Server tarafında herhangi bir şey yapılması gerekmez, çünkü JWT stateless'tir.
     return {"message": "Çıkış başarılı."}
+
+
+# Kullanıcı Profil Bilgilerini Getiren Endpoint
+@router.get("/profile", response_model=UserProfileResponse)
+def get_user_profile(current_user: int = Depends(get_current_user)):
+    """
+    Giriş yapmış kullanıcının profil bilgilerini döndürür.
+    Password hariç tüm bilgileri içerir.
+    """
+    engine = _get_engine()
+    try:
+        with engine.connect() as conn:
+            result = conn.execute(
+                text(
+                    """
+                    SELECT customer_id, name, surname, email, created_at, 
+                           customer_no, address, phone
+                    FROM customers
+                    WHERE customer_id = :cid
+                    LIMIT 1
+                    """
+                ),
+                {"cid": current_user},
+            )
+            row = result.first()
+            if not row:
+                raise HTTPException(status_code=404, detail="Kullanıcı bulunamadı")
+            
+            return UserProfileResponse(
+                customer_id=row[0],
+                name=row[1],
+                surname=row[2],
+                email=row[3],
+                created_at=row[4],
+                customer_no=row[5],
+                address=row[6],
+                phone=row[7]
+            )
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Veritabanı hatası: {exc}")

@@ -8,6 +8,7 @@ import FeesCard from './components/FeesCard'
 import ATMCard from './components/ATMCard'
 import CardInfoCard from './components/CardInfoCard'
 import TransactionsCard from './components/TransactionsCard'
+import UserProfileCard from './components/UserProfileCard'
 
 function App() {
   // Login state
@@ -29,10 +30,38 @@ function App() {
   const [showLogoutModal, setShowLogoutModal] = useState(false)
   const [isDarkTheme, setIsDarkTheme] = useState(false)
   const [isLoadingChats, setIsLoadingChats] = useState(false)
+  const [userProfile, setUserProfile] = useState(null)
+  const [showProfile, setShowProfile] = useState(false)
+  const [isLoadingProfile, setIsLoadingProfile] = useState(false)
   const messagesEndRef = useRef(null)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }
+
+  // Kullanıcı profilini yükle
+  const loadUserProfile = async () => {
+    if (!userInfo?.userId) return
+    
+    setIsLoadingProfile(true)
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/auth/profile`, {
+        headers: {
+          'Authorization': `Bearer ${userInfo.token}`
+        }
+      })
+      
+      if (response.ok) {
+        const profileData = await response.json()
+        setUserProfile(profileData)
+      } else {
+        console.error('Profil yükleme hatası:', response.status)
+      }
+    } catch (error) {
+      console.error('Profil yükleme hatası:', error)
+    } finally {
+      setIsLoadingProfile(false)
+    }
   }
 
   // Backend'den chat sessions'ları yükle
@@ -193,10 +222,11 @@ function App() {
     }
   }, [])
 
-  // Kullanıcı giriş yaptığında chat sessions'ları yükle
+  // Kullanıcı giriş yaptığında chat sessions'ları ve profil bilgilerini yükle
   useEffect(() => {
     if (isLoggedIn && userInfo?.userId) {
       loadChatSessions()
+      loadUserProfile()
     }
   }, [isLoggedIn, userInfo])
 
@@ -311,10 +341,6 @@ function App() {
 
   const toggleTheme = () => {
     setIsDarkTheme(!isDarkTheme)
-  }
-
-  const handleLogoClick = () => {
-    window.location.reload()
   }
 
   const handleLogin = (credentials) => {
@@ -738,6 +764,25 @@ function App() {
               </div>
             ))}
           </div>
+          
+          {/* Profil Bölümü */}
+          <div className="sidebar-profile-section">
+            <button className="sidebar-profile-button" onClick={() => {
+              setShowProfile(true)
+              setShowSidebar(false)
+            }}>
+              <div className="profile-button-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <circle cx="12" cy="7" r="4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <div className="profile-button-text">
+                <span className="profile-button-title">Profil Bilgileri</span>
+                <span className="profile-button-subtitle">Kişisel - Hesap bilgileriniz</span>
+              </div>
+            </button>
+          </div>
         </div>
 
         {/* Sidebar Overlay */}
@@ -755,7 +800,7 @@ function App() {
                 <path d="M3 18H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </button>
-            <div className="bot-avatar" onClick={handleLogoClick}>
+            <div className="bot-avatar">
               <img src="/logo.jpg" alt="InterChat Logo" className="avatar-logo" />
             </div>
             <div className="header-info">
@@ -1176,6 +1221,36 @@ function App() {
                   İptal
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Profile Modal */}
+      {showProfile && (
+        <div className="modal-overlay" onClick={() => setShowProfile(false)}>
+          <div className="modal-content profile-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Profil Bilgileri</h3>
+              <button
+                className="modal-close-button"
+                onClick={() => setShowProfile(false)}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            </div>
+            <div className="modal-body">
+              {isLoadingProfile ? (
+                <div className="profile-loading-modal">
+                  <div className="loading-spinner"></div>
+                  <p>Profil bilgileri yükleniyor...</p>
+                </div>
+              ) : (
+                <UserProfileCard userData={userProfile} />
+              )}
             </div>
           </div>
         </div>
