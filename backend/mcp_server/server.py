@@ -7,6 +7,7 @@ from .data.sqlite_repo import SQLiteRepository
 from fastmcp import FastMCP
 from .tools.general_tools import GeneralTools 
 from .tools.calculation_tools import CalculationTools
+from .tools.roi_simulator_tool import RoiSimulatorTool  
 
 ###############
 
@@ -19,11 +20,13 @@ from common.mcp_decorators import log_tool
 
 # === Initialize MCP server ===
 mcp = FastMCP("Fortuna Banking Services")
-
 # === Initialize tool classes ===
 repo = SQLiteRepository(db_path=DB_PATH)
 general_tools = GeneralTools(repo)
 calc_tools = CalculationTools(repo)
+roi_simulator_tool = RoiSimulatorTool(repo)
+
+
 
 
 @mcp.tool()
@@ -478,6 +481,36 @@ def interest_compute(
         schedule_limit=schedule_limit,
         rounding=rounding,
     )
+    
+
+@mcp.tool()
+def run_roi_simulation(portfolio_name: str, monthly_investment: float, years: int) -> dict:
+    """
+    Runs a Monte Carlo simulation to project the future value of an investment portfolio.
+
+    When to use:
+    - This tool is ideal for answering user questions about long-term investment outcomes.
+    - Use for queries like: "If I invest 5000 TL per month in a Balanced Portfolio for 10 years, what could be the result?",
+      "Simulate the growth of my portfolio", or "Show me the potential outcomes for the Growth Portfolio".
+
+    Args:
+        portfolio_name (str): The name of the portfolio to simulate (e.g., "Dengeli Portföy", "Büyüme Portföyü").
+        monthly_investment (float): The amount of money to be invested every month.
+        years (int): The total number of years for the investment period.
+
+    Returns:
+        A dictionary summarizing the simulation results, including:
+        - average_outcome: The mean final balance across all simulations.
+        - good_scenario_outcome: The 75th percentile final balance.
+        - bad_scenario_outcome: The 25th percentile final balance.
+        If the portfolio name is not found, it returns a dictionary with an 'error' key.
+    """
+    return roi_simulator_tool.run(
+        portfolio_name=portfolio_name,
+        monthly_investment=monthly_investment,
+        years=years
+    )
+
 
 
 if __name__ == "__main__":

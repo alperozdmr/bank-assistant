@@ -3,6 +3,7 @@ import os
 import sqlite3
 from datetime import datetime
 from typing import Any, Dict, List, Optional,Tuple
+import pandas as pd
 
 
 class SQLiteRepository:
@@ -546,3 +547,34 @@ class SQLiteRepository:
             return float(best_row[meta["matched_columns"]["rate"]]), meta
         finally:
             con.close()
+    
+    def _get_connection(self):
+        """
+        Yeni bir veritabanı bağlantısı oluşturur ve döndürür.
+
+        Bu, sınıf içinde kullanılmak üzere özel bir yardımcı metottur.
+        """
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        return conn
+
+
+    def get_asset_performance_data(self) -> pd.DataFrame:
+        """
+        Retrieves the asset performance data from the 'asset_performance' table.
+        """
+        query = "SELECT * FROM asset_performance;"
+        
+        with self._get_connection() as conn:
+            df = pd.read_sql_query(query, conn)
+            return df
+
+    def get_portfolio_mixes_data(self) -> pd.DataFrame:
+        """
+        'asset_performance' tablosundan varlık performans verilerini çeker.
+        """
+        query = "SELECT * FROM portfolio_mixes;"
+        with self._get_connection() as conn:
+            df = pd.read_sql_query(query, conn)
+            return df
+
