@@ -197,3 +197,46 @@ def delete_session(chat_id: str, user_id: str, db=Depends(get_db)):
     )
     conn.commit()
     return {"status": "ok"}
+
+
+@router.get("/search")
+def search_messages(user_id: str, query: str, db=Depends(get_db)):
+    """
+    Sohbet başlıklarında ve mesaj içeriklerinde arama yapar
+    """
+    c, conn = db
+    
+    # SQL injection'a karşı koruma için parametreli sorgu kullan
+    search_query = f"%{query}%"
+    
+    # Sadece mesaj içeriklerinde arama yap
+    c.execute("""
+        SELECT DISTINCT 
+            cs.chat_id,
+            cs.title as chat_title,
+            m.message_id,
+            m.text as message_text,
+            m.timestamp,
+            m.sender
+        FROM chat_sessions cs
+        INNER JOIN messages m ON cs.chat_id = m.chat_id
+        WHERE cs.user_id = ? 
+        AND m.text LIKE ?
+        ORDER BY m.timestamp DESC
+        LIMIT 20
+    """, (user_id, search_query))
+    
+    results = []
+    for row in c.fetchall():
+        chat_id, chat_title, message_id, message_text, timestamp, sender = row
+        if message_text:  # Mesaj içeriği varsa ekle
+            results.append({
+                "chat_id": chat_id,
+                "chat_title": chat_title,
+                "message_id": message_id,
+                "message_text": message_text,
+                "timestamp": timestamp,
+                "sender": sender
+            })
+    
+    return results

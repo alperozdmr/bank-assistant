@@ -33,6 +33,10 @@ function App() {
   const [userProfile, setUserProfile] = useState(null)
   const [showProfile, setShowProfile] = useState(false)
   const [isLoadingProfile, setIsLoadingProfile] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState([])
+  const [isSearching, setIsSearching] = useState(false)
+  const [showSearchInput, setShowSearchInput] = useState(false)
   const messagesEndRef = useRef(null)
 
   const scrollToBottom = () => {
@@ -306,6 +310,27 @@ function App() {
   const switchToChat = (chatId) => {
     setCurrentChatId(chatId)
     setShowSidebar(false)
+  }
+
+  // Arama sonucuna tıklandığında o mesaja git
+  const navigateToMessage = (chatId, messageId) => {
+    setCurrentChatId(chatId)
+    setShowSidebar(false)
+    setSearchQuery('')
+    setShowSearchInput(false)
+    
+    // Eğer messageId varsa o mesaja scroll yap
+    if (messageId) {
+      setTimeout(() => {
+        const messageElement = document.getElementById(`message-${messageId}`)
+        if (messageElement) {
+          messageElement.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center' 
+          })
+        }
+      }, 500)
+    }
   }
 
   // Sohbet başlığını güncelle
@@ -703,6 +728,64 @@ function App() {
     ).sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)))
   }
 
+  // Arama fonksiyonu
+  const performSearch = async (query) => {
+    if (!query.trim() || !userInfo?.userId) {
+      setSearchResults([])
+      setIsSearching(false)
+      return
+    }
+
+    setIsSearching(true)
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/chat/search?user_id=${userInfo.userId}&query=${encodeURIComponent(query)}`, {
+        headers: {
+          'Authorization': `Bearer ${userInfo.token}`
+        }
+      })
+
+      if (response.ok) {
+        const results = await response.json()
+        setSearchResults(results)
+      } else {
+        console.error('Arama hatası:', response.status)
+        setSearchResults([])
+      }
+    } catch (error) {
+      console.error('Arama hatası:', error)
+      setSearchResults([])
+    } finally {
+      setIsSearching(false)
+    }
+  }
+
+  // Arama sorgusu değiştiğinde arama yap
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (searchQuery.trim()) {
+        performSearch(searchQuery)
+      } else {
+        setSearchResults([])
+      }
+    }, 300) // 300ms gecikme ile arama
+
+    return () => clearTimeout(timeoutId)
+  }, [searchQuery, userInfo])
+
+  // Arama sonuçlarında eşleşen kelimeleri highlight et
+  const highlightSearchText = (text, searchQuery) => {
+    if (!searchQuery.trim()) return text
+    
+    const regex = new RegExp(`(${searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi')
+    const parts = text.split(regex)
+    
+    return parts.map((part, index) => 
+      regex.test(part) ? (
+        <span key={index} className="search-highlight">{part}</span>
+      ) : part
+    )
+  }
+
   const formatTime = (timestamp) => {
     return timestamp.toLocaleTimeString('tr-TR', {
       hour: '2-digit',
@@ -722,47 +805,149 @@ function App() {
         <div className={`sidebar ${showSidebar ? 'show' : ''}`}>
           <div className="sidebar-header">
             <h2>Sohbetler</h2>
-            <button className="new-chat-button" onClick={createNewChat}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 5V19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </button>
+            <div className="sidebar-header-buttons">
+              <button className={`search-toggle-button ${showSearchInput ? 'active' : ''}`} onClick={() => setShowSearchInput(!showSearchInput)}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2"/>
+                  <path d="M21 21L16.65 16.65" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+              <button className="new-chat-button" onClick={createNewChat}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 5V19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            </div>
           </div>
-          <div className="chat-list">
-            {chatList.map((chat) => (
-              <div
-                key={chat.id}
-                className={`chat-item ${currentChatId === chat.id ? 'active' : ''}`}
-                onClick={() => switchToChat(chat.id)}
-              >
-                <div className="chat-info">
-                  <div className="chat-title">{chat.title}</div>
-                  <div className="chat-time">
-                    {(chat.updatedAt instanceof Date ? chat.updatedAt : new Date(chat.updatedAt)).toLocaleDateString('tr-TR', {
-                      day: '2-digit',
-                      month: '2-digit',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </div>
+          
+                    {/* Arama Kutusu */}
+          {showSearchInput && (
+            <div className="sidebar-search">
+              <div className="search-input-wrapper">
+                <div className="search-icon">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2"/>
+                    <path d="M21 21L16.65 16.65" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
                 </div>
-                {chatList.length > 1 && !chat.isNew && (
-                  <button
-                    className="delete-chat-button"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      deleteChat(chat.id)
-                    }}
+                <input
+                  type="text"
+                  placeholder="Mesajlarda ara..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="search-input"
+                  autoFocus
+                />
+                {searchQuery && (
+                  <button 
+                    className="clear-search-button"
+                    onClick={() => setSearchQuery('')}
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M3 6H5H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                   </button>
                 )}
               </div>
-            ))}
+            </div>
+          )}
+          <div className="chat-list">
+            {/* Arama Sonuçları */}
+            {searchQuery && (
+              <div className="search-results-section">
+                <div className="search-results-header">
+                  <h3>Arama Sonuçları</h3>
+                  {isSearching && <div className="search-loading">Aranıyor...</div>}
+                </div>
+                {searchResults.length > 0 ? (
+                  <div className="search-results">
+                    {searchResults.map((result, index) => (
+                      <div
+                        key={`search-${index}`}
+                        className="search-result-item"
+                                               onClick={() => {
+                         if (result.message_id) {
+                           navigateToMessage(result.chat_id, result.message_id)
+                         } else {
+                           switchToChat(result.chat_id)
+                           setSearchQuery('')
+                         }
+                       }}
+                      >
+                          <div className="search-result-content">
+                           <div className="search-result-text">
+                             {highlightSearchText(result.message_text, searchQuery)}
+                           </div>
+                           <div className="search-result-meta">
+                             <span className="search-result-sender">
+                               {result.sender === 'user' ? 'Siz' : 'Bot'}
+                             </span>
+                             <span className="search-result-time">
+                               {new Date(result.timestamp).toLocaleDateString('tr-TR', {
+                                 day: '2-digit',
+                                 month: '2-digit',
+                                 hour: '2-digit',
+                                 minute: '2-digit'
+                               })}
+                             </span>
+                           </div>
+                         </div>
+                        <div className="search-result-icon">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : !isSearching && searchQuery && (
+                  <div className="no-search-results">
+                    <p>Arama sonucu bulunamadı</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Normal Sohbet Listesi */}
+            {!searchQuery && (
+              <>
+                {chatList.map((chat) => (
+                  <div
+                    key={chat.id}
+                    className={`chat-item ${currentChatId === chat.id ? 'active' : ''}`}
+                    onClick={() => switchToChat(chat.id)}
+                  >
+                    <div className="chat-info">
+                      <div className="chat-title">{chat.title}</div>
+                      <div className="chat-time">
+                        {(chat.updatedAt instanceof Date ? chat.updatedAt : new Date(chat.updatedAt)).toLocaleDateString('tr-TR', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </div>
+                    </div>
+                    {chatList.length > 1 && !chat.isNew && (
+                      <button
+                        className="delete-chat-button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          deleteChat(chat.id)
+                        }}
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M3 6H5H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </>
+            )}
           </div>
           
           {/* Profil Bölümü */}
@@ -846,6 +1031,7 @@ function App() {
           {messages.map((message, idx) => (
             <Fragment key={`m-${message.id}`}>
               <div
+                id={`message-${message.id}`}
                 className={`message ${message.sender === 'user' ? 'user-message' : 'bot-message'}`}
               >
                 <div className="message-content">
