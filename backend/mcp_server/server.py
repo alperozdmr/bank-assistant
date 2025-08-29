@@ -7,7 +7,7 @@ from .data.sqlite_repo import SQLiteRepository
 from fastmcp import FastMCP
 from .tools.general_tools import GeneralTools 
 from .tools.calculation_tools import CalculationTools
-from .tools.roi_simulator_tool import RoiSimulatorTool  
+from .tools.roi_simulator_tool import ROISimulatorTool  
 
 ###############
 
@@ -24,7 +24,7 @@ mcp = FastMCP("Fortuna Banking Services")
 repo = SQLiteRepository(db_path=DB_PATH)
 general_tools = GeneralTools(repo)
 calc_tools = CalculationTools(repo)
-roi_simulator_tool = RoiSimulatorTool(repo)
+roi_simulator_tool = ROISimulatorTool(repo)
 
 
 
