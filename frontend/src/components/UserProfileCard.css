@@ -93,7 +93,7 @@
   justify-content: space-between;
   align-items: flex-start;
   padding: 8px 0;
-  border-bottom: 1px solid var(--border-light, #f8f9fa);
+  border-bottom: 1px solid #e1e5e9;
 }
 
 .dark-theme .profile-row {
