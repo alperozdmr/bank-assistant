@@ -239,8 +239,8 @@ async def chat_endpoint(request: ChatRequest, current_user: int = Depends(get_cu
             return text
         # <think> bloklarını temizle
         cleaned = re.sub(r"<think\b[\s\S]*?</think>", "", text, flags=re.IGNORECASE)
-        # <ask> bloklarını temizle
-        cleaned = re.sub(r"<ask\b[\s\S]*?</ask>", "", cleaned, flags=re.IGNORECASE)
+        # <ask> bloklarının içeriğini koru, sadece etiketleri kaldır
+        cleaned = re.sub(r"</?ask\b[^>]*>", "", cleaned, flags=re.IGNORECASE)
         return cleaned.strip()
 
     final_text = _strip_think(final_text)
