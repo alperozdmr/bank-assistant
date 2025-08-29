@@ -609,3 +609,16 @@ class GeneralTools:
             "snapshot": snap,
             "transactions": rows,
         }
+    
+    def list_available_portfolios(self) -> dict:
+        """
+        Fetches all available investment portfolios and formats them for display.
+        """
+        portfolios_data = self.repo.get_all_portfolios()
+
+        if not portfolios_data:
+            return {"error": "No investment portfolios found in the database."}
+        
+        # Sonucu, 'portfolios' adında bir anahtar altında liste olarak döndürerek
+        # daha standart bir JSON yapısı oluşturuyoruz.
+        return {"available_portfolios": portfolios_data}

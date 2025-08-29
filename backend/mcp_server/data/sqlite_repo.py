@@ -578,3 +578,16 @@ class SQLiteRepository:
             df = pd.read_sql_query(query, conn)
             return df
 
+    def get_all_portfolios(self) -> list[dict]:
+        """
+        Retrieves all available portfolio definitions from the 'portfolio_mixes' table.
+
+        Returns:
+            A list of dictionaries, where each dictionary represents a portfolio
+            with its name, risk level, and asset allocation string.
+        """
+        query = "SELECT portfoy_adi, risk_seviyesi, varlik_dagilimi FROM portfolio_mixes;"
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            results = cursor.execute(query).fetchall()
+            return [dict(row) for row in results]

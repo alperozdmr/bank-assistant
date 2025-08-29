@@ -512,6 +512,28 @@ def run_roi_simulation(portfolio_name: str, monthly_investment: float, years: in
     )
 
 
+@mcp.tool()
+def list_portfolios() -> dict:
+    """
+    Lists all available investment portfolios with their names, risk levels, and asset allocations.
+
+    When to use:
+    - This tool is perfect for answering user questions about what investment options are available.
+    - Use for queries like: "What are my portfolio options?", "Show me the available investment strategies",
+      "Which portfolios can I choose from?", or "List all portfolios".
+    - This should be used before running a simulation if the user doesn't know which portfolio to choose.
+
+    Args:
+        None
+
+    Returns:
+        A dictionary containing a list of all available portfolios.
+        Each portfolio in the list is a dictionary with 'portfoy_adi', 'risk_seviyesi',
+        and 'varlik_dagilimi' keys.
+    """
+    
+    return general_tools.list_available_portfolios()
+
 
 if __name__ == "__main__":
     # Varsayılan port ile başlat (kütüphanen ne destekliyorsa)
