@@ -52,6 +52,16 @@ app.include_router(auth_router)
 # --------------------
 
 
+def _strip_think(text: str) -> str:
+    if not isinstance(text, str):
+        return text
+    # <think> bloklarını temizle
+    cleaned = re.sub(r"<think\b[\s\S]*?</think>", "", text, flags=re.IGNORECASE)
+    # <ask> bloklarının içeriğini koru, sadece etiketleri kaldır
+    cleaned = re.sub(r"</?ask\b[^>]*>", "", cleaned, flags=re.IGNORECASE)
+    return cleaned.strip()
+
+
 class ChatRequest(BaseModel):
     message: str
     session_id: Optional[str] = None
@@ -194,6 +204,9 @@ async def chat_endpoint(request: ChatRequest, current_user: int = Depends(get_cu
             import json
             ui_component_json = json.dumps(ui_component)
         
+        # Mesajı DB'ye kaydetmeden önce etiketleri temizle
+        final_text = _strip_think(final_text)
+
         # GMT+3 zaman damgası oluştur
         from datetime import datetime, timedelta
         gmt_plus_3 = datetime.utcnow() + timedelta(hours=3)
@@ -234,18 +247,7 @@ async def chat_endpoint(request: ChatRequest, current_user: int = Depends(get_cu
         "meta": {"session_id": session_id, "message_id": message_id, "has_ui_component": ui_component is not None, "chat_id": request.chat_id},
         "response_masked": mask_text(final_text),
     })
-    def _strip_think(text: str) -> str:
-        if not isinstance(text, str):
-            return text
-        # <think> bloklarını temizle
-        cleaned = re.sub(r"<think\b[\s\S]*?</think>", "", text, flags=re.IGNORECASE)
-        # <ask> bloklarının içeriğini koru, sadece etiketleri kaldır
-        cleaned = re.sub(r"</?ask\b[^>]*>", "", cleaned, flags=re.IGNORECASE)
-        return cleaned.strip()
-
-    final_text = _strip_think(final_text)
    
-
     response = ChatResponse(
         session_id=session_id,
         message_id=message_id,
