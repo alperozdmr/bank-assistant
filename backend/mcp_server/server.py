@@ -229,6 +229,14 @@ def get_fee(service_code: str) -> dict:
 
 @mcp.tool()
 @log_tool
+def get_all_fees() -> dict:
+    """
+    Tüm ücretleri (fees) eksiksiz döndürür.
+    """
+    return general_tools.get_all_fees()
+
+@mcp.tool()
+@log_tool
 def branch_atm_search(city: str, district: str | None = None, type: str | None = None, limit: int = 3) -> dict:
     """
     Finds nearby bank branches/ATMs for a given location.

@@ -14,6 +14,8 @@ from tools.schemas import get_tool_catalog
 USE_MCP = 0
 MCP_URL = "http://127.0.0.1:8081/sse"
 
+
+
 _BALANCE_WORDS = ("bakiye", "balance", "ne kadar var", "kalan para", "hesabımda ne kadar", 
                   "bakiyem", "hesaplarım", "hesap", "hesabım", "hesaplarımda ne kadar")
 _CARD_WORDS = ("kart", "kredi kartı", "kartım", "kart bilgisi", "kart detayı", 
@@ -30,6 +32,72 @@ _TRANSACTION_WORDS = (
     "past transactions", "transaction history",
     "son işlem", "son işlemler", "hesap hareketleri", "ekstre"
 )
+ALL_FEES_FULL_TRIGGERS = (
+    "tüm ücret", "tüm ücretler",
+    "ücretlerin hepsi", "hepsini göster",
+    "bütün ücret", "bütün ücretler",
+    "tüm komisyon", "tüm komisyonlar", "komisyonların hepsi"
+)
+SUPPORTED_FEE_CODES = {
+    "EFT","FAST","HAVALE","KART_AIDATI","KREDI_TAHSIS",
+    "ACCOUNT_CLOSURE","ACCOUNT_MAINTENANCE","ACCOUNT_OPENING","ACCOUNT_STATEMENT",
+    "ATM_BALANCE_INQUIRY","ATM_PIN_CHANGE","ATM_WITHDRAWAL",
+    "BILL_PAYMENT","CARD_REPLACEMENT",
+    "CHEQUE_BOUNCE","CHEQUE_DEPOSIT",
+    "CREDIT_CHECK","FOREIGN_EXCHANGE",
+}
+FEE_ALIASES = {
+    "hesap kapatma": "ACCOUNT_CLOSURE",
+    "kapatma": "ACCOUNT_CLOSURE",
+    "account closure": "ACCOUNT_CLOSURE",
+
+    "hesap bakim": "ACCOUNT_MAINTENANCE",
+    "hesap isletim": "ACCOUNT_MAINTENANCE",
+    "account maintenance": "ACCOUNT_MAINTENANCE",
+
+    "hesap acilis": "ACCOUNT_OPENING",
+    "hesap acma": "ACCOUNT_OPENING",
+    "account opening": "ACCOUNT_OPENING",
+
+    "hesap ozeti": "ACCOUNT_STATEMENT",
+    "ekstre": "ACCOUNT_STATEMENT",
+    "statement": "ACCOUNT_STATEMENT",
+
+    "atm bakiye sorgulama": "ATM_BALANCE_INQUIRY",
+    "bakiye sorgulama": "ATM_BALANCE_INQUIRY",
+
+    "pin degisikligi": "ATM_PIN_CHANGE",
+    "atm pin": "ATM_PIN_CHANGE",
+    "sifre degisikligi": "ATM_PIN_CHANGE",
+
+    "para cekme": "ATM_WITHDRAWAL",
+    "atm para cekme": "ATM_WITHDRAWAL",
+
+    "fatura odeme": "BILL_PAYMENT",
+
+    "kart degisim": "CARD_REPLACEMENT",
+    "kart yenileme": "CARD_REPLACEMENT",
+
+    "cek iade": "CHEQUE_BOUNCE",
+    "cek yatirma": "CHEQUE_DEPOSIT",
+
+    "kredi sorgulama": "CREDIT_CHECK",
+
+    "doviz alim-satim": "FOREIGN_EXCHANGE",
+    "doviz alis satis": "FOREIGN_EXCHANGE",
+    "doviz": "FOREIGN_EXCHANGE",
+
+    "eft": "EFT",
+    "fast": "FAST",
+    "havale": "HAVALE",
+    "kart aidati": "KART_AIDATI",
+    "yillik aidat": "KART_AIDATI",
+    "kredi tahsis": "KREDI_TAHSIS",
+}
+
+def _normalize_tr(s: str) -> str:
+    return (s or "").lower().translate(str.maketrans("çğıöşü", "cgiosu"))
+ALL_FEES_FULL_TRIGGERS_ASCII = tuple(_normalize_tr(t) for t in ALL_FEES_FULL_TRIGGERS)
 
 
 def _acc_id(txt: str) -> Optional[int]:
@@ -42,12 +110,25 @@ def _cust_id(txt: str) -> Optional[int]:
     return int(m.group(3)) if m else None
 
 def _service_code(txt: str) -> Optional[str]:
-    m = _SRV_RE.search(txt or "")
-    if not m: return None
-    s = m.group(1).upper().replace(" ", "_")
-    if s.startswith("KART"): s = "KART_AIDATI"
-    if s.startswith("KREDI"): s = "KREDI_TAHSIS"
-    return s
+    if not txt:
+        return None
+    norm = _normalize_tr(txt)
+
+    for token in re.findall(r"[A-Z_]{3,}", txt.upper()):
+        if token in SUPPORTED_FEE_CODES:
+            return token
+
+    for alias, code in FEE_ALIASES.items():
+        pat = r"\b" + re.escape(alias).replace(r"\ ", r"[\s_]+") + r"\b"
+        if re.search(pat, norm, re.I):
+            return code
+
+    for code in SUPPORTED_FEE_CODES:
+        c_norm = code.lower().replace("_", " ")
+        if re.search(rf"\b{re.escape(c_norm)}\b", norm):
+            return code
+
+    return None
 
 
 def _fmt_balance(res: Dict[str, Any], fallback_id: Optional[int] = None) -> Dict[str, Any]:
@@ -234,10 +315,12 @@ def _fmt_fees(res: Dict[str, Any]) -> Dict[str, Any]:
     if not ui_component:
         ui_component = {
             "type": "fees_card",
-            "service_code": d.get("service_code"),
+            "title_tr": "Hizmet Ücreti",
+            "display_name": desc,
             "description": desc,
             "pricing": pr,
-            "updated_at": d.get("updated_at")
+            "updated_at": d.get("updated_at"),
+            "hide_service_code": True
         }
 
     def fmt_try(x: float) -> str:
@@ -284,7 +367,29 @@ def _fmt_fees(res: Dict[str, Any]) -> Dict[str, Any]:
         "ui_component": ui_component
     }
 
+def _fmt_all_fees(res: Dict[str, Any]) -> Dict[str, Any]:
+    d = res.get("data") if isinstance(res.get("data"), dict) else res
+    items = d.get("items") or d.get("fees") or []
+    ui_component = d.get("ui_component")
 
+    if not items:
+        return {"text": "Ücret listesi boş.", "ui_component": None}
+
+    # FE’ye ipucu: kodu gizle
+    if not ui_component:
+        ui_component = {"type": "fees_table", "items": items, "hide_service_code": True}
+    else:
+        ui_component.setdefault("hide_service_code", True)
+
+    # Yalnızca Türkçe açıklamaları önizlemede göster
+    descs = [i.get("description") or i.get("service_code") for i in items if isinstance(i, dict)]
+    preview = " - ".join(descs[:5])
+    more = f" (+{len(descs)-5} diğer)" if len(descs) > 5 else ""
+
+    return {
+        "text": f"Toplam {len(descs)} ücret bulundu: {preview}{more}",
+        "ui_component": ui_component
+    }
 def _fmt_card_info(res: Dict[str, Any]) -> Dict[str, Any]:
     """
     Card info response'unu hem text hem de UI component data olarak döndürür
@@ -1029,6 +1134,7 @@ def _llm_flow(user_text: str, customer_id: int) -> Dict[str, Any]: # customer_id
 
 def handle_message(user_text: str, customer_id: int) -> Dict[str, Any]: # customer_id: int olarak güncellendi
     low = user_text.lower()
+    norm_low = _normalize_tr(user_text)
 
     if any(w in low for w in _TRANSACTION_WORDS):
         params = _extract_txn_params(user_text)
@@ -1146,6 +1252,18 @@ def handle_message(user_text: str, customer_id: int) -> Dict[str, Any]: # custom
         if ui_component:
             result["ui_component"] = ui_component
         return result
+    
+    # Tüm ücretler
+    if (any(t in low for t in ALL_FEES_FULL_TRIGGERS) or
+        any(t in norm_low for t in ALL_FEES_FULL_TRIGGERS_ASCII)):
+        res = call_mcp_tool(MCP_URL, "get_all_fees", {})
+        all_fees = _fmt_all_fees(res)
+        return {
+            "YANIT": all_fees["text"],   # Sadece düz metin
+            "toolOutputs": [
+                {"name": "get_all_fees", "args": {}, "result": res, "ok": res.get("ok", True)}
+            ],
+        }
     
     # Ücretler
     if any(w in low for w in _FEE_WORDS):

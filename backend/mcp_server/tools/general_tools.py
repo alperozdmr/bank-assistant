@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import Any, Dict, List, Optional
+import sqlite3
 import math
 import hashlib
 import logging as log
@@ -425,6 +426,66 @@ class GeneralTools:
         except Exception as e:
             return {"error": f"Okuma hatası: {e}"}
         
+    def get_all_fees(self) -> Dict[str, Any]:
+        """
+        fees tablosundaki TÜM ücret kayıtlarını (19 satır) eksiksiz döndürür.
+        Dönüş formatı, frontend’in doğrudan kullanabileceği şekilde normalize edilir.
+
+        Returns:
+            {
+              "ok": True,
+              "count": <int>,
+              "items": [
+                 {
+                   "service_code": str,
+                   "description": str,
+                   "pricing": dict|str,   # pricing_json parse edilebiliyorsa dict
+                   "updated_at": str
+                 },
+                 ...
+              ],
+              "ui_component": {
+                "type": "fees_table",
+                "items": [...]
+              }
+            }
+        """
+        try:
+            rows = self.repo.list_fees()  # Repo 19 satırı döndürür
+        except Exception as e:
+            return {"ok": False, "error": f"Okuma hatası: {e}"}
+
+        if not rows:
+            return {"ok": True, "count": 0, "items": []}
+
+        items: List[Dict[str, Any]] = []
+        for r in rows:
+            raw = r.get("pricing_json")
+            # pricing_json'u mümkünse JSON'a çevir
+            try:
+                pricing = json.loads(raw) if isinstance(raw, str) else raw
+            except Exception:
+                pricing = raw  # bozuksa string olarak bırak
+
+            items.append({
+                "service_code": r.get("service_code"),
+                "description": r.get("description"),
+                "pricing": pricing,
+                "updated_at": r.get("updated_at"),
+            })
+
+        return {
+            "ok": True,
+            "count": len(items),
+            "items": items,
+            "ui_component": {
+                "type": "fees_table",
+                "items": items,
+                "hide_service_code": True,            # tablo görünümünde kodu gizle
+                "display_field": "description"        # FE liste sütununda description’ı öne çıkarabilir
+            }
+        }
+
     def get_fee(self, service_code: str) -> Dict[str, Any]:
         """
         Ücret tablosundan tek bir hizmet kodunun (service_code) JSON ücretlerini döndürür.
@@ -456,10 +517,13 @@ class GeneralTools:
         # Frontend FeesCard component için structured data
         result["ui_component"] = {
             "type": "fees_card",
-            "service_code": row["service_code"],
+            "title_tr": "Hizmet Ücreti",
+            "display_name": row["description"],       # FE bunu başlık/isim olarak kullansın
             "description": row["description"],
             "pricing": pricing,
-            "updated_at": row["updated_at"]
+            "updated_at": row["updated_at"],
+            "service_code": row["service_code"],      
+            "hide_service_code": True                 
         }
         
         return result
