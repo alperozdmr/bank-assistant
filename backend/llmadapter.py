@@ -128,7 +128,13 @@ class LLMAdapter:
     @staticmethod
     def first_message_content(resp: Dict[str, Any]) -> Optional[str]:
         try:
-            return resp["choices"][0]["message"].get("content")
+            content = resp["choices"][0]["message"].get("content")
+            if content:
+                # <think> tag'lerini temizle
+                import re
+                content = re.sub(r'<think>.*?</think>', '', content, flags=re.DOTALL)
+                content = content.strip()
+            return content
         except Exception:
             return None
 

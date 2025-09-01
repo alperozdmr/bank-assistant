@@ -388,10 +388,18 @@ body {
   background: linear-gradient(135deg, #1789dc 0%, #58167d 100%);
 }
 
-.loading-spinner {
+.login-button .loading-spinner {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+.login-button .loading-span {
+  animation: none !important;
+  transform: none !important;
+  transition: none !important;
+  white-space: nowrap;
+  will-change: auto;
 }
 
 .spinner {

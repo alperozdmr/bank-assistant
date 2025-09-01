@@ -21,7 +21,7 @@ _BALANCE_WORDS = ("bakiye", "balance", "ne kadar var", "kalan para", "hesabımda
 _CARD_WORDS = ("kart", "kredi kartı", "kartım", "kart bilgisi", "kart detayı", 
                "limit", "borç", "son ödeme", "kesim", "kullanılabilir limit")
 _FX_WORDS   = ("kur", "döviz", "doviz", "usd", "eur", "dolar", "euro", "sterlin", "rate")
-_INT_WORDS  = ("faiz", "oran", "interest", "yatırım", "mevduat", "kredi faizi", "kredi")
+_INT_WORDS  = ("faiz", "oran", "interest", "yatırım", "mevduat", "kredi faizi")
 _FEE_WORDS  = ("ücret", "ucret", "masraf", "komisyon", "aidat", "fee")
 _ACC_STRICT = re.compile(r"\b(hesap|account)\s*(no|id)?\s*(\d{1,10})\b", re.IGNORECASE)
 _CUST_RE = re.compile(r"\b(müşteri|customer)\s*(no|id)?\s*(\d{1,10})\b", re.IGNORECASE)
@@ -1270,7 +1270,7 @@ def handle_message(user_text: str, customer_id: int) -> Dict[str, Any]: # custom
         }
     
     # Ücretler
-    if any(w in low for w in _FEE_WORDS):
+    if USE_MCP and any(w in low for w in _FEE_WORDS):
         code = _service_code(user_text)
         if not code:
             return {"YANIT": "Hangi hizmetin ücreti? Örnek: EFT, FAST, HAVALE, KART_AIDATI, KREDI_TAHSIS"}
@@ -1336,7 +1336,7 @@ def handle_message(user_text: str, customer_id: int) -> Dict[str, Any]: # custom
         return result
     
     # Hesap bakiyesi
-    if USE_MCP and any(w in low for w in _BALANCE_WORDS):
+    if any(w in low for w in _BALANCE_WORDS):
         cid_from_text = _cust_id(user_text)
         if cid_from_text is not None:
             # LLM'in yanlış bir müşteri ID'si döndürmesini engelle

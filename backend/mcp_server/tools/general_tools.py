@@ -5,6 +5,12 @@ import math
 import hashlib
 import logging as log
 import json
+import sys
+import os
+
+# TCMB servisini import etmek için path ekle
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+from tcmb_service import TCMBService
 
 class GeneralTools:
     """
@@ -14,6 +20,11 @@ class GeneralTools:
 
     def __init__(self, repo):
         self.repo = repo
+        # TCMB servisini veritabanı yolu ile başlat
+        if hasattr(repo, 'db_path'):
+            self.tcmb_service = TCMBService(db_path=repo.db_path)
+        else:
+            self.tcmb_service = TCMBService()
 
     def get_balance(self, account_id: int, customer_id: int) -> Dict[str, Any]:
         """
@@ -363,37 +374,29 @@ class GeneralTools:
 
     def get_exchange_rates(self) -> Dict[str, Any]:
         """
-        Repo içindeki hazır SQL/okuma fonksiyonunu kullanarak döviz kurlarını döndürür.
-        Beklenen repo metodu: get_fx_rates() veya get_exchange_rates()
+        TCMB'den canlı döviz kurlarını çeker ve döndürür.
+        Günlük 15:31'de otomatik güncelleme yapar.
         Dönüş: {"rates": [ {...}, ... ]} veya {"rates": []} / {"error": "..."}
         """
         try:
-            if hasattr(self.repo, "get_fx_rates") and callable(getattr(self.repo, "get_fx_rates")):
-                rows = self.repo.get_fx_rates()
-            elif hasattr(self.repo, "get_exchange_rates") and callable(getattr(self.repo, "get_exchange_rates")):
-                rows = self.repo.get_exchange_rates()
-            else:
-                return {"error": "Repository bu okumayı desteklemiyor (get_fx_rates() ya da get_exchange_rates() bulunamadı)."}
+            # TCMB servisinden güncel kurları al
+            rates = self.tcmb_service.get_exchange_rates()
+            
+            if not rates:
+                return {"error": "TCMB'den döviz kuru verisi alınamadı."}
 
-            rows = rows or []
-            # sqlite3.Row veya dict olabilir → dict'e çevir
-            try:
-                rows = [dict(r) for r in rows]
-            except Exception:
-                pass  # zaten dict listesi ise
-
-            result = {"rates": rows}
+            result = {"rates": rates}
             
             # Frontend ExchangeRatesCard component için structured data
-            if rows:
+            if rates:
                 result["ui_component"] = {
                     "type": "exchange_rates_card",
-                    "rates": rows
+                    "rates": rates
                 }
 
             return result
         except Exception as e:
-            return {"error": f"Okuma hatası: {e}"}
+            return {"error": f"TCMB veri çekme hatası: {e}"}
 
     def get_interest_rates(self) -> Dict[str, Any]:
         """

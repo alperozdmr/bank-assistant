@@ -200,10 +200,10 @@ function Login({ onLogin }) {
                 disabled={isLoading}
               >
                 {isLoading ? (
-                  <div className="loading-spinner">
+                  <>
                     <div className="spinner"></div>
-                    <span>Giriş yapılıyor...</span>
-                  </div>
+                    <span style={{animation: 'none', transform: 'none'}}>Giriş yapılıyor...</span>
+                  </>
                 ) : (
                   'Giriş'
                 )}

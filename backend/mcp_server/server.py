@@ -144,15 +144,14 @@ def list_recent_transactions(customer_id: int, n: int = 5) -> dict:
 @mcp.tool()
 @log_tool
 def get_exchange_rates() -> dict:
-    """Fetch FX rates from `fx_rates`. Read-only; output is normalized for chat/agent flows.
+    """Fetch live FX rates from TCMB (Turkish Central Bank). Updates daily at 15:30 TR time.
 
     Data source:
-        - Table: fx_rates
-        - Columns:
-            - code (TEXT): Currency pair code (e.g., "USD/TRY", "EUR/TRY")
-            - buy (REAL): Bank buy price for the pair
-            - sell (REAL): Bank sell price for the pair
-            - updated_at (TEXT): "YYYY-MM-DD HH:MM:SS" (or ISO-like timestamp)
+        - TCMB XML API: https://www.tcmb.gov.tr/kurlar/today.xml
+        - Updates automatically at 15:30 TR time daily (TCMB announcement time)
+        - Data is stored in fx_rates table and served from database between updates
+        - JPY rates are divided by 100 (TCMB provides rates for 100 JPY)
+        - Uses TCMB's official date from XML for updated_at timestamp
 
     Parameters:
         (none)
@@ -163,21 +162,23 @@ def get_exchange_rates() -> dict:
               "rates": [
                 {
                   "code": "USD/TRY",
-                  "buy": 32.10,
-                  "sell": 32.40,
-                  "updated_at": "2025-08-20 12:00:00"
+                  "buy": 40.9441,
+                  "sell": 41.0178,
+                  "updated_at": "2025-01-20 15:31:00",
+                  "source": "TCMB"
                 },
                 ...
               ]
             }
-            * The list may be empty if the table has no rows.
+            * The list may be empty if TCMB data is unavailable.
         - Error:
             { "error": "<explanatory message>" }
 
     Use cases:
         - Display current FX quotes in UI.
         - Validate supported currency pair before conversion flows.
-        - Show the last refresh timestamp for transparency and troubleshooting."""
+        - Show the last refresh timestamp for transparency and troubleshooting.
+        - Real-time exchange rate information from official source."""
     return general_tools.get_exchange_rates()
 
 
