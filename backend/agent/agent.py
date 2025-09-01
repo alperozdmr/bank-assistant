@@ -85,7 +85,6 @@ FEE_ALIASES = {
 
     "doviz alim-satim": "FOREIGN_EXCHANGE",
     "doviz alis satis": "FOREIGN_EXCHANGE",
-    "doviz": "FOREIGN_EXCHANGE",
 
     "eft": "EFT",
     "fast": "FAST",
@@ -113,6 +112,11 @@ def _service_code(txt: str) -> Optional[str]:
     if not txt:
         return None
     norm = _normalize_tr(txt)
+
+    # Özel durum: 'döviz' + (ücret/masraf/komisyon/bedel) -> FOREIGN_EXCHANGE ücreti
+    # Örn: "döviz alım ücreti", "döviz alım/satım bedeli"
+    if re.search(r"\bdoviz\b", norm) and re.search(r"\b(ucret|masraf|komisyon|bedel)\b", norm):
+        return "FOREIGN_EXCHANGE"
 
     for token in re.findall(r"[A-Z_]{3,}", txt.upper()):
         if token in SUPPORTED_FEE_CODES:
