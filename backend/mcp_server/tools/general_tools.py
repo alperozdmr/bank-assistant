@@ -336,37 +336,7 @@ class GeneralTools:
                 "son_odeme_tarihi": card_data["due_day"]
             }
         }
-
-    def list_recent_transactions(self, customer_id: int, n: int = 5) -> Dict[str, Any]:
-        """
-        Bir müşterinin tüm hesaplarındaki son 'n' adet işlemi listeler.
-
-        Args:
-            customer_id (int): Müşteri kimliği.
-            n (int): Listelenecek işlem sayısı (varsayılan: 5).
-
-        Returns:
-            A dictionary containing a list of transactions or an error.
-        """
-        if customer_id is None:
-            return {"error": "parametre eksik: customer_id verin"}
-
-        try:
-            c_id = int(customer_id)
-        except (TypeError, ValueError):
-            return {"error": "customer_id geçersiz (int olmalı)"}
-
-        transactions = self.repo.get_transactions_by_customer(c_id, n)
-
-        if not transactions:
-            return {
-                "customer_id": c_id,
-                "transactions": [],
-                "message": "Müşteriye ait son işlem bulunamadı.",
-            }
-
-        return {"customer_id": c_id, "transactions": transactions}
-    
+   
     """
     Döviz kurları ve faiz oranlarını döndürür.
     Repo: exchange_rates, interest_rates tablolarını sorgular.
@@ -668,7 +638,31 @@ class GeneralTools:
             # Okuma başarılı olsa da yazma hatasında bilgiyi yine döndürelim
             snap = {"error": f"snapshot yazılamadı: {e}", "saved": 0}
 
-        return {
+        # UI component için öğeleri normalize et
+        def _fmt_amount(x: Any) -> str:
+            try:
+                val = float(x)
+            except Exception:
+                return str(x)
+            # Türkçe biçimlendirme: binlik ayraç nokta, ondalık virgül
+            return f"{val:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+
+        items = []
+        for r in rows:
+            amt = r.get("amount")
+            items.append({
+                "id": r.get("txn_id") or r.get("id"),
+                "datetime": r.get("txn_date") or r.get("date"),
+                "amount": amt,
+                "amount_formatted": _fmt_amount(amt) if amt is not None else None,
+                "currency": r.get("currency") or "TRY",
+                "type": r.get("txn_type") or r.get("type"),
+                "description": r.get("description"),
+                "balance_after": r.get("balance_after"),
+                "account_id": r.get("account_id") or acc_id,
+            })
+
+        base = {
             "account_id": acc_id,
             "range": {"from": f, "to": t},
             "limit": limit,
@@ -676,6 +670,17 @@ class GeneralTools:
             "snapshot": snap,
             "transactions": rows,
         }
+
+        # Frontend'in beklediği UI şeması
+        ui_component = {
+            "type": "transactions_list",
+            "account_id": acc_id,
+            "items": items,
+        }
+
+        base["ui_component"] = ui_component
+        base["ok"] = True
+        return base
     
     def list_available_portfolios(self) -> dict:
         """

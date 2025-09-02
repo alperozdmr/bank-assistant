@@ -1051,7 +1051,7 @@ function App() {
                       {message.ui_component.type === 'interest_rates_card' && (
                         <InterestRatesCard cardData={message.ui_component} />
                       )}
-                      {message.ui_component.type === 'fees_card' && (
+                      {(message.ui_component.type === 'fees_card' || message.ui_component.type === 'fees_table') && (
                         <FeesCard cardData={message.ui_component} />
                       )}
                       {message.ui_component.type === 'atm_card' && (
