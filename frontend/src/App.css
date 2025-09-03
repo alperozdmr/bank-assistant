@@ -1043,9 +1043,12 @@ body {
 }
 
 .quick-buttons {
-  display: flex;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
   justify-content: center;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
 .quick-button {
@@ -1192,6 +1195,12 @@ body {
     font-size: 14px;
   }
 
+  .quick-buttons {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    max-width: 400px;
+  }
+  
   .send-button {
     width: 36px;
     height: 36px;
@@ -1225,6 +1234,12 @@ body {
 
   .quick-button span {
     font-size: 11px;
+  }
+  
+  .quick-buttons {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    max-width: 350px;
   }
 }
 
@@ -1382,6 +1397,12 @@ body {
   .quick-actions {
     max-width: 95%;
     padding: 10px;
+  }
+  
+  .quick-buttons {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    max-width: 300px;
   }
 
   .quick-actions h3 {

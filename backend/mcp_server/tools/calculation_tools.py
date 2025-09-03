@@ -226,11 +226,27 @@ class CalculationTools:
 
             # Oran çözümleme (repo→db→manuel sırası yukarıdaki helper’da)
             product_fallback = "savings" if mode == "deposit" else "loan"
-            resolved_rate, rate_meta = self.repo._resolve_rate_via_repo_or_db(
-                provided_rate=rate,
-                product=product, product_fallback=product_fallback,
-                currency=currency, as_of=as_of,
-            )
+            # Türkçe product isimlerini İngilizce karşılıklarına çevir
+            product_mapping = {
+                "savings": "mevduat",
+                "loan": "ihtiyaç kredisi",
+                "credit_card": "kredi kartı"
+            }
+            
+            # Product mapping uygula
+            mapped_product = product_mapping.get(product or product_fallback, product or product_fallback)
+            
+            try:
+                resolved_rate, rate_meta = self.repo._resolve_rate_via_repo_or_db(
+                    provided_rate=rate,
+                    product=mapped_product, product_fallback=mapped_product,
+                    currency=currency, as_of=as_of,
+                )
+            except Exception as e:
+                # Hata detayını görmek için
+                error_msg = f"Rate resolution failed for product={mapped_product}, mode={mode}, error={str(e)}"
+                return self._err(error_msg)
+            
             if resolved_rate < 0:
                 return self._err("rate cannot be negative")
 

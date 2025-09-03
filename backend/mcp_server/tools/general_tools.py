@@ -691,6 +691,16 @@ class GeneralTools:
         if not portfolios_data:
             return {"error": "No investment portfolios found in the database."}
         
-        # Sonucu, 'portfolios' adında bir anahtar altında liste olarak döndürerek
-        # daha standart bir JSON yapısı oluşturuyoruz.
-        return {"available_portfolios": portfolios_data}
+        # Frontend'in beklediği UI şeması
+        ui_component = {
+            "type": "portfolios_card",
+            "portfolios": portfolios_data
+        }
+        
+        base = {
+            "available_portfolios": portfolios_data,
+            "ui_component": ui_component,
+            "ok": True
+        }
+        
+        return base

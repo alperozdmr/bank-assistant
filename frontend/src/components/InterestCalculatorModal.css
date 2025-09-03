@@ -1,0 +1,239 @@
+/* InterestCalculatorModal.css */
+
+/* Overlay */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  backdrop-filter: blur(3px);
+  animation: fadeIn 0.2s ease;
+}
+
+/* Modal Box */
+.interest-calculator-modal {
+  background: #fff;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 550px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.3s ease;
+}
+
+.dark-theme .interest-calculator-modal {
+  background: #1e1e2f;
+  color: #f5f5f5;
+}
+
+/* Header */
+.interest-calculator-modal .modal-header {
+  background: linear-gradient(135deg, #1789dc 0%, #58167d 100%);
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #fff;
+}
+
+.interest-calculator-modal .modal-header h3 {
+  font-size: 1.25rem;
+  margin: 0;
+  font-weight: 600;
+}
+
+.interest-calculator-modal .modal-close-button {
+  background: transparent;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 50%;
+  transition: background 0.2s;
+}
+
+.interest-calculator-modal .modal-close-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Body */
+.interest-calculator-modal .modal-body {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Section Titles */
+.interest-calculator-modal .form-section h4 {
+  font-size: 1rem;
+  margin-bottom: 0.75rem;
+  color: #444;
+}
+
+.dark-theme .interest-calculator-modal .form-section h4 {
+  color: #ddd;
+}
+
+/* Radio Buttons */
+.interest-calculator-modal .radio-group {
+  display: flex;
+  gap: 1rem;
+}
+
+.interest-calculator-modal .radio-option {
+  position: relative;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.interest-calculator-modal .radio-option input {
+  display: none;
+}
+
+.interest-calculator-modal .radio-custom {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #1789dc;
+  border-radius: 50%;
+  margin-right: 0.5rem;
+  position: relative;
+}
+
+.interest-calculator-modal .radio-option input:checked + .interest-calculator-modal .radio-custom::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  background: #1789dc;
+  border-radius: 50%;
+}
+
+/* Form Groups */
+.interest-calculator-modal .form-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.interest-calculator-modal .form-group {
+  flex: 1;
+  min-width: 150px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.interest-calculator-modal label {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.interest-calculator-modal .input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.interest-calculator-modal input[type="number"],
+.interest-calculator-modal select {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border 0.2s, box-shadow 0.2s;
+}
+
+.interest-calculator-modal .interest-calculator-modal input:focus,
+select:focus {
+  border-color: #1789dc;
+  box-shadow: 0 0 0 2px rgba(23, 137, 220, 0.2);
+}
+
+.interest-calculator-modal .currency-symbol,
+.interest-calculator-modal .input-suffix {
+  position: absolute;
+  right: 0.75rem;
+  color: #777;
+  font-size: 0.85rem;
+}
+
+.interest-calculator-modal .term-unit-select {
+  margin-left: 0.5rem;
+  padding: 0.6rem;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  background: #f9f9f9;
+}
+
+.interest-calculator-modal .help-text {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.interest-calculator-modal .error {
+  border-color: #dc3545 !important;
+}
+
+.interest-calculator-modal .error-message {
+  font-size: 0.8rem;
+  color: #dc3545;
+}
+
+/* Footer Actions */
+.interest-calculator-modal .form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.interest-calculator-modal .modal-cancel-button,
+.interest-calculator-modal .modal-confirm-button {
+  padding: 0.6rem 1.2rem;
+  border-radius: 12px;
+  border: none;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.interest-calculator-modal .modal-cancel-button {
+  background: #e1e8ed;
+  color: #333;
+}
+
+.interest-calculator-modal .modal-cancel-button:hover {
+  background: #d6dce1;
+  transform: translateY(-1px);
+}
+
+.interest-calculator-modal .modal-confirm-button {
+  background: linear-gradient(135deg, #1789dc 0%, #58167d 100%);
+  color: #fff;
+}
+
+.interest-calculator-modal .modal-confirm-button:hover {
+  transform: translateY(-1px);
+  opacity: 0.95;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0 }
+  to { opacity: 1 }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0 }
+  to { transform: translateY(0); opacity: 1 }
+}

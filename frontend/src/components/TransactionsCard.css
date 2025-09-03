@@ -278,10 +278,6 @@
   border-color: rgba(255, 255, 255, 0.15);
 }
 
-.dark-theme .transaction-item::before {
-  background: linear-gradient(90deg, #64b5f6 0%, #9c27b0 100%);
-}
-
 .dark-theme .transaction-icon {
   background: rgba(100, 181, 246, 0.1);
   color: #64b5f6;
