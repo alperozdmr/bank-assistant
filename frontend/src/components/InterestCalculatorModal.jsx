@@ -139,9 +139,27 @@ const InterestCalculatorModal = ({ isOpen, onClose, onSubmit }) => {
                 className="form-select"
               >
                 <option value="TRY">Türk Lirası (TRY)</option>
-                <option value="USD">Amerikan Doları (USD)</option>
+                <option value="USD">ABD Doları (USD)</option>
                 <option value="EUR">Euro (EUR)</option>
                 <option value="GBP">İngiliz Sterlini (GBP)</option>
+                <option value="AUD">Avustralya Doları (AUD)</option>
+                <option value="DKK">Danimarka Kronu (DKK)</option>
+                <option value="CHF">İsviçre Frangı (CHF)</option>
+                <option value="SEK">İsveç Kronu (SEK)</option>
+                <option value="CAD">Kanada Doları (CAD)</option>
+                <option value="KWD">Kuveyt Dinarı (KWD)</option>
+                <option value="NOK">Norveç Kronu (NOK)</option>
+                <option value="SAR">Suudi Arabistan Riyali (SAR)</option>
+                <option value="JPY">Japon Yeni (JPY)</option>
+                <option value="BGN">Bulgar Levası (BGN)</option>
+                <option value="RON">Rumen Leyi (RON)</option>
+                <option value="RUB">Rus Rublesi (RUB)</option>
+                <option value="CNY">Çin Yuanı (CNY)</option>
+                <option value="PKR">Pakistan Rupisi (PKR)</option>
+                <option value="QAR">Katar Riyali (QAR)</option>
+                <option value="KRW">Güney Kore Wonu (KRW)</option>
+                <option value="AZN">Azerbaycan Yeni Manatı (AZN)</option>
+                <option value="AED">Birleşik Arap Emirlikleri Dirhemi (AED)</option>
               </select>
             </div>
           </div>

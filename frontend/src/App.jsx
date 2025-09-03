@@ -710,6 +710,7 @@ function App() {
   const handleQuickAction = async (actionKey) => {
     if (actionKey === 'interest_compute') {
       setShowInterestCalculator(true)
+      setShowQuickActionsModal(false)
       return
     }
 
