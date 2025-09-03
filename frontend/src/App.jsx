@@ -13,6 +13,7 @@ import PortfoliosCard from './components/PortfoliosCard'
 import InterestQuoteCard from './components/InterestQuoteCard'
 import InterestCalculatorModal from './components/InterestCalculatorModal'
 import AmortizationTableCard from './components/AmortizationTableCard'
+import LoanAmortizationModal from './components/LoanAmortizationModal'
 
 function App() {
   // Login state
@@ -42,6 +43,7 @@ function App() {
   const [isSearching, setIsSearching] = useState(false)
   const [showSearchInput, setShowSearchInput] = useState(false)
   const [showInterestCalculator, setShowInterestCalculator] = useState(false)
+  const [showLoanAmortization, setShowLoanAmortization] = useState(false)
   const messagesEndRef = useRef(null)
 
   const scrollToBottom = () => {
@@ -708,9 +710,87 @@ function App() {
     ).sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)))
   }
 
+  const handleLoanAmortizationSubmit = async ({ principal, term, rate, currency }) => {
+    const rateText = rate ? `, Faiz oranı %${rate}` : ''
+    const userMessage = {
+      id: messages.length + 1,
+      text: `Kredi amortismanı hesapla: Anapara ${principal} ${currency}, Vade ${term} ay${rateText}`,
+      sender: 'user',
+      timestamp: new Date()
+    }
+
+    const updatedMessages = [...messages, userMessage]
+    setMessages(updatedMessages)
+    setShowQuickActions(false)
+
+    if (messages.length === 1) {
+      updateChatTitle(currentChatId, userMessage.text.length > 30 ? userMessage.text.substring(0, 30) + '...' : userMessage.text)
+      setChatHistory(prev => ({
+        ...prev,
+        [currentChatId]: { ...prev[currentChatId], isNew: false }
+      }))
+      setChatList(prev => prev.map(chat => (
+        chat.id === currentChatId ? { ...chat, isNew: false } : chat
+      )))
+    }
+
+    setChatHistory(prev => ({
+      ...prev,
+      [currentChatId]: { ...prev[currentChatId], messages: updatedMessages, updatedAt: new Date() }
+    }))
+    setChatList(prev => prev.map(chat => (
+      chat.id === currentChatId ? { ...chat, updatedAt: new Date() } : chat
+    )).sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)))
+
+    setIsTyping(true)
+    let finalMessages = updatedMessages
+    try {
+      const response = await fetch('http://127.0.0.1:8000/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${userInfo.token}` },
+        body: JSON.stringify({
+          message: userMessage.text,
+          user_id: userInfo.userId,
+          chat_id: currentChatId
+        })
+      })
+      const data = await response.json()
+      const botMessage = {
+        id: messages.length + 2,
+        text: data.response,
+        sender: 'bot',
+        timestamp: new Date(data.timestamp),
+        ui_component: data.ui_component
+      }
+      finalMessages = [...updatedMessages, botMessage]
+      setMessages(finalMessages)
+      if (data.chat_id) {
+        loadChatSessions()
+      }
+    } catch (err) {
+      finalMessages = [...updatedMessages, { id: messages.length + 2, text: '⚠️ Bot cevap veremedi.', sender: 'bot', timestamp: new Date() }]
+      setMessages(finalMessages)
+    } finally {
+      setIsTyping(false)
+    }
+
+    setChatHistory(prev => ({
+      ...prev,
+      [currentChatId]: { ...prev[currentChatId], messages: finalMessages, updatedAt: new Date() }
+    }))
+    setChatList(prev => prev.map(chat => (
+      chat.id === currentChatId ? { ...chat, updatedAt: new Date() } : chat
+    )).sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)))
+  }
+
   const handleQuickAction = async (actionKey) => {
     if (actionKey === 'interest_compute') {
       setShowInterestCalculator(true)
+      setShowQuickActionsModal(false)
+      return
+    }
+    if (actionKey === 'loan_amort') {
+      setShowLoanAmortization(true)
       setShowQuickActionsModal(false)
       return
     }
@@ -1355,6 +1435,18 @@ function App() {
                       </div>
                       <span>Faiz Hesaplama</span>
                     </button>
+                    <button className="quick-button" onClick={() => handleQuickAction('loan_amort')}>
+                      <div className="quick-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                      <div className="quick-text">
+                        <span className="quick-title">Kredi Amortisman</span>
+                      </div>
+                    </button>
                   </div>
                 </div>
               )}
@@ -1576,6 +1668,19 @@ function App() {
                     <span className="modal-quick-desc">Mevduat ve kredi faiz hesaplamalarını yapın.</span>
                   </div>
                 </button>
+                <button className="modal-quick-button" onClick={() => handleQuickAction('loan_amort')}>
+                  <div className="modal-quick-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                  <div className="modal-quick-text">
+                    <span className="modal-quick-title">Kredi Amortisman</span>
+                    <span className="modal-quick-desc">Aylık ödeme planını hesaplayın ve indirin.</span>
+                  </div>
+                </button>
               </div>
             </div>
           </div>
@@ -1648,6 +1753,13 @@ function App() {
         isOpen={showInterestCalculator}
         onClose={() => setShowInterestCalculator(false)}
         onSubmit={handleInterestCalculatorSubmit}
+      />
+
+      {/* Loan Amortization Modal */}
+      <LoanAmortizationModal
+        isOpen={showLoanAmortization}
+        onClose={() => setShowLoanAmortization(false)}
+        onSubmit={handleLoanAmortizationSubmit}
       />
     </div>
   )
