@@ -64,7 +64,7 @@ class CalculationTools:
     def loan_amortization_schedule(
         self,
         principal: float,
-        rate: float,
+        rate: Optional[float],
         term: int,
         method: str = "annuity",
         currency: Optional[str] = None,
@@ -77,7 +77,30 @@ class CalculationTools:
         try:
             if principal is None or principal <= 0:
                 return self._err("principal must be > 0")
-            if rate is None or rate < 0:
+            # Faiz oranı verilmemişse repo/DB'den 'ihtiyaç kredisi' ürünü ile çöz
+            resolved_rate = None
+            if rate is None:
+                try:
+                    # InterestCalculatorTool'daki mantıkla eş: loan için 'ihtiyaç kredisi'
+                    product_mapping = {
+                        "savings": "mevduat",
+                        "loan": "ihtiyaç kredisi",
+                        "credit_card": "kredi kartı",
+                    }
+                    mapped_product = product_mapping.get("loan", "loan")
+                    resolved_rate, _meta = self.repo._resolve_rate_via_repo_or_db(
+                        provided_rate=None,
+                        product=mapped_product,
+                        product_fallback=mapped_product,
+                        currency=currency or "TRY",
+                        as_of=None,
+                    )
+                except Exception as e:
+                    return self._err(f"rate resolution failed: {e}")
+            else:
+                resolved_rate = float(rate)
+
+            if resolved_rate is None or resolved_rate < 0:
                 return self._err("annual rate must be >= 0")
             if term is None or int(term) < 1:
                 return self._err("term (months) must be >= 1")
@@ -87,7 +110,7 @@ class CalculationTools:
             if m != "annuity":
                 return self._err("only 'annuity' method is supported")
 
-            i = rate / 12.0
+            i = resolved_rate / 12.0
             n = term
             if i == 0:
                 installment = principal / n
@@ -124,7 +147,8 @@ class CalculationTools:
             data: Dict[str, Any] = {
                 "summary": {
                     "principal": self._round2(principal),
-                    "annual_rate": rate,
+                    "annual_rate": resolved_rate,
+                    "monthly_rate": round(resolved_rate / 12.0, 10),
                     "term_months": n,
                     "installment": self._round2(installment),
                     "total_interest": self._round2(total_interest),
@@ -140,7 +164,8 @@ class CalculationTools:
                         "total_interest": self._round2(total_interest),
                         "total_payment": self._round2(total_payment),
                         "principal": self._round2(principal),
-                        "annual_rate": rate,
+                        "annual_rate": resolved_rate,
+                        "monthly_rate": round(resolved_rate / 12.0, 10),
                         "term_months": n,
                         "currency": currency or "",
                     },

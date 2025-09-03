@@ -259,8 +259,8 @@ def branch_atm_search(city: str, district: str | None = None, type: str | None =
 @log_tool
 def loan_amortization_schedule(
     principal: float,
-    rate: float,
     term: int,
+    rate: float | None = None,
     method: str = "annuity",
     currency: str | None = None,
     export: str = "none",
@@ -275,10 +275,10 @@ def loan_amortization_schedule(
 
     Parametreler:
         principal (float): Anapara ( > 0 )
-        rate (float): Yıllık nominal faiz ( >= 0, örn. 0.35 )
+        currency (str, ops.): Para birimi (örn. "TRY")
+        rate (float, ops): Yıllık nominal faiz ( >= 0, örn. 0.35 )
         term (int): Vade (ay, >= 1)
         method (str, ops.): Şimdilik sadece "annuity" desteklenir.
-        currency (str | None, ops.): Görsel amaçlı para birimi etiketi (örn. "TRY")
         export (str, ops.): "csv" → `csv_base64` alanı döner; "none" → dönmez.
 
     Dönüş (başarı):
@@ -290,7 +290,6 @@ def loan_amortization_schedule(
             "installment": 12258.91,
             "total_interest": 146113.78,
             "total_payment": 346113.78,
-            "currency": "TRY",
             "method": "annuity_monthly"
           },
           "schedule": [

@@ -12,6 +12,7 @@ import UserProfileCard from './components/UserProfileCard'
 import PortfoliosCard from './components/PortfoliosCard'
 import InterestQuoteCard from './components/InterestQuoteCard'
 import InterestCalculatorModal from './components/InterestCalculatorModal'
+import AmortizationTableCard from './components/AmortizationTableCard'
 
 function App() {
   // Login state
@@ -1219,6 +1220,9 @@ function App() {
                       )}
                       {message.ui_component.type === 'interest_quote_card' && (
                         <InterestQuoteCard cardData={message.ui_component} />
+                      )}
+                      {message.ui_component.type === 'amortization_table_card' && (
+                        <AmortizationTableCard cardData={message.ui_component} />
                       )}
                     </div>
                   )}
