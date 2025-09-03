@@ -98,134 +98,38 @@ const InterestCalculatorModal = ({ isOpen, onClose, onSubmit }) => {
           </button>
         </div>
         
-        <form onSubmit={handleSubmit} className="modal-body">
-          <div className="form-section">
-            <h4>Hesaplama Türü</h4>
-            <div className="radio-group">
-              <label className="radio-option">
-                <input
-                  type="radio"
-                  name="type"
-                  value="deposit"
-                  checked={formData.type === 'deposit'}
-                  onChange={handleInputChange}
-                />
-                <span className="radio-custom"></span>
-                <span className="radio-label">Mevduat Getirisi</span>
-              </label>
-              <label className="radio-option">
-                <input
-                  type="radio"
-                  name="type"
-                  value="loan"
-                  checked={formData.type === 'loan'}
-                  onChange={handleInputChange}
-                />
-                <span className="radio-custom"></span>
-                <span className="radio-label">Kredi Taksiti</span>
-              </label>
-            </div>
+        <form onSubmit={handleSubmit} className="modal-body vertical-form">
+          <div className="form-group">
+            <label>Hesaplama Türü</label>
+            <select
+              id="type"
+              name="type"
+              value={formData.type}
+              onChange={handleInputChange}
+              className="form-select"
+            >
+              <option value="deposit">Mevduat Getirisi</option>
+              <option value="loan">Kredi Faizi</option>
+            </select>
           </div>
 
-          <div className="form-section">
-            <h4>Temel Bilgiler</h4>
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="principal">Anapara</label>
-                <div className="input-wrapper">
-                  <input
-                    type="number"
-                    id="principal"
-                    name="principal"
-                    value={formData.principal}
-                    onChange={handleInputChange}
-                    placeholder="0.00"
-                    step="0.01"
-                    min="0"
-                    className={errors.principal ? 'error' : ''}
-                  />
-                  <span className="currency-symbol">{formData.currency}</span>
-                </div>
-                {errors.principal && <span className="error-message">{errors.principal}</span>}
-              </div>
-              
-              <div className="form-group">
-                <label htmlFor="term">Vade</label>
-                <div className="input-wrapper">
-                  <input
-                    type="number"
-                    id="term"
-                    name="term"
-                    value={formData.term}
-                    onChange={handleInputChange}
-                    placeholder="0"
-                    step="0.01"
-                    min="0"
-                    className={errors.term ? 'error' : ''}
-                  />
-                  <select
-                    name="term_unit"
-                    value={formData.term_unit}
-                    onChange={handleInputChange}
-                    className="term-unit-select"
-                  >
-                    <option value="years">Yıl</option>
-                    <option value="months">Ay</option>
-                  </select>
-                </div>
-                {errors.term && <span className="error-message">{errors.term}</span>}
-              </div>
+          <div className="form-row">
+            <div className="form-group form-group--principal">
+              <label htmlFor="principal">Anapara</label>
+              <input
+                type="number"
+                id="principal"
+                name="principal"
+                value={formData.principal}
+                onChange={handleInputChange}
+                placeholder="0.00"
+                step="0.01"
+                min="0"
+                className={errors.principal ? 'error' : ''}
+              />
+              {errors.principal && <span className="error-message">{errors.principal}</span>}
             </div>
-          </div>
-
-          <div className="form-section">
-            <h4>Faiz Oranı</h4>
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="rate">Yıllık Faiz Oranı (%)</label>
-                <div className="input-wrapper">
-                  <input
-                    type="number"
-                    id="rate"
-                    name="rate"
-                    value={formData.rate}
-                    onChange={handleInputChange}
-                    placeholder="Otomatik (güncel oranlar)"
-                    step="0.01"
-                    min="0"
-                    max="100"
-                    className={errors.rate ? 'error' : ''}
-                  />
-                  <span className="input-suffix">%</span>
-                </div>
-                <span className="help-text">Boş bırakırsanız güncel banka oranları kullanılır</span>
-                {errors.rate && <span className="error-message">{errors.rate}</span>}
-              </div>
-              
-              <div className="form-group">
-                <label htmlFor="compounding">Bileşik Sıklığı</label>
-                <select
-                  id="compounding"
-                  name="compounding"
-                  value={formData.compounding}
-                  onChange={handleInputChange}
-                  className="form-select"
-                >
-                  <option value="annual">Yıllık</option>
-                  <option value="semiannual">6 Aylık</option>
-                  <option value="quarterly">3 Aylık</option>
-                  <option value="monthly">Aylık</option>
-                  <option value="weekly">Haftalık</option>
-                  <option value="daily">Günlük</option>
-                  <option value="continuous">Sürekli</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <div className="form-section">
-            <h4>Para Birimi</h4>
-            <div className="form-group">
+            <div className="form-group form-group--shrink">
               <label htmlFor="currency">Para Birimi</label>
               <select
                 id="currency"
@@ -241,6 +145,76 @@ const InterestCalculatorModal = ({ isOpen, onClose, onSubmit }) => {
               </select>
             </div>
           </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="term">Vade</label>
+              <input
+                type="number"
+                id="term"
+                name="term"
+                value={formData.term}
+                onChange={handleInputChange}
+                placeholder="0"
+                step="1"
+                min="0"
+                className={errors.term ? 'error' : ''}
+              />
+              {errors.term && <span className="error-message">{errors.term}</span>}
+            </div>
+            <div className="form-group">
+              <label htmlFor="term_unit">Vade Birimi</label>
+              <select
+                id="term_unit"
+                name="term_unit"
+                value={formData.term_unit}
+                onChange={handleInputChange}
+                className="form-select term-unit-select"
+              >
+                <option value="years">Yıl</option>
+                <option value="months">Ay</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="rate">Yıllık Faiz Oranı (%)</label>
+            <input
+              type="number"
+              id="rate"
+              name="rate"
+              value={formData.rate}
+              onChange={handleInputChange}
+              placeholder="Otomatik (güncel oranlar)"
+              step="0.01"
+              min="0"
+              max="100"
+              className={errors.rate ? 'error' : ''}
+            />
+            <span className="help-text">Boş bırakırsanız güncel banka oranları kullanılır</span>
+            {errors.rate && <span className="error-message">{errors.rate}</span>}
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="compounding">Bileşik Sıklığı</label>
+            <select
+              id="compounding"
+              name="compounding"
+              value={formData.compounding}
+              onChange={handleInputChange}
+              className="form-select"
+            >
+              <option value="annual">Yıllık</option>
+              <option value="semiannual">6 Aylık</option>
+              <option value="quarterly">3 Aylık</option>
+              <option value="monthly">Aylık</option>
+              <option value="weekly">Haftalık</option>
+              <option value="daily">Günlük</option>
+              <option value="continuous">Sürekli</option>
+            </select>
+          </div>
+
+          {/** Para birimi artık anapara ile yan yana gösteriliyor **/}
 
           <div className="form-actions">
             <button type="button" className="modal-cancel-button" onClick={handleClose}>
