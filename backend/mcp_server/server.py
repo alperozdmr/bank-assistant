@@ -583,6 +583,43 @@ def list_portfolios() -> dict:
     
     return general_tools.list_available_portfolios()
 
+# ============ FX CONVERTER TOOL ==============#
+@mcp.tool()
+@log_tool
+def fx_convert(
+    amount: float,
+    from_currency: str,
+    to_currency: str,
+) -> dict:
+    """
+    Converts a given amount from one currency to another using rates from the database.
+
+    This tool is ideal for answering user questions about currency conversions.
+    Use for queries like: "Convert 100 dollars to TRY", "How much is 50 euros in dollars?",
+    or "Show me the exchange rate for JPY to TRY".
+
+    Args:
+        amount (float): The amount of money to be converted.
+        from_currency (str): The currency to convert from (e.g., "USD", "EUR").
+        to_currency (str): The currency to convert to (e.g., "TRY", "USD").
+
+    Returns:
+        A dictionary summarizing the conversion results, including:
+        - amount_from: The original amount.
+        - currency_from: The original currency.
+        - amount_to: The converted amount.
+        - currency_to: The target currency.
+        - rate: The exchange rate used for the conversion.
+        - summary_text: A human-readable summary of the conversion.
+        If the conversion is not possible, it returns a dictionary with an 'error' key.
+    """
+    return calc_tools.fx_convert(
+        amount=amount,
+        from_currency=from_currency,
+        to_currency=to_currency,
+    )
+
+
 
 # ============ PAYMENT TOOL ==============#
 @mcp.tool()

@@ -11,6 +11,68 @@ from typing import Dict, Any, List, Optional, Tuple, Literal
 # ---- interest helpers (module-level) ----
 Compounding = Literal["annual","semiannual","quarterly","monthly","weekly","daily","continuous"]
 
+class RatesTool:
+    """
+    Veritabanından döviz kurlarını okur ve yönetir.
+    Bu araç, `FXCalculatorTool` için bir bağımlılık olarak kullanılır.
+    """
+    def __init__(self, repo):
+        self._repo = repo
+        self._rates = None
+        self._load_rates()
+
+    def _load_rates(self):
+        """Veritabanından fx_rates tablosundaki tüm kurları yükler."""
+        rows = self._repo.get_fx_rates()
+        # Örn: {'USD': {'buy': 32.50, 'sell': 32.55}, 'EUR': ...}
+        self._rates = {}
+        for r in rows:
+            # Gelen kod "USD/TRY" formatında olabilir, sadece ilk kısmı al
+            code = r["code"].upper().split('/')[0]
+            self._rates[code] = {"buy": float(r["buy"]), "sell": float(r["sell"])}
+
+        # TRY'yi temel para birimi olarak ekle
+        if "TRY" not in self._rates:
+            self._rates["TRY"] = {"buy": 1.0, "sell": 1.0}
+
+
+    def get_rate(self, from_currency: str, to_currency: str) -> Optional[float]:
+        """
+        İki para birimi arasındaki dönüşüm kurunu hesaplar.
+        Tüm kurlar USD veya diğer ana para birimleri üzerinden TRY'ye karşı tanımlanmıştır.
+        Örnek:
+          - USD'den TRY'ye: USD'nin satış (sell) kurunu kullanırız.
+          - TRY'den USD'ye: USD'nin alış (buy) kurunu kullanırız.
+          - EUR'dan USD'ye: Önce EUR'yu TRY'ye, sonra TRY'yi USD'ye çeviririz (çapraz kur).
+        """
+        if self._rates is None:
+            return None
+
+        f = from_currency.upper()
+        t = to_currency.upper()
+
+        if f == t:
+            return 1.0
+
+        # ---- TRY'ye/TRY'den dönüşümler ----
+        # USD -> TRY: Banka USD satar (sell rate)
+        if f != "TRY" and t == "TRY":
+            return self._rates.get(f, {}).get("sell")
+        # TRY -> USD: Banka USD alır (buy rate)
+        if f == "TRY" and t != "TRY":
+            buy_rate = self._rates.get(t, {}).get("buy")
+            return 1.0 / buy_rate if buy_rate else None
+
+        # ---- Çapraz Kur (örn: EUR -> USD) ----
+        # EUR -> TRY (sell) ve TRY -> USD (buy) kurlarını birleştir
+        rate_from_try = self.get_rate(f, "TRY")  # EUR -> TRY
+        rate_try_to = self.get_rate("TRY", t)    # TRY -> USD
+
+        if rate_from_try and rate_try_to:
+            return rate_from_try * rate_try_to
+        
+        return None
+
 def _normalize_compounding(value: str) -> Compounding:
     v = (value or "").strip().lower()
     aliases = {
@@ -58,6 +120,82 @@ class CalculationTools:
         if math.isnan(xf) or math.isinf(xf):
             return 0.0
         return round(xf, 2)
+    
+     # ------------- FXCalculatorTool (S4) -------------
+    def fx_convert(
+        self,
+        amount: float,
+        from_currency: str,
+        to_currency: str,
+        rate_source: Optional[RatesTool] = None,
+    ) -> Dict[str, Any]:
+        """
+        Verilen bir miktarı bir para biriminden diğerine dönüştürür.
+        Döviz kurları, `rate_source` (RatesTool) tarafından veritabanındaki 'fx_rates'
+        tablosundan sağlanır.
+
+        Parametreler:
+            amount (float): Dönüştürülecek miktar.
+            from_currency (str): Başlangıç para birimi kodu (örn: "USD", "EUR").
+            to_currency (str): Hedef para birimi kodu (örn: "TRY", "JPY").
+            rate_source (RatesTool): Kurları sağlayan ve `get_rate` metodu olan nesne.
+                                     Eğer sağlanmazsa, dahili repo kullanılarak oluşturulur.
+
+        Dönüş:
+            Başarı durumunda:
+            {
+                "amount_from": 100.0,
+                "currency_from": "USD",
+                "amount_to": 3255.0,
+                "currency_to": "TRY",
+                "rate": 32.55,
+                "summary_text": "100.00 USD = 3,255.00 TRY (Kur: 1 USD = 32.5500 TRY)"
+            }
+            Hata durumunda:
+            {"error": "Hata mesajı"}
+        """
+        try:
+            if amount is None or amount <= 0:
+                return self._err("amount must be > 0")
+            if not from_currency or not to_currency:
+                return self._err("from_currency and to_currency must be provided")
+
+            # Eğer dışarıdan bir rate_source verilmemişse, kendimiz oluşturalım.
+            # Bu, aracın bağımsız test edilebilirliğini ve esnekliğini artırır.
+            if rate_source is None:
+                rate_source = RatesTool(self.repo)
+
+            rate = rate_source.get_rate(from_currency, to_currency)
+            if rate is None:
+                return self._err(f"conversion rate not found for {from_currency} -> {to_currency}")
+
+            converted_amount = amount * rate
+            
+            # Sonuç metnini formatla
+            summary = (
+                f"{amount:,.2f} {from_currency.upper()} = "
+                f"{converted_amount:,.2f} {to_currency.upper()} "
+                f"(Kur: 1 {from_currency.upper()} = {rate:,.4f} {to_currency.upper()})"
+            )
+            # Türkçe format için virgül ve noktaları değiştir
+            summary = summary.replace(",", "X").replace(".", ",").replace("X", ".")
+
+
+            return {
+                "ok": True,
+                "amount_from": self._round2(amount),
+                "currency_from": from_currency.upper(),
+                "amount_to": self._round2(converted_amount),
+                "currency_to": to_currency.upper(),
+                "rate": rate,
+                "summary_text": summary,
+                # Agent'ın yanıtı göstermesi için standart anahtarlar
+                "text": summary,
+                "YANIT": summary,
+            }
+
+        except Exception as e:
+            return self._err(f"fx_convert_error: {str(e)}")
 
 
     # ------------- S5: LoanAmortizationTool -------------

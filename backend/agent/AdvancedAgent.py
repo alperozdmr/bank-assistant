@@ -378,10 +378,23 @@ class BankingAgent:
             # Genel tool yanıtları için - UI component'ı koru
             if ui:
                 # UI component varsa, onu kullan
-                txt = tool_output.get("YANIT") or tool_output.get("text") or tool_output.get("response") or "İşlem tamamlandı."
+                # Metni hem 'data' içinden hem de ana çıktıdan ara
+                txt = (data.get("YANIT") if isinstance(data, dict) else None) or \
+                      (data.get("text") if isinstance(data, dict) else None) or \
+                      tool_output.get("YANIT") or \
+                      tool_output.get("text") or \
+                      tool_output.get("response") or \
+                      "İşlem tamamlandı."
                 return {"text": txt, "YANIT": txt, "ui_component": ui}
 
-            txt = tool_output.get("YANIT") or tool_output.get("text") or tool_output.get("response")
+            # Metni hem 'data' içinden hem de ana çıktıdan ara
+            data = tool_output.get("data") if "data" in tool_output else tool_output
+            txt = (data.get("YANIT") if isinstance(data, dict) else None) or \
+                  (data.get("text") if isinstance(data, dict) else None) or \
+                  tool_output.get("YANIT") or \
+                  tool_output.get("text") or \
+                  tool_output.get("response")
+
             if txt:
                 return {"text": txt, "YANIT": txt, "ui_component": ui}
 
