@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import Any, Dict, List, Optional
+import re
 import sqlite3
 import math
 import hashlib
@@ -7,6 +8,7 @@ import logging as log
 import json
 import sys
 import os
+from geopy.geocoders import Nominatim
 
 # TCMB servisini import etmek için path ekle
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
@@ -502,7 +504,7 @@ class GeneralTools:
         return result
     
     def search(self, city: str, district: Optional[str] = None,
-               type: Optional[str] = None, limit: int = 3) -> Dict[str, Any]:
+               type: Optional[str] = None, limit: int = 3, nearby: bool = False) -> Dict[str, Any]:
         
         """ 
         Belirtilen şehir (ve opsiyonel ilçe) için ATM veya şube bilgilerini döndürür.
@@ -541,6 +543,19 @@ class GeneralTools:
       
         city = city.strip() if city is not None else None
         district =district.strip() if district is not None else None
+
+        # Türkçe yer-yön ekleri ("-da/-de/-ta/-te" ve apostrof varyasyonları) temizleme
+        # Örn: "Van'da", "vanda", "İzmirde" -> "Van", "van", "İzmir"
+        def _strip_tr_locative(token: Optional[str]) -> Optional[str]:
+            if not token:
+                return token
+            t = token.strip()
+            # Sondaki "'da/'de/'ta/'te" veya direkt bitişik "da/de/ta/te" eklerini kaldır
+            t = re.sub(r"(?:'|’)?\s*(?:d[ea]|t[ea])$", "", t, flags=re.IGNORECASE)
+            return t.strip()
+
+        city = _strip_tr_locative(city)
+        district = _strip_tr_locative(district)
         if not city:
             return {"ok": False, "error": "Lütfen şehir belirtin.", "data": {"query": {"city": city, "district": district}}}
 
@@ -548,7 +563,96 @@ class GeneralTools:
         rows = self.repo.find_branch_atm(city=city, district=district, limit=max(limit, 5)*2, kind=type)
 
         if not rows:
-            return {"ok": False, "error": "Bu bölgede sonuç bulunamadı.", "data": {"query": {"city": city, "district": district}}}
+            # Eksakt eşleşme yoksa: önce kullanıcıya yakın sonuç isteğini soran mesaj dön
+            if not nearby:
+                suggestion = {
+                    "ok": False,
+                    "error": "Belirttiğiniz bölgede sonuç bulunamadı. Dilerseniz 'en yakın ATM/şube' şeklinde sorabilirsiniz.",
+                    "data": {
+                        "query": {"city": city, "district": district, "type": (type or None)},
+                        "hint": {"nearby_param": True}
+                    }
+                }
+                return suggestion
+
+            # Kullanıcı yakın isterse geocode ederek en yakın kayıtları dön (inline)
+            try:
+                loc_query = f"{city} {district}".strip() if district else city
+                geocoder = Nominatim(user_agent="bank_assistant_geocoder")
+                g = geocoder.geocode(loc_query, language="tr")
+                if not g or not g.latitude or not g.longitude:
+                    raise ValueError("konum bulunamadı")
+                lat0, lon0 = float(g.latitude), float(g.longitude)
+
+                if not hasattr(self.repo, "list_branch_atm_all"):
+                    raise ValueError("repo list_branch_atm_all yok")
+                all_rows = self.repo.list_branch_atm_all() or []
+
+                want_kind = None
+                if type:
+                    k = type.strip().casefold()
+                    if k == "atm":
+                        want_kind = "atm"
+                    elif k in ("branch", "şube", "sube"):
+                        want_kind = "branch"
+
+                def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+                    R = 6371.0
+                    from math import radians, sin, cos, asin, sqrt
+                    dlat = radians(lat2 - lat1)
+                    dlon = radians(lon2 - lon1)
+                    a = sin(dlat/2) ** 2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon/2) ** 2
+                    c = 2 * asin(sqrt(a))
+                    return R * c
+
+                scored: List[Dict[str, Any]] = []
+                for r in all_rows:
+                    if want_kind and r.get("type") != want_kind:
+                        continue
+                    la, lo = r.get("lat"), r.get("lon")
+                    if la is None or lo is None:
+                        continue
+                    dist = haversine_km(lat0, lon0, float(la), float(lo))
+                    rr = dict(r)
+                    rr["distance_km"] = round(dist, 3)
+                    scored.append(rr)
+
+                if not scored:
+                    return {"ok": False, "error": "Yakında kayıt bulunamadı.", "data": {"query": {"city": city, "district": district}}}
+
+                scored.sort(key=lambda x: x["distance_km"])
+                items = [
+                    {
+                        "id": s["id"],
+                        "name": s["name"],
+                        "type": s["type"],
+                        "address": s["address"],
+                        "city": s["city"],
+                        "district": s.get("district"),
+                        "latitude": s.get("lat"),
+                        "longitude": s.get("lon"),
+                        "distance_km": s["distance_km"],
+                    }
+                    for s in scored[: max(1, min(limit, 5))]
+                ]
+
+                result = {
+                    "ok": True,
+                    "data": {
+                        "query": {"city": city, "district": district, "type": (type or None)},
+                        "items": items,
+                        "count": len(items),
+                    }
+                }
+                result["data"]["ui_component"] = {
+                    "type": "atm_card",
+                    "query": {"city": city, "district": district, "type": (type or None)},
+                    "items": items,
+                    "count": len(items)
+                }
+                return result
+            except Exception:
+                return {"ok": False, "error": "Bu bölgede sonuç bulunamadı.", "data": {"query": {"city": city, "district": district}}}
 
         items: List[Dict[str, Any]] = []
         for r in rows:

@@ -146,6 +146,18 @@ class BankingAgent:
                 except Exception:
                     pass
                 
+                # "en yakın" niyeti: branch_atm_search için nearby=True ekle
+                try:
+                    txt_low = (self.last_user_text or "").lower()
+                    wants_nearby = any(k in txt_low for k in ["en yakın", "en yakin", "yakın", "yakin", "yakindaki", "yakındaki", "civarında"]) and ("atm" in txt_low or "şube" in txt_low or "sube" in txt_low)
+                except Exception:
+                    wants_nearby = False
+                try:
+                    if wants_nearby and _name and str(_name).lower() == "branch_atm_search":
+                        payload.setdefault("nearby", True)
+                except Exception:
+                    pass
+
                 # Tool'un customer parametresi kabul edip etmediğini kontrol et
                 tool_accepts_customer = False
                 if _args_schema:

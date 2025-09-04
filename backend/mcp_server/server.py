@@ -222,7 +222,7 @@ def get_all_fees() -> dict:
 
 @mcp.tool()
 @log_tool
-def branch_atm_search(city: str, district: str | None = None, type: str | None = None, limit: int = 3) -> dict:
+def branch_atm_search(city: str, district: str | None = None, type: str | None = None, limit: int = 3, nearby: bool | None = None) -> dict:
     """
     Finds nearby bank branches/ATMs for a given location.
 
@@ -257,7 +257,10 @@ def branch_atm_search(city: str, district: str | None = None, type: str | None =
     # türkçe 'şube' desteği
     if type and type.strip().casefold() in ("şube", "sube"):
         type = "branch"
-    return general_tools.search(city=city, district=district, type=type, limit=limit)
+    return general_tools.search(city=city, district=district, type=type, limit=limit, nearby=bool(nearby) if nearby is not None else False)
+
+
+## Removed: branch_atm_near tool (fallback is handled within search)
 
 @mcp.tool()
 @log_tool

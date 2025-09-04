@@ -297,6 +297,39 @@ class SQLiteRepository:
         finally:
             con.close()
 
+    def list_branch_atm_all(self) -> List[Dict[str, Any]]:
+        """
+        Tüm şube/ATM kayıtlarını döndürür (şehir/ilçe filtresi olmadan).
+        Dönüş: {id, type, name, city, district, address, lat, lon}
+        """
+        con = sqlite3.connect(self.db_path)
+        con.row_factory = sqlite3.Row
+        try:
+            cur = con.cursor()
+            cur.execute(
+                """
+                SELECT id, kind, name, city, district, address, latitude, longitude
+                FROM branch_atm
+                """
+            )
+            rows = cur.fetchall()
+            out: List[Dict[str, Any]] = []
+            for r in rows:
+                kind_db = str(r["kind"]).upper() if r["kind"] is not None else ""
+                out.append({
+                    "id": int(r["id"]),
+                    "type": "atm" if kind_db == "ATM" else "branch",
+                    "name": str(r["name"]),
+                    "city": str(r["city"]),
+                    "district": str(r["district"]) if r["district"] is not None else None,
+                    "address": str(r["address"]),
+                    "lat": float(r["latitude"]) if r["latitude"] is not None else None,
+                    "lon": float(r["longitude"]) if r["longitude"] is not None else None,
+                })
+            return out
+        finally:
+            con.close()
+
     def list_transactions(
         self,
         account_id: int,
