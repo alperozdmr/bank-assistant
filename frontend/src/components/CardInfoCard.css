@@ -27,6 +27,11 @@
   align-items: stretch;
 }
 
+/* Tek kart varsa tek kolon kullan ve yatay boşluğu kaldır */
+.card-info-card .card-list.single {
+  grid-template-columns: 1fr;
+}
+
 /* Çoklu kart tek tek eleman stili - genişlik kısıtını kaldır */
 .card-info-card.multiple {
   max-width: none;

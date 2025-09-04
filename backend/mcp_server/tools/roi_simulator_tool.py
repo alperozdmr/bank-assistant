@@ -95,5 +95,15 @@ class ROISimulatorTool:
             "average_outcome": round(avg_final_balance, 2),
             "good_scenario_outcome (75th percentile)": round(percentile_75, 2),
             "bad_scenario_outcome (25th percentile)": round(percentile_25, 2),
-            "num_simulations_run": num_simulations
+            "num_simulations_run": num_simulations,
+            "ui_component": {
+                "type": "roi_simulation_card",
+                "portfolio_name": portfolio_name,
+                "years": years,
+                "monthly_investment": monthly_investment,
+                "average_outcome": round(avg_final_balance, 2),
+                "good_scenario_outcome": round(percentile_75, 2),
+                "bad_scenario_outcome": round(percentile_25, 2),
+                "num_simulations_run": num_simulations
+            }
         }

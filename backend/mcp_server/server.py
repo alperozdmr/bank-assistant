@@ -3,11 +3,13 @@
 import os
 import sys
 from typing import Any, Dict
+from .data.sql_payment_repo import SQLitePaymentRepository
 from .data.sqlite_repo import SQLiteRepository
 from fastmcp import FastMCP
-from .tools.general_tools import GeneralTools 
+from .tools.general_tools import GeneralTools
 from .tools.calculation_tools import CalculationTools
-from .tools.roi_simulator_tool import ROISimulatorTool  
+from .tools.roi_simulator_tool import ROISimulatorTool
+from .tools.payment_tools import PaymentService
 
 ###############
 
@@ -26,9 +28,12 @@ general_tools = GeneralTools(repo)
 calc_tools = CalculationTools(repo)
 roi_simulator_tool = ROISimulatorTool(repo)
 
+repo_payment = SQLitePaymentRepository(db_path=DB_PATH)
+pay = PaymentService(repo_payment)
 
 
 
+# ============ GENERAL TOOL ==============#
 @mcp.tool()
 @log_tool
 def get_balance(account_id: int, customer_id: int) -> dict:
@@ -119,27 +124,6 @@ def list_customer_cards(customer_id: int) -> dict:
     """
     return general_tools.list_customer_cards(customer_id=customer_id)
 
-
-@mcp.tool()
-@log_tool
-def list_recent_transactions(customer_id: int, n: int = 5) -> dict:
-    """
-    Lists the last 'n' transactions (money in/out) across all accounts for a given customer, sorted by date.
-
-    When to use:
-    - Use this to fulfill general requests for account activity, such as "What are my recent transactions?",
-      "Show my account statement", or "List my recent expenses".
-    - Use it when the user specifies a number of transactions, like "show me my last 3 transactions".
-    - Useful for quickly reviewing recent activity to check for suspicious transactions.
-
-    Args:
-        customer_id (int): The unique identifier for the customer.
-        n (int, optional): The number of transactions to retrieve. Defaults to 5.
-
-    Returns:
-        A dictionary containing a list of transaction objects. Returns an empty list if there are no transactions.
-    """
-    return general_tools.list_recent_transactions(customer_id=customer_id, n=n)
 
 @mcp.tool()
 @log_tool
@@ -275,75 +259,11 @@ def branch_atm_search(city: str, district: str | None = None, type: str | None =
         type = "branch"
     return general_tools.search(city=city, district=district, type=type, limit=limit)
 
-
-@mcp.tool()
-@log_tool
-def loan_amortization_schedule(
-    principal: float,
-    rate: float,
-    term: int,
-    method: str = "annuity",
-    currency: str | None = None,
-    export: str = "none",
-) -> Dict[str, Any]:
-    """
-    S5: Kredi ödeme planı (amortisman tablosu) ve özet değerler.
-
-    Amaç:
-        Aylık anüite yöntemiyle (method="annuity") her ay için:
-        taksit, faiz, anapara ve kalan borç kalemlerini hesaplar. İsteğe bağlı
-        olarak CSV çıktısını base64 olarak döndürür.
-
-    Parametreler:
-        principal (float): Anapara ( > 0 )
-        rate (float): Yıllık nominal faiz ( >= 0, örn. 0.35 )
-        term (int): Vade (ay, >= 1)
-        method (str, ops.): Şimdilik sadece "annuity" desteklenir.
-        currency (str | None, ops.): Görsel amaçlı para birimi etiketi (örn. "TRY")
-        export (str, ops.): "csv" → `csv_base64` alanı döner; "none" → dönmez.
-
-    Dönüş (başarı):
-        {
-          "summary": {
-            "principal": 200000.0,
-            "annual_rate": 0.40,
-            "term_months": 24,
-            "installment": 12258.91,
-            "total_interest": 146113.78,
-            "total_payment": 346113.78,
-            "currency": "TRY",
-            "method": "annuity_monthly"
-          },
-          "schedule": [
-            {"month":1,"installment":12258.91,"interest":6666.67,"principal":5592.24,"remaining":194407.76},
-            ...
-          ],
-          "ui_component": {...},
-          "csv_base64": "..."   # export="csv" ise yer alır
-        }
-
-    Hata (ör.):
-        {"error": "principal must be > 0"}
-        {"error": "only 'annuity' method is supported"}
-
-    Notlar:
-        - Son ayda yuvarlama farkı kapatılır (kalan=0’a çekilir).
-        - Hesaplama deterministiktir; DB erişimi yoktur.
-        - CSV UTF-8, başlıklar: month,installment,interest,principal,remaining
-    """
-    return calc_tools.loan_amortization_schedule(
-        principal=principal,
-        rate=rate,
-        term=term,
-        method=method,
-        currency=currency,
-        export=export,
-    )
-
 @mcp.tool()
 @log_tool
 def transactions_list(
     account_id: int,
+    customer_id: int,
     from_date: str | None = None,
     to_date: str | None = None,
     limit: int = 50
@@ -364,7 +284,15 @@ def transactions_list(
     acc = repo.get_account(acc_id)
     if not acc:
         return {"error": f"Hesap bulunamadı: {acc_id}"}
-    cust_id = int(acc["customer_id"])
+    cust_id = int(acc["customer_id"])  # hesap sahibinin customer_id’si
+    try:
+        req_cust_id = int(customer_id)
+    except Exception:
+        return {"error": "customer_id geçersiz (int olmalı)"}
+
+    # Güvenlik: İstek yapan müşteri, hesabın sahibi mi?
+    if req_cust_id != cust_id:
+        return {"error": "forbidden: account does not belong to this customer", "status_code": 403}
 
     # limit güvenliği
     try:
@@ -386,11 +314,26 @@ def transactions_list(
     elif t is None:
         t = "9999-12-31 23:59:59"
 
+    # Eğer iki tarih de verildiyse ve sıraları ters ise otomatik düzelt
+    try:
+        from datetime import datetime
+        def _parse_dt(s: str):
+            try:
+                return datetime.fromisoformat(s)
+            except Exception:
+                return None
+        df = _parse_dt(f) if isinstance(f, str) else None
+        dt = _parse_dt(t) if isinstance(t, str) else None
+        if df and dt and df > dt:
+            f, t = t, f
+    except Exception:
+        pass
+
     # işlemleri çek  DOĞRU parametre sırası çok önemli
     try:
         rows = repo.list_transactions(
             account_id=acc_id,
-            customer_id=cust_id,
+            customer_id=req_cust_id,
             from_date=f,
             to_date=t,
             limit=lim,
@@ -410,14 +353,109 @@ def transactions_list(
     except Exception as e:
         snap = {"error": f"snapshot yazılamadı: {e}", "saved": 0}
 
+    # UI component için normalize edilmiş öğeler
+    def _fmt_amount(val):
+        try:
+            v = float(val)
+        except Exception:
+            return str(val)
+        return f"{v:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+
+    items = []
+    for r in rows:
+        amt = r.get("amount")
+        items.append({
+            "id": r.get("txn_id") or r.get("id"),
+            "datetime": r.get("txn_date") or r.get("date"),
+            "amount": amt,
+            "amount_formatted": _fmt_amount(amt) if amt is not None else None,
+            "currency": r.get("currency") or "TRY",
+            "type": r.get("txn_type") or r.get("type"),
+            "description": r.get("description"),
+            "balance_after": r.get("balance_after"),
+            "account_id": r.get("account_id") or acc_id,
+        })
+
     return {
+        "ok": True,
         "account_id": acc_id,
         "range": {"from": f, "to": t},
         "limit": lim,
         "count": len(rows),
         "snapshot": snap,
         "transactions": rows,
+        "ui_component": {
+            "type": "transactions_list",
+            "account_id": acc_id,
+            "items": items,
+        },
     }
+
+
+# ============ CALCULATION TOOL ==============#
+@mcp.tool()
+@log_tool
+def loan_amortization_schedule(
+   principal: float,
+    term: int,
+    rate: float | None = None,
+    method: str = "annuity",
+    currency: str | None = None,
+    export: str = "none",
+) -> Dict[str, Any]:
+    """
+        S5: Kredi ödeme planı (amortisman tablosu) ve özet değerler.
+
+        Amaç:
+            Aylık anüite yöntemiyle (method="annuity") her ay için:
+            taksit, faiz, anapara ve kalan borç kalemlerini hesaplar. İsteğe bağlı
+            olarak CSV çıktısını base64 olarak döndürür.
+
+        Parametreler:
+            principal (float): Anapara ( > 0 )
+            currency (str, ops.): Para birimi (örn. "TRY")
+            rate (float, ops): Yıllık nominal faiz ( >= 0, örn. 0.35 )
+            term (int): Vade (ay, >= 1)
+            method (str, ops.): Şimdilik sadece "annuity" desteklenir.
+            export (str, ops.): "csv" → `csv_base64` alanı döner; "none" → dönmez.
+
+        Dönüş (başarı):
+            {
+            "summary": {
+                "principal": 200000.0,
+                "annual_rate": 0.40,
+                "term_months": 24,
+                "installment": 12258.91,
+                "total_interest": 146113.78,
+                "total_payment": 346113.78,
+                "method": "annuity_monthly"
+            },
+            "schedule": [
+                {"month":1,"installment":12258.91,"interest":6666.67,"principal":5592.24,"remaining":194407.76},
+                ...
+            ],
+            "ui_component": {...},
+            "csv_base64": "..."   # export="csv" ise yer alır
+            }
+
+        Hata (ör.):
+            {"error": "principal must be > 0"}
+            {"error": "only 'annuity' method is supported"}
+
+        Notlar:
+            - Son ayda yuvarlama farkı kapatılır (kalan=0’a çekilir).
+            - Hesaplama deterministiktir; DB erişimi yoktur.
+            - CSV UTF-8, başlıklar: month,installment,interest,principal,remaining
+        """
+    return calc_tools.loan_amortization_schedule(
+        principal=principal,
+        rate=rate,
+        term=term,
+        method=method,
+        currency=currency,
+        export=export,
+    )
+
 
 @mcp.tool()
 @log_tool
@@ -493,6 +531,7 @@ def interest_compute(
     
 
 @mcp.tool()
+@log_tool
 def run_roi_simulation(portfolio_name: str, monthly_investment: float, years: int) -> dict:
     """
     Runs a Monte Carlo simulation to project the future value of an investment portfolio.
@@ -522,6 +561,7 @@ def run_roi_simulation(portfolio_name: str, monthly_investment: float, years: in
 
 
 @mcp.tool()
+@log_tool
 def list_portfolios() -> dict:
     """
     Lists all available investment portfolios with their names, risk levels, and asset allocations.
@@ -542,6 +582,71 @@ def list_portfolios() -> dict:
     """
     
     return general_tools.list_available_portfolios()
+
+
+# ============ PAYMENT TOOL ==============#
+@mcp.tool()
+@log_tool
+def payment_request(
+    from_account: int,
+    to_account: int,
+    amount: float,
+    currency: str = "TRY",
+    note: str = "",
+    client_ref: str = "",
+    confirm: bool = False,
+):
+    """
+    Own-accounts transfer (preview or commit) with idempotency and safety checks.
+
+    Phases (via `confirm`):
+    - False → preview/dry-run: validate and return summary + `suggested_client_ref`
+    - True  → commit: re-validate and post transfer atomically
+
+    Params:
+    from_account:int, to_account:int, amount:float,
+    currency:str="TRY", note:str="", client_ref:str="", confirm:bool=False
+
+    Returns:
+    - Preview: { ok, phase:"precheck", suggested_client_ref, preview{...} }
+    - Commit:  { ok, phase:"commit", txn{...}, receipt{...} }
+    - Error:   { ok:false, error:<code>, ... }
+
+    Rules: accounts exist/active, same currency, sufficient funds, per-txn & daily limits,
+    idempotent by `client_ref`. Reads `accounts`; writes `payments` (and optionally `txns`).
+    """
+    # 1) Her zaman precheck: güvenlik ağımız
+    pre = pay.precheck(from_account, to_account, amount, currency, note)
+    if not pre.get("ok"):
+        return [{"type": "json", "json": {"ok": False, "phase": "precheck", **pre}}]
+
+    # 2) Kullanıcıdan onay istenecekse (dry-run cevabı)
+    if not confirm:
+        suggested = client_ref #or str(uuid4())
+        preview = {
+            "ok": True,
+            "phase": "precheck",
+            "confirm_required": True,
+            "suggested_client_ref": suggested,
+            "preview": {
+                "from_account": from_account,
+                "to_account": to_account,
+                "amount": pre["amount"],
+                "currency": pre["currency"],
+                "fee": pre["fee"],
+                "note": pre.get("note", ""),
+                "limits": pre.get("limits", {}),
+            },
+            "message": (
+                "Özet hazır. Onaylıyorsanız confirm=True ve aynı client_ref ile tekrar çağırın."
+            ),
+        }
+        return [{"type": "json", "json": preview}]
+
+    # 3) Onaylandı → create (idempotent)
+    ref = client_ref #or str(uuid4())
+    res = pay.create(ref, from_account, to_account, amount, currency, note)
+    return [{"type": "json", "json": {"phase": "commit", **res}}]
 
 
 if __name__ == "__main__":

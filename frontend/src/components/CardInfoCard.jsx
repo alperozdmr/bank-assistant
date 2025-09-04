@@ -26,7 +26,7 @@ const CardInfoCard = ({ cardData }) => {
           <div className="card-info-card-title">Kredi Kartı Bilgileri</div>
         </div>
 
-        <div className="card-list">
+        <div className={`card-list ${cards.length === 1 ? 'single' : ''}`}>
           {cards.map((c) => {
             const limit = Number(c.limit ?? c.credit_limit ?? 0)
             const borc = Number(c.borc ?? c.current_debt ?? 0)

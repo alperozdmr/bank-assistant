@@ -1,0 +1,242 @@
+/* AmortizationTableCard.css - InterestQuoteCard ile uyumlu görünüm */
+.amortization-table-card {
+  background: linear-gradient(135deg, #f8f9ff 0%, #f0f7ff 100%);
+  border: 1px solid #e1e8ed;
+  border-radius: 16px;
+  padding: 20px;
+  margin: 8px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+  max-width: 600px;
+  width: 100%;
+}
+
+.amortization-table-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.amortization-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(23, 137, 220, 0.1);
+}
+
+.amortization-card-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.amortization-card-icon {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #1789dc 0%, #58167d 100%);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+.amortization-card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0;
+}
+
+.amortization-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Özet satırları, InterestQuoteCard ile aynı yapı */
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  background: white;
+  border: 1px solid #e1e8ed;
+  border-radius: 8px;
+  padding: 12px 16px;
+}
+
+.summary-label {
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
+}
+
+.summary-value {
+  font-size: 14px;
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.rate-value {
+  color: #1789dc;
+  background: rgba(23, 137, 220, 0.1);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.installment-value {
+  color: #1789dc;
+}
+
+.total-value {
+  color: #2c3e50;
+}
+
+/* CSV Butonu InterestQuoteCard'a uygun */
+.csv-export-section {
+  display: flex;
+  justify-content: center;
+}
+
+.csv-export-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.csv-export-button:hover {
+  background: rgba(16, 185, 129, 0.2);
+  transform: scale(1.05);
+}
+
+.csv-export-button-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: #10b981;
+}
+
+.csv-hint {
+  text-align: center;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #666;
+}
+
+/* Karanlık tema uyumu */
+.dark-theme .amortization-table-card {
+  background: linear-gradient(135deg, #2a2a2a 0%, #1f1f1f 100%);
+  border-color: #444;
+  color: #e1e8ed;
+}
+
+.dark-theme .amortization-card-title {
+  color: #e1e8ed;
+}
+
+.dark-theme .summary-item {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-theme .summary-label {
+  color: #999;
+}
+
+.dark-theme .summary-value {
+  color: #e1e8ed;
+}
+
+/* Dark theme csv export button */
+.dark-theme .csv-export-button {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.dark-theme .csv-export-button:hover {
+  background: rgba(16, 185, 129, 0.25);
+}
+
+.dark-theme .csv-export-button-text {
+  color: #10b981;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .amortization-table-card {
+    max-width: 100%;
+    margin: 8px;
+    padding: 18px;
+  }
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .csv-export-button {
+    padding: 6px 10px;
+    gap: 6px;
+    font-size: 13px;
+  }
+  .csv-export-button svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+@media (max-width: 500px) {
+  /* Mobilde CSV button text'i gizle */
+  .csv-export-button-text {
+    display: none;
+  }
+  
+  /* Mobilde CSV button'ı sadece ikon olarak göster */
+  .csv-export-button {
+    padding: 8px;
+    min-width: 36px;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 360px) {
+  .csv-export-button {
+    padding: 5px 8px;
+    font-size: 12px;
+    gap: 5px;
+  }
+  .csv-export-button svg {
+    width: 16px;
+    height: 16px;
+  }
+  
+  /* Çok küçük ekranlarda CSV button'ı daha da kompakt yap */
+  .csv-export-button {
+    padding: 6px;
+    min-width: 32px;
+  }
+  
+  .csv-export-button svg {
+    width: 16px;
+    height: 16px;
+  }
+}

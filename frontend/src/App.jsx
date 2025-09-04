@@ -1,6 +1,31 @@
 import { useState, useRef, useEffect, Fragment } from 'react'
 import './App.css'
 import Login from './Login'
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+} from 'chart.js'
+import { Line } from 'react-chartjs-2'
+
+// Chart.js'i register et
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+)
+
 import BalanceCard from './components/BalanceCard'
 import ExchangeRatesCard from './components/ExchangeRatesCard'
 import InterestRatesCard from './components/InterestRatesCard'
@@ -9,6 +34,13 @@ import ATMCard from './components/ATMCard'
 import CardInfoCard from './components/CardInfoCard'
 import TransactionsCard from './components/TransactionsCard'
 import UserProfileCard from './components/UserProfileCard'
+import PortfoliosCard from './components/PortfoliosCard'
+import InterestQuoteCard from './components/InterestQuoteCard'
+import InterestCalculatorModal from './components/InterestCalculatorModal'
+import AmortizationTableCard from './components/AmortizationTableCard'
+import LoanAmortizationModal from './components/LoanAmortizationModal'
+import ROISimulationCard from './components/ROISimulationCard'
+import ROISimulationModal from './components/ROISimulationModal'
 
 function App() {
   // Login state
@@ -37,10 +69,25 @@ function App() {
   const [searchResults, setSearchResults] = useState([])
   const [isSearching, setIsSearching] = useState(false)
   const [showSearchInput, setShowSearchInput] = useState(false)
+  const [showInterestCalculator, setShowInterestCalculator] = useState(false)
+  const [showLoanAmortization, setShowLoanAmortization] = useState(false)
+  const [showROISimulation, setShowROISimulation] = useState(false)
+  const [showROIChart, setShowROIChart] = useState(false)
+  const [roiChartData, setRoiChartData] = useState(null)
   const messagesEndRef = useRef(null)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }
+
+  // Para formatı
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('tr-TR', {
+      style: 'currency',
+      currency: 'TRY',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount)
   }
 
   // Kullanıcı profilini yükle
@@ -266,6 +313,46 @@ function App() {
       document.body.classList.remove('dark-theme')
     }
   }, [isDarkTheme])
+
+  // ROI Chart veri hesaplama
+  const calculateROIData = (years, monthly_investment, target_outcomes) => {
+    const labels = []
+    const averageData = []
+    const optimisticData = []
+    const pessimisticData = []
+    
+    // Başlangıç değeri (0. yıl)
+    labels.push('0. Yıl')
+    averageData.push(0)
+    optimisticData.push(0)
+    pessimisticData.push(0)
+    
+    // Yıl bazında büyüme hesaplama
+    for (let year = 1; year <= years; year++) {
+      labels.push(`${year}. Yıl`)
+      
+      // Toplam yatırım
+      const totalInvestment = monthly_investment * 12 * year
+      
+      // Her senaryo için büyüme hesaplama
+      // Gerçek ROI simülasyon sonuçlarına göre interpolasyon
+      const progress = year / years
+      
+      // Ortalama senaryo: Başlangıç 0, son nokta target_outcomes.average
+      const averageGrowth = Math.round(totalInvestment + (target_outcomes.average - totalInvestment) * progress)
+      averageData.push(averageGrowth)
+      
+      // İyimser senaryo: Başlangıç 0, son nokta target_outcomes.optimistic
+      const optimisticGrowth = Math.round(totalInvestment + (target_outcomes.optimistic - totalInvestment) * progress)
+      optimisticData.push(optimisticGrowth)
+      
+      // Kötümser senaryo: Başlangıç 0, son nokta target_outcomes.pessimistic
+      const pessimisticGrowth = Math.round(totalInvestment + (target_outcomes.pessimistic - totalInvestment) * progress)
+      pessimisticData.push(pessimisticGrowth)
+    }
+    
+    return { labels, averageData, optimisticData, pessimisticData }
+  }
 
   // Sohbet sil
   const deleteChat = async (chatId) => {
@@ -583,7 +670,293 @@ function App() {
     }
   }
 
+  const handleInterestCalculatorSubmit = async (formData) => {
+    // Form verilerini backend'e gönder
+    const userMessage = {
+      id: messages.length + 1,
+      text: `Faiz hesaplaması yapmak istiyorum. ${formData.type === 'deposit' ? 'Mevduat' : 'Kredi'} hesaplaması: Anapara ${formData.principal} ${formData.currency}, Vade ${formData.term} ${formData.term_unit === 'years' ? 'yıl' : 'ay'}, Bileşik ${formData.compounding}${formData.rate ? `, Faiz oranı %${formData.rate}` : ''}`,
+      sender: 'user',
+      timestamp: new Date()
+    }
+
+    const updatedMessages = [...messages, userMessage]
+
+    // Hemen kullanıcı mesajını göster
+    setMessages(updatedMessages)
+    setShowQuickActions(false)
+
+    // Sohbet başlığını güncelle
+    if (messages.length === 1) {
+      updateChatTitle(currentChatId, userMessage.text.length > 30 ? userMessage.text.substring(0, 30) + '...' : userMessage.text)
+
+      setChatHistory(prev => ({
+        ...prev,
+        [currentChatId]: {
+          ...prev[currentChatId],
+          isNew: false
+        }
+      }))
+
+      setChatList(prev => prev.map(chat =>
+        chat.id === currentChatId
+          ? { ...chat, isNew: false }
+          : chat
+      ))
+    }
+
+    // Sohbet geçmişini güncelle
+    setChatHistory(prev => ({
+      ...prev,
+      [currentChatId]: {
+        ...prev[currentChatId],
+        messages: updatedMessages,
+        updatedAt: new Date()
+      }
+    }))
+
+    // Sohbet listesini güncelle
+    setChatList(prev => prev.map(chat =>
+      chat.id === currentChatId
+        ? { ...chat, updatedAt: new Date() }
+        : chat
+    ).sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)))
+
+    setIsTyping(true)
+    let finalMessages = updatedMessages
+
+    try {
+      const response = await fetch("http://127.0.0.1:8000/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${userInfo.token}`
+        },
+        body: JSON.stringify({
+          message: userMessage.text,
+          user_id: userInfo.userId,
+          chat_id: currentChatId
+        })
+      })
+
+      const data = await response.json()
+
+      const botMessage = {
+        id: messages.length + 2,
+        text: data.response,
+        sender: 'bot',
+        timestamp: new Date(data.timestamp),
+        ui_component: data.ui_component
+      }
+
+      finalMessages = [...updatedMessages, botMessage]
+      setMessages(finalMessages)
+
+      // Backend'den chat sessions'ları yeniden yükle
+      if (data.chat_id) {
+        loadChatSessions()
+      }
+
+    } catch (err) {
+      console.error("API çağrısı başarısız:", err)
+      const botMessage = {
+        id: messages.length + 2,
+        text: "⚠️ Bot cevap veremedi.",
+        sender: 'bot',
+        timestamp: new Date()
+      }
+
+      finalMessages = [...updatedMessages, botMessage]
+      setMessages(finalMessages)
+
+    } finally {
+      setIsTyping(false)
+    }
+
+    // Sohbet geçmişini bot mesajıyla güncelle
+    setChatHistory(prev => ({
+      ...prev,
+      [currentChatId]: {
+        ...prev[currentChatId],
+        messages: finalMessages,
+        updatedAt: new Date()
+      }
+    }))
+
+    // Sohbet listesini güncelle
+    setChatList(prev => prev.map(chat =>
+      chat.id === currentChatId
+        ? { ...chat, updatedAt: new Date() }
+        : chat
+    ).sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)))
+  }
+
+  const handleROISimulationSubmit = async ({ portfolio_name, monthly_investment, years }) => {
+    const userMessage = {
+      id: messages.length + 1,
+      text: `ROI simülasyonu çalıştır: ${portfolio_name}, aylık ${monthly_investment} TL, ${years} yıl`,
+      sender: 'user',
+      timestamp: new Date()
+    }
+
+    const updatedMessages = [...messages, userMessage]
+    setMessages(updatedMessages)
+    setShowQuickActions(false)
+
+    if (messages.length === 1) {
+      updateChatTitle(currentChatId, userMessage.text.length > 30 ? userMessage.text.substring(0, 30) + '...' : userMessage.text)
+      setChatHistory(prev => ({
+        ...prev,
+        [currentChatId]: { ...prev[currentChatId], isNew: false }
+      }))
+      setChatList(prev => prev.map(chat => (
+        chat.id === currentChatId ? { ...chat, isNew: false } : chat
+      )))
+    }
+
+    setChatHistory(prev => ({
+      ...prev,
+      [currentChatId]: { ...prev[currentChatId], messages: updatedMessages, updatedAt: new Date() }
+    }))
+    setChatList(prev => prev.map(chat => (
+      chat.id === currentChatId ? { ...chat, updatedAt: new Date() } : chat
+    )).sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)))
+
+    setIsTyping(true)
+    let finalMessages = updatedMessages
+    try {
+      const response = await fetch('http://127.0.0.1:8000/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${userInfo.token}` },
+        body: JSON.stringify({
+          message: userMessage.text,
+          user_id: userInfo.userId,
+          chat_id: currentChatId
+        })
+      })
+      const data = await response.json()
+      const botMessage = {
+        id: messages.length + 2,
+        text: data.response,
+        sender: 'bot',
+        timestamp: new Date(data.timestamp),
+        ui_component: data.ui_component
+      }
+      finalMessages = [...updatedMessages, botMessage]
+      setMessages(finalMessages)
+      if (data.chat_id) {
+        loadChatSessions()
+      }
+    } catch (err) {
+      finalMessages = [...updatedMessages, { id: messages.length + 2, text: '⚠️ Bot cevap veremedi.', sender: 'bot', timestamp: new Date() }]
+      setMessages(finalMessages)
+    } finally {
+      setIsTyping(false)
+    }
+
+    setChatHistory(prev => ({
+      ...prev,
+      [currentChatId]: { ...prev[currentChatId], messages: finalMessages, updatedAt: new Date() }
+    }))
+    setChatList(prev => prev.map(chat => (
+      chat.id === currentChatId ? { ...chat, updatedAt: new Date() } : chat
+    )).sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)))
+  }
+
+  const handleROIChartShow = (data) => {
+    setRoiChartData(data)
+    setShowROIChart(true)
+  }
+
+  const handleLoanAmortizationSubmit = async ({ principal, term, rate, currency }) => {
+    const rateText = rate ? `, Faiz oranı %${rate}` : ''
+    const userMessage = {
+      id: messages.length + 1,
+      text: `Kredi amortismanı hesapla: Anapara ${principal} ${currency}, Vade ${term} ay${rateText}`,
+      sender: 'user',
+      timestamp: new Date()
+    }
+
+    const updatedMessages = [...messages, userMessage]
+    setMessages(updatedMessages)
+    setShowQuickActions(false)
+
+    if (messages.length === 1) {
+      updateChatTitle(currentChatId, userMessage.text.length > 30 ? userMessage.text.substring(0, 30) + '...' : userMessage.text)
+      setChatHistory(prev => ({
+        ...prev,
+        [currentChatId]: { ...prev[currentChatId], isNew: false }
+      }))
+      setChatList(prev => prev.map(chat => (
+        chat.id === currentChatId ? { ...chat, isNew: false } : chat
+      )))
+    }
+
+    setChatHistory(prev => ({
+      ...prev,
+      [currentChatId]: { ...prev[currentChatId], messages: updatedMessages, updatedAt: new Date() }
+    }))
+    setChatList(prev => prev.map(chat => (
+      chat.id === currentChatId ? { ...chat, updatedAt: new Date() } : chat
+    )).sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)))
+
+    setIsTyping(true)
+    let finalMessages = updatedMessages
+    try {
+      const response = await fetch('http://127.0.0.1:8000/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${userInfo.token}` },
+        body: JSON.stringify({
+          message: userMessage.text,
+          user_id: userInfo.userId,
+          chat_id: currentChatId
+        })
+      })
+      const data = await response.json()
+      const botMessage = {
+        id: messages.length + 2,
+        text: data.response,
+        sender: 'bot',
+        timestamp: new Date(data.timestamp),
+        ui_component: data.ui_component
+      }
+      finalMessages = [...updatedMessages, botMessage]
+      setMessages(finalMessages)
+      if (data.chat_id) {
+        loadChatSessions()
+      }
+    } catch (err) {
+      finalMessages = [...updatedMessages, { id: messages.length + 2, text: '⚠️ Bot cevap veremedi.', sender: 'bot', timestamp: new Date() }]
+      setMessages(finalMessages)
+    } finally {
+      setIsTyping(false)
+    }
+
+    setChatHistory(prev => ({
+      ...prev,
+      [currentChatId]: { ...prev[currentChatId], messages: finalMessages, updatedAt: new Date() }
+    }))
+    setChatList(prev => prev.map(chat => (
+      chat.id === currentChatId ? { ...chat, updatedAt: new Date() } : chat
+    )).sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)))
+  }
+
   const handleQuickAction = async (actionKey) => {
+    if (actionKey === 'interest_compute') {
+      setShowInterestCalculator(true)
+      setShowQuickActionsModal(false)
+      return
+    }
+    if (actionKey === 'loan_amort') {
+      setShowLoanAmortization(true)
+      setShowQuickActionsModal(false)
+      return
+    }
+    if (actionKey === 'roi_simulation') {
+      setShowROISimulation(true)
+      setShowQuickActionsModal(false)
+      return
+    }
+
     const actions = {
       balance: {
         user: 'Hesap bakiyemi görmek istiyorum.'
@@ -605,6 +978,9 @@ function App() {
       },
       transactions: {
         user: 'İşlem geçmişimi göster.'
+      },
+      portfolios: {
+        user: 'Yatırım portföylerini göster.'
       }
     }
 
@@ -1051,7 +1427,7 @@ function App() {
                       {message.ui_component.type === 'interest_rates_card' && (
                         <InterestRatesCard cardData={message.ui_component} />
                       )}
-                      {message.ui_component.type === 'fees_card' && (
+                      {(message.ui_component.type === 'fees_card' || message.ui_component.type === 'fees_table') && (
                         <FeesCard cardData={message.ui_component} />
                       )}
                       {message.ui_component.type === 'atm_card' && (
@@ -1080,6 +1456,18 @@ function App() {
                           }
                           return <TransactionsCard data={mapped} />
                         })()
+                      )}
+                      {message.ui_component.type === 'portfolios_card' && (
+                        <PortfoliosCard cardData={message.ui_component} />
+                      )}
+                      {message.ui_component.type === 'interest_quote_card' && (
+                        <InterestQuoteCard cardData={message.ui_component} />
+                      )}
+                      {message.ui_component.type === 'amortization_table_card' && (
+                        <AmortizationTableCard cardData={message.ui_component} />
+                      )}
+                      {message.ui_component.type === 'roi_simulation_card' && (
+                        <ROISimulationCard cardData={message.ui_component} onShowChart={handleROIChartShow} />
                       )}
                     </div>
                   )}
@@ -1187,6 +1575,54 @@ function App() {
                         </svg>
                       </div>
                       <span>Kart Bilgileri</span>
+                    </button>
+                    <button className="quick-button" onClick={() => handleQuickAction('portfolios')}>
+                      <div className="quick-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          {/* Portfolio/Investment Icon */}
+                          <path d="M3 3h18v18H3z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M9 9h6v6H9z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M12 3v18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M3 12h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                      <span>Yatırım Portföyleri</span>
+                    </button>
+                    <button className="quick-button" onClick={() => handleQuickAction('interest_compute')}>
+                      <div className="quick-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          {/* Percentage/Interest Icon */}
+                          <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+                          <path d="M8 16l8-8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                          <path d="M9 12h.01" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M15 12h.01" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                      <span>Faiz Hesaplama</span>
+                    </button>
+                    <button className="quick-button" onClick={() => handleQuickAction('loan_amort')}>
+                      <div className="quick-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                      <div className="quick-text">
+                        <span className="quick-title">Kredi Amortisman</span>
+                      </div>
+                    </button>
+                    <button className="quick-button" onClick={() => handleQuickAction('roi_simulation')}>
+                      <div className="quick-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          {/* Chart/Graph Icon */}
+                          <path d="M3 3v18h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M18 17V9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M13 17V5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M8 17v-3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                      <span>ROI Simülasyonu</span>
                     </button>
                   </div>
                 </div>
@@ -1379,6 +1815,64 @@ function App() {
                     <span className="modal-quick-desc">Kredi kartı limit ve borç bilgilerinizi görün.</span>
                   </div>
                 </button>
+                <button className="modal-quick-button" onClick={() => handleQuickAction('portfolios')}>
+                  <div className="modal-quick-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      {/* Portfolio/Investment Icon */}
+                      <path d="M3 3h18v18H3z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M9 9h6v6H9z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M12 3v18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M3 12h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                  <div className="modal-quick-text">
+                    <span className="modal-quick-title">Yatırım Portföyleri</span>
+                    <span className="modal-quick-desc">Yatırım portföylerini görüntüleyin.</span>
+                  </div>
+                </button>
+                <button className="modal-quick-button" onClick={() => handleQuickAction('interest_compute')}>
+                  <div className="modal-quick-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      {/* Percentage/Interest Icon */}
+                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+                      <path d="M8 16l8-8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                      <path d="M9 12h.01" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M15 12h.01" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                  <div className="modal-quick-text">
+                    <span className="modal-quick-title">Faiz Hesaplama</span>
+                    <span className="modal-quick-desc">Mevduat ve kredi faiz hesaplamalarını yapın.</span>
+                  </div>
+                </button>
+                <button className="modal-quick-button" onClick={() => handleQuickAction('loan_amort')}>
+                  <div className="modal-quick-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                  <div className="modal-quick-text">
+                    <span className="modal-quick-title">Kredi Amortisman</span>
+                    <span className="modal-quick-desc">Aylık ödeme planını hesaplayın ve indirin.</span>
+                  </div>
+                </button>
+                <button className="modal-quick-button" onClick={() => handleQuickAction('roi_simulation')}>
+                  <div className="modal-quick-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      {/* Chart/Graph Icon */}
+                      <path d="M3 3v18h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M18 17V9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M13 17V5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M8 17v-3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                  <div className="modal-quick-text">
+                    <span className="modal-quick-title">ROI Simülasyonu</span>
+                    <span className="modal-quick-desc">Yatırım getiri simülasyonu yapın.</span>
+                  </div>
+                </button>
               </div>
             </div>
           </div>
@@ -1441,6 +1935,165 @@ function App() {
               ) : (
                 <UserProfileCard userData={userProfile} />
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Interest Calculator Modal */}
+      <InterestCalculatorModal
+        isOpen={showInterestCalculator}
+        onClose={() => setShowInterestCalculator(false)}
+        onSubmit={handleInterestCalculatorSubmit}
+      />
+
+      {/* Loan Amortization Modal */}
+      <LoanAmortizationModal
+        isOpen={showLoanAmortization}
+        onClose={() => setShowLoanAmortization(false)}
+        onSubmit={handleLoanAmortizationSubmit}
+      />
+
+      {/* ROI Simulation Modal */}
+      <ROISimulationModal
+        isOpen={showROISimulation}
+        onClose={() => setShowROISimulation(false)}
+        onSubmit={handleROISimulationSubmit}
+      />
+
+      {/* ROI Chart Modal */}
+      {showROIChart && roiChartData && (
+        <div className="modal-overlay" onClick={() => setShowROIChart(false)}>
+          <div className="chart-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="chart-modal-header">
+              <h3>ROI Büyüme Eğrisi</h3>
+              <button 
+                className="chart-modal-close-button"
+                onClick={() => setShowROIChart(false)}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            </div>
+            <div className="chart-modal-body">
+              <div className="chart-container-large">
+                                {roiChartData && (() => {
+                  const chartData = calculateROIData(
+                    roiChartData.years || 10,
+                    roiChartData.monthly_investment || 1000,
+                    {
+                      average: roiChartData.average_outcome,
+                      optimistic: roiChartData.good_scenario_outcome,
+                      pessimistic: roiChartData.bad_scenario_outcome
+                    }
+                  )
+                  
+                  return (
+                    <Line
+                      data={{
+                        labels: chartData.labels,
+                        datasets: [
+                          {
+                            label: 'Kötümser Senaryo (25%)',
+                            data: chartData.pessimisticData,
+                            borderColor: '#ef4444',
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4
+                          },
+                          {
+                            label: 'Ortalama Senaryo',
+                            data: chartData.averageData,
+                            borderColor: '#1789dc',
+                            backgroundColor: 'rgba(23, 137, 220, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4
+                          },
+                          {
+                            label: 'İyimser Senaryo (75%)',
+                            data: chartData.optimisticData,
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4
+                          }
+                        ]
+                      }}
+                      options={{
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                          legend: {
+                            position: 'bottom',
+                            labels: {
+                              usePointStyle: true,
+                              padding: 20,
+                              font: {
+                                size: 12
+                              }
+                            }
+                          },
+                          tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                              label: function(context) {
+                                return context.dataset.label + ': ' + formatCurrency(context.parsed.y)
+                              }
+                            }
+                          }
+                        },
+                        scales: {
+                          x: {
+                            title: {
+                              display: true,
+                              text: 'Yıl',
+                              font: {
+                                size: 14,
+                                weight: 'bold'
+                              }
+                            },
+                            grid: {
+                              color: 'rgba(0,0,0,0.1)',
+                              drawBorder: false
+                            }
+                          },
+                          y: {
+                            title: {
+                              display: true,
+                              text: 'Portföy Değeri (TL)',
+                              font: {
+                                size: 14,
+                                weight: 'bold'
+                              }
+                            },
+                            grid: {
+                              color: 'rgba(0,0,0,0.1)',
+                              drawBorder: false
+                            },
+                            ticks: {
+                              callback: function(value) {
+                                return formatCurrency(value)
+                              }
+                            }
+                          }
+                        },
+                        interaction: {
+                          mode: 'nearest',
+                          axis: 'x',
+                          intersect: false
+                        }
+                      }}
+                      height={400}
+                    />
+                  )
+                })()}
+              </div>
             </div>
           </div>
         </div>

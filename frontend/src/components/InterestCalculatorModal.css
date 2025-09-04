@@ -1,0 +1,253 @@
+/* Overlay */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  backdrop-filter: blur(3px);
+  animation: modalFadeIn 0.2s ease-out;
+}
+
+/* Modal Box */
+.interest-calculator-modal {
+  background: #fff;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+/* Body */
+.interest-calculator-modal .modal-body {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Section Titles */
+.interest-calculator-modal .form-section h4 {
+  font-size: 1rem;
+  margin-bottom: 0.75rem;
+  color: #444;
+}
+
+.dark-theme .interest-calculator-modal .form-section h4 {
+  color: #ddd;
+}
+
+/* Radio Buttons */
+.interest-calculator-modal .radio-group {
+  display: flex;
+  gap: 1rem;
+}
+
+.interest-calculator-modal .radio-option {
+  position: relative;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.interest-calculator-modal .radio-option input {
+  display: none;
+}
+
+.interest-calculator-modal .radio-custom {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #1789dc;
+  border-radius: 50%;
+  margin-right: 0.5rem;
+  position: relative;
+}
+
+.interest-calculator-modal .radio-option input:checked + .radio-custom::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  background: #1789dc;
+  border-radius: 50%;
+}
+
+/* Form Groups */
+.interest-calculator-modal .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.interest-calculator-modal label {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* Koyu tema: başlık/etiket renkleri Quick Actions ile uyumlu */
+.dark-theme .interest-calculator-modal label {
+  color: #e1e8ed;
+}
+.dark-theme .interest-calculator-modal .help-text {
+  color: #bbb;
+}
+
+/* Koyu tema: input/select arka planı Quick Actions buton griliğinde, yazı beyaz */
+.dark-theme .interest-calculator-modal input[type="number"],
+.dark-theme .interest-calculator-modal select,
+.dark-theme .interest-calculator-modal .term-unit-select {
+  background: #3a3a3a;
+  color: #ffffff;
+  border-color: #555;
+}
+
+.dark-theme .interest-calculator-modal input[type="number"]::placeholder {
+  color: #bbbbbb;
+}
+
+/* Vade ve Vade Birimi yan yana */
+.interest-calculator-modal .form-row {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+.interest-calculator-modal .form-row .form-group {
+  flex: 1;
+}
+
+/* Yan yana alanda sağdaki küçük seçim alanı için */
+.interest-calculator-modal .form-group--shrink {
+  flex: 0 0 180px;
+  max-width: 180px;
+  min-width: 160px;
+}
+
+/* Anapara alanını biraz daralt, yanındaki para birimine daha fazla alan bırak */
+.interest-calculator-modal .form-group--principal {
+  flex: 1 1 auto;
+}
+
+.interest-calculator-modal input[type="number"],
+.interest-calculator-modal select {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid #e1e8ed;
+  background: #f8f9fa;
+  color: #2c3e50;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border 0.2s, box-shadow 0.2s, background 0.2s;
+}
+
+.interest-calculator-modal input:focus,
+.interest-calculator-modal select:focus {
+  border-color: #1789dc;
+  box-shadow: 0 0 0 2px rgba(23, 137, 220, 0.2);
+  background: #ffffff;
+}
+
+.interest-calculator-modal .currency-symbol,
+.interest-calculator-modal .input-suffix {
+  position: absolute;
+  right: 0.75rem;
+  color: #777;
+  font-size: 0.85rem;
+}
+
+.interest-calculator-modal .term-unit-select {
+  margin-left: 0;
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid #e1e8ed;
+  background: #f8f9fa;
+  color: #2c3e50;
+}
+
+/* Dikey form düzeni */
+.interest-calculator-modal .vertical-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.interest-calculator-modal .vertical-form .input-wrapper {
+  width: 100%;
+}
+
+.interest-calculator-modal .help-text {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.interest-calculator-modal .error {
+  border-color: #dc3545 !important;
+}
+
+.interest-calculator-modal .error-message {
+  font-size: 0.8rem;
+  color: #dc3545;
+}
+
+/* Footer Actions */
+.interest-calculator-modal .form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.interest-calculator-modal .modal-cancel-button,
+.interest-calculator-modal .modal-confirm-button {
+  padding: 0.6rem 1.2rem;
+  border-radius: 12px;
+  border: none;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.interest-calculator-modal .modal-cancel-button {
+  background: #e1e8ed;
+  color: #333;
+}
+
+.interest-calculator-modal .modal-cancel-button:hover {
+  background: #e1e8ed;
+  color: #2c3e50;
+  transform: translateY(-1px);
+}
+
+.interest-calculator-modal .modal-confirm-button {
+  background: linear-gradient(135deg, #1789dc 0%, #58167d 100%);
+  color: #fff;
+}
+
+.interest-calculator-modal .modal-confirm-button:hover {
+  background: linear-gradient(135deg, #1478c7 0%, #4a0f6a 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(23, 137, 220, 0.3);
+}
+
+/* Koyu temada select focus durumunda da arka plan rengini koru */
+.dark-theme .interest-calculator-modal select:focus,
+.dark-theme .interest-calculator-modal select:active,
+.dark-theme .interest-calculator-modal select:focus-visible {
+  background: #3a3a3a !important;
+  color: #ffffff !important;
+  border-color: #1789dc;
+  box-shadow: 0 0 0 2px rgba(23, 137, 220, 0.2);
+}
+
+/* Koyu temada input alanlarının focus durumunda border rengi */
+.dark-theme .interest-calculator-modal input[type="number"]:focus {
+  border-color: #1789dc;
+  box-shadow: 0 0 0 2px rgba(23, 137, 220, 0.2);
+}
