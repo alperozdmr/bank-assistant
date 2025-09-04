@@ -1,0 +1,279 @@
+/* Portfolios Card Styles */
+.portfolios-card {
+  background: linear-gradient(135deg, #f8f9ff 0%, #f0f7ff 100%);
+  border: 1px solid #e1e8ed;
+  border-radius: 16px;
+  padding: 20px;
+  margin: 8px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+  max-width: none;
+  width: 100%;
+}
+
+.portfolios-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.portfolios-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(23, 137, 220, 0.1);
+}
+
+.portfolios-card-icon {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #1789dc 0%, #58167d 100%);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+.portfolios-card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0;
+}
+
+.portfolios-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.no-portfolios {
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  padding: 20px;
+}
+
+.portfolios-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  /* İlk etapta yaklaşık 6 öğe görünecek şekilde sınırlı yükseklik ve kaydırma */
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+/* Desktop'ta yan yana 3 tane */
+@media (min-width: 768px) {
+  .portfolios-list {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.portfolio-item {
+  background: white;
+  border: 1px solid #e1e8ed;
+  border-radius: 12px;
+  padding: 12px;
+  transition: all 0.2s ease;
+  min-width: 0;
+}
+
+
+
+.portfolio-item:hover {
+  border-color: #1789dc;
+  box-shadow: 0 2px 8px rgba(23, 137, 220, 0.1);
+}
+
+.portfolio-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  gap: 8px;
+}
+
+.portfolio-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2c3e50;
+  flex: 1;
+}
+
+
+
+.risk-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.risk-badge.low-risk {
+  background: rgba(46, 204, 113, 0.1);
+  color: #27ae60;
+  border: 1px solid rgba(46, 204, 113, 0.3);
+}
+
+.risk-badge.medium-risk {
+  background: rgba(243, 156, 18, 0.1);
+  color: #f39c12;
+  border: 1px solid rgba(243, 156, 18, 0.3);
+}
+
+.risk-badge.high-risk {
+  background: rgba(231, 76, 60, 0.1);
+  color: #e74c3c;
+  border: 1px solid rgba(231, 76, 60, 0.3);
+}
+
+.portfolio-allocation {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.allocation-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #666;
+}
+
+
+
+.allocation-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.allocation-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(23, 137, 220, 0.05);
+  border: 1px solid rgba(23, 137, 220, 0.2);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 13px;
+}
+
+.allocation-percentage {
+  font-weight: 600;
+  color: #1789dc;
+  background: rgba(23, 137, 220, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  min-width: 32px;
+  text-align: center;
+}
+
+.allocation-asset {
+  color: #2c3e50;
+  font-weight: 500;
+}
+
+
+
+.portfolios-summary {
+  text-align: center;
+  margin-top: 8px;
+  padding: 8px;
+  font-size: 13px;
+  color: #666;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Dark theme for portfolios cards */
+.dark-theme .portfolios-card {
+  background: linear-gradient(135deg, #2a2a2a 0%, #1f1f1f 100%);
+  border-color: #444;
+  color: #e1e8ed;
+}
+
+.dark-theme .portfolios-card-title {
+  color: #e1e8ed;
+}
+
+.dark-theme .portfolio-item {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-theme .portfolio-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.dark-theme .portfolio-name {
+  color: #e1e8ed;
+}
+
+.dark-theme .allocation-title {
+  color: #999;
+}
+
+.dark-theme .allocation-asset {
+  color: #e1e8ed;
+}
+
+.dark-theme .portfolios-summary {
+  background: rgba(255, 255, 255, 0.1);
+  color: #999;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .portfolios-card {
+    max-width: 100%;
+    margin: 8px;
+  }
+  
+  .portfolio-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .risk-badge {
+    align-self: flex-start;
+  }
+  
+  .allocation-items {
+    flex-direction: column;
+    gap: 6px;
+  }
+  
+  .allocation-item {
+    justify-content: space-between;
+  }
+}
+
+@media (max-width: 480px) {
+  .portfolios-card {
+    padding: 16px;
+  }
+  
+  .portfolio-item {
+    padding: 12px;
+  }
+  
+  .portfolio-name {
+    font-size: 15px;
+  }
+  
+  .allocation-item {
+    font-size: 12px;
+    padding: 4px 8px;
+  }
+}

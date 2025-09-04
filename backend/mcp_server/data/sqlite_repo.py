@@ -434,7 +434,14 @@ class SQLiteRepository:
             row = con.execute(sql, (product,)).fetchone()
             if not row or row["rate_value"] is None:
              raise ValueError(f"Interest rate not found for product={product}")
-            return float(row["rate_value"])
+            
+            rate_value = float(row["rate_value"])
+            
+            # rate_apy sütunundan geliyorsa 100'e böl (zaten yüzde olarak geliyor)
+            if rate_col == "rate_apy":
+                rate_value = rate_value / 100.0
+                
+            return rate_value
         finally:
             con.close()
 
