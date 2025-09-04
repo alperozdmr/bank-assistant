@@ -157,3 +157,79 @@ class PaymentService:
             return {"ok": False, "error": str(ve)}
         except Exception as e:
             return {"ok": False, "error": "create_failed", "detail": type(e).__name__}
+        
+
+    def card_limit_increase_request(
+        self,
+        card_id: int,
+        customer_id: int,
+        new_limit: float,
+        reason: str | None = None,
+    ) -> Dict[str, Any]:
+        """
+        Kart limit artış talebi:
+          - Kartın müşteriye ait olduğunu doğrular.
+          - Basit politika kontrolleri uygular.
+          - Talebi DB'ye 'received' statüsüyle kaydeder.
+        """
+        # 1) Tip/pozitiflik
+        try:
+            cid = int(card_id)
+            cust = int(customer_id)
+            nl = float(new_limit)
+        except Exception:
+            return {"error": "card_id/customer_id/new_limit geçersiz."}
+        if nl <= 0:
+            return {"error": "new_limit pozitif olmalı."}
+
+        # 2) Kart doğrulama (SQLiteRepository'den gelir)
+        card = self.repo.get_card_details(card_id=cid, customer_id=cust)  # inherits
+        if not card:
+            return {"error": "Kart bulunamadı ya da bu müşteriye ait değil."}
+
+        current_limit = float(card.get("credit_limit") or 0.0)
+        current_debt  = float(card.get("current_debt") or 0.0)
+
+        # 3) Politika: mevcut limitten büyük, borcun altında olamaz, üst sınır = 2x
+        if nl <= current_limit:
+            return {"error": "Yeni limit mevcut limitten büyük olmalı."}
+        if nl < current_debt:
+            return {"error": "Yeni limit mevcut borcun altında olamaz."}
+        max_limit = current_limit * 2.0
+        if nl > max_limit:
+            return {"error": f"Talep edilen limit üst sınırı aşıyor (<= {max_limit:,.2f})."}
+
+        # 4) DB'ye kaydet
+        saved = self.repo.save_card_limit_increase_request(
+            card_id=cid,
+            customer_id=cust,
+            requested_limit=nl,
+            reason=(reason or "").strip() or None,
+            status="received",
+        )
+
+        # 5) Dönüş
+        return {
+            "ok": True,
+            "request_id": saved.get("request_id"),
+            "status": saved.get("status"),
+            "card": {
+                "card_id": cid,
+                "current_limit": current_limit,
+                "current_debt": current_debt,
+                "statement_day": card.get("statement_day"),
+                "due_day": card.get("due_day"),
+            },
+            "requested_limit": nl,
+            "reason": saved.get("reason"),
+            "created_at": saved.get("created_at"),
+            "ui_component": {
+                "type": "card_limit_increase_request",
+                "title": "Kart Limit Artış Talebi Alındı",
+                "card_id": cid,
+                "current_limit": current_limit,
+                "requested_limit": nl,
+                "status": saved.get("status"),
+                "created_at": saved.get("created_at"),
+            },
+        }

@@ -689,6 +689,73 @@ def payment_request(
     return [{"type": "json", "json": {"phase": "commit", **res}}]
 
 
+@mcp.tool()
+@log_tool
+def payment_card_limit_increase_request(
+    card_id: int,
+    customer_id: int,
+    new_limit: float,
+    reason: str | None = None,
+) -> dict:
+    """
+    Kart limit artış talebi aracıdır.
+
+    Amaç:
+        Belirli bir kredi kartı için müşteri tarafından yapılan limit artış talebini
+        alır, basit doğrulama/politika kontrolleri uygular ve sonucu `card_limit_requests`
+        tablosuna kaydeder. İlk kayıt durumu varsayılan olarak "received" olur.
+
+    Kullanım Senaryoları:
+        - "Kart limitimi 30.000 TL'den 45.000 TL'ye çıkarmak istiyorum."
+        - "Limit artış talebim kaydedildi mi?"
+
+    Veri kaynağı:
+        - Tablo: card_limit_requests
+        - Kolonlar:
+            request_id      INTEGER PRIMARY KEY AUTOINCREMENT
+            created_at      TEXT (UTC, ISO-8601 "YYYY-MM-DD HH:MM:SS")
+            card_id         INTEGER
+            customer_id     INTEGER
+            requested_limit REAL
+            reason          TEXT (opsiyonel)
+            status          TEXT ("received" | "approved" | "rejected")
+
+    Parametreler:
+        card_id (int): Kartın benzersiz kimliği.
+        customer_id (int): Talepte bulunan müşterinin kimliği.
+        new_limit (float): Talep edilen yeni kredi limiti (pozitif olmalı).
+        reason (str|None): Opsiyonel açıklama veya talep gerekçesi.
+
+    Dönüş:
+        - Başarı (örnek):
+            {
+              "ok": True,
+              "request_id": 101,
+              "status": "received",
+              "card": {
+                "card_id": 5,
+                "current_limit": 30000.0,
+                "current_debt": 12450.0,
+                "statement_day": 15,
+                "due_day": 25
+              },
+              "requested_limit": 45000.0,
+              "reason": "Gelir artışı",
+              "created_at": "2025-09-04 18:00:00",
+              "ui_component": {...}
+            }
+        - Hata:
+            { "error": "Yeni limit mevcut limitten büyük olmalı." }
+            { "error": "Kart bulunamadı ya da bu müşteriye ait değil." }
+    """
+    return pay.card_limit_increase_request(
+        card_id=card_id,
+        customer_id=customer_id,
+        new_limit=new_limit,
+        reason=reason,
+    )
+
+
 if __name__ == "__main__":
     # Varsayılan port ile başlat (kütüphanen ne destekliyorsa)
     # mcp.run() veya mcp.run(port=8001)

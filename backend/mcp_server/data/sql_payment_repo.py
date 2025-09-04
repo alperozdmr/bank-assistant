@@ -305,3 +305,66 @@ class SQLitePaymentRepository(SQLiteRepository):
             raise
         finally:
             con.close()
+
+    def _ensure_schema(self, con: sqlite3.Connection):
+        """
+        Kart limit artış talebi oluşturur ve DB'ye 'received' statüsünde kaydeder.
+        """
+        cur = con.cursor()
+        # mevcut payments tablosu
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS payments (
+          payment_id TEXT PRIMARY KEY,
+          client_ref TEXT UNIQUE,
+          from_account INTEGER NOT NULL,
+          to_account INTEGER NOT NULL,
+          amount REAL NOT NULL,
+          currency TEXT NOT NULL,
+          fee REAL NOT NULL DEFAULT 0,
+          note TEXT,
+          status TEXT NOT NULL,
+          created_at TEXT NOT NULL,
+          posted_at TEXT,
+          balance_after REAL
+        )
+        """)
+        # YENİ: kart limit artış talepleri
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS card_limit_requests (
+          request_id      INTEGER PRIMARY KEY AUTOINCREMENT,
+          created_at      TEXT NOT NULL,
+          card_id         INTEGER NOT NULL,
+          customer_id     INTEGER NOT NULL,
+          requested_limit REAL NOT NULL,
+          reason          TEXT,
+          status          TEXT NOT NULL   -- received|approved|rejected
+        )
+        """)
+
+    def save_card_limit_increase_request(
+        self,
+        card_id: int,
+        customer_id: int,
+        requested_limit: float,
+        reason: str | None,
+        status: str = "received",
+    ) -> dict:
+        con = self._connect()
+        try:
+            now = self._now()
+            cur = con.cursor()
+            cur.execute("""
+              INSERT INTO card_limit_requests
+              (created_at, card_id, customer_id, requested_limit, reason, status)
+              VALUES (?, ?, ?, ?, ?, ?)
+            """, (now, int(card_id), int(customer_id), float(requested_limit), reason, status))
+            con.commit()
+            rid = cur.lastrowid
+            return {
+                "request_id": int(rid),
+                "created_at": now,
+                "status": status,
+                "reason": reason,
+            }
+        finally:
+            con.close()
