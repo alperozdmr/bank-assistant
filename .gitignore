@@ -42,4 +42,3 @@ logs/
 # ---- file ----
 test.py
 chat.db
-AdvancedAgent.py

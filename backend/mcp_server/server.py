@@ -122,6 +122,27 @@ def list_customer_cards(customer_id: int) -> dict:
 
 @mcp.tool()
 @log_tool
+def list_recent_transactions(customer_id: int, n: int = 5) -> dict:
+    """
+    Lists the last 'n' transactions (money in/out) across all accounts for a given customer, sorted by date.
+
+    When to use:
+    - Use this to fulfill general requests for account activity, such as "What are my recent transactions?",
+      "Show my account statement", or "List my recent expenses".
+    - Use it when the user specifies a number of transactions, like "show me my last 3 transactions".
+    - Useful for quickly reviewing recent activity to check for suspicious transactions.
+
+    Args:
+        customer_id (int): The unique identifier for the customer.
+        n (int, optional): The number of transactions to retrieve. Defaults to 5.
+
+    Returns:
+        A dictionary containing a list of transaction objects. Returns an empty list if there are no transactions.
+    """
+    return general_tools.list_recent_transactions(customer_id=customer_id, n=n)
+
+@mcp.tool()
+@log_tool
 def get_exchange_rates() -> dict:
     """Fetch live FX rates from TCMB (Turkish Central Bank). Updates daily at 15:30 TR time.
 
@@ -323,7 +344,6 @@ def loan_amortization_schedule(
 @log_tool
 def transactions_list(
     account_id: int,
-    customer_id: int,
     from_date: str | None = None,
     to_date: str | None = None,
     limit: int = 50
@@ -344,15 +364,7 @@ def transactions_list(
     acc = repo.get_account(acc_id)
     if not acc:
         return {"error": f"Hesap bulunamadı: {acc_id}"}
-    cust_id = int(acc["customer_id"])  # hesap sahibinin customer_id’si
-    try:
-        req_cust_id = int(customer_id)
-    except Exception:
-        return {"error": "customer_id geçersiz (int olmalı)"}
-
-    # Güvenlik: İstek yapan müşteri, hesabın sahibi mi?
-    if req_cust_id != cust_id:
-        return {"error": "forbidden: account does not belong to this customer", "status_code": 403}
+    cust_id = int(acc["customer_id"])
 
     # limit güvenliği
     try:
@@ -374,26 +386,11 @@ def transactions_list(
     elif t is None:
         t = "9999-12-31 23:59:59"
 
-    # Eğer iki tarih de verildiyse ve sıraları ters ise otomatik düzelt
-    try:
-        from datetime import datetime
-        def _parse_dt(s: str):
-            try:
-                return datetime.fromisoformat(s)
-            except Exception:
-                return None
-        df = _parse_dt(f) if isinstance(f, str) else None
-        dt = _parse_dt(t) if isinstance(t, str) else None
-        if df and dt and df > dt:
-            f, t = t, f
-    except Exception:
-        pass
-
     # işlemleri çek  DOĞRU parametre sırası çok önemli
     try:
         rows = repo.list_transactions(
             account_id=acc_id,
-            customer_id=req_cust_id,
+            customer_id=cust_id,
             from_date=f,
             to_date=t,
             limit=lim,
@@ -413,42 +410,13 @@ def transactions_list(
     except Exception as e:
         snap = {"error": f"snapshot yazılamadı: {e}", "saved": 0}
 
-    # UI component için normalize edilmiş öğeler
-    def _fmt_amount(val):
-        try:
-            v = float(val)
-        except Exception:
-            return str(val)
-        return f"{v:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
-
-    items = []
-    for r in rows:
-        amt = r.get("amount")
-        items.append({
-            "id": r.get("txn_id") or r.get("id"),
-            "datetime": r.get("txn_date") or r.get("date"),
-            "amount": amt,
-            "amount_formatted": _fmt_amount(amt) if amt is not None else None,
-            "currency": r.get("currency") or "TRY",
-            "type": r.get("txn_type") or r.get("type"),
-            "description": r.get("description"),
-            "balance_after": r.get("balance_after"),
-            "account_id": r.get("account_id") or acc_id,
-        })
-
     return {
-        "ok": True,
         "account_id": acc_id,
         "range": {"from": f, "to": t},
         "limit": lim,
         "count": len(rows),
         "snapshot": snap,
         "transactions": rows,
-        "ui_component": {
-            "type": "transactions_list",
-            "account_id": acc_id,
-            "items": items,
-        },
     }
 
 @mcp.tool()
