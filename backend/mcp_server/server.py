@@ -396,58 +396,57 @@ def transactions_list(
 @mcp.tool()
 @log_tool
 def loan_amortization_schedule(
-    principal: float,
-    rate: float,
+   principal: float,
     term: int,
+    rate: float | None = None,
     method: str = "annuity",
     currency: str | None = None,
     export: str = "none",
 ) -> Dict[str, Any]:
     """
-    S5: Kredi ödeme planı (amortisman tablosu) ve özet değerler.
+        S5: Kredi ödeme planı (amortisman tablosu) ve özet değerler.
 
-    Amaç:
-        Aylık anüite yöntemiyle (method="annuity") her ay için:
-        taksit, faiz, anapara ve kalan borç kalemlerini hesaplar. İsteğe bağlı
-        olarak CSV çıktısını base64 olarak döndürür.
+        Amaç:
+            Aylık anüite yöntemiyle (method="annuity") her ay için:
+            taksit, faiz, anapara ve kalan borç kalemlerini hesaplar. İsteğe bağlı
+            olarak CSV çıktısını base64 olarak döndürür.
 
-    Parametreler:
-        principal (float): Anapara ( > 0 )
-        rate (float): Yıllık nominal faiz ( >= 0, örn. 0.35 )
-        term (int): Vade (ay, >= 1)
-        method (str, ops.): Şimdilik sadece "annuity" desteklenir.
-        currency (str | None, ops.): Görsel amaçlı para birimi etiketi (örn. "TRY")
-        export (str, ops.): "csv" → `csv_base64` alanı döner; "none" → dönmez.
+        Parametreler:
+            principal (float): Anapara ( > 0 )
+            currency (str, ops.): Para birimi (örn. "TRY")
+            rate (float, ops): Yıllık nominal faiz ( >= 0, örn. 0.35 )
+            term (int): Vade (ay, >= 1)
+            method (str, ops.): Şimdilik sadece "annuity" desteklenir.
+            export (str, ops.): "csv" → `csv_base64` alanı döner; "none" → dönmez.
 
-    Dönüş (başarı):
-        {
-          "summary": {
-            "principal": 200000.0,
-            "annual_rate": 0.40,
-            "term_months": 24,
-            "installment": 12258.91,
-            "total_interest": 146113.78,
-            "total_payment": 346113.78,
-            "currency": "TRY",
-            "method": "annuity_monthly"
-          },
-          "schedule": [
-            {"month":1,"installment":12258.91,"interest":6666.67,"principal":5592.24,"remaining":194407.76},
-            ...
-          ],
-          "ui_component": {...},
-          "csv_base64": "..."   # export="csv" ise yer alır
-        }
+        Dönüş (başarı):
+            {
+            "summary": {
+                "principal": 200000.0,
+                "annual_rate": 0.40,
+                "term_months": 24,
+                "installment": 12258.91,
+                "total_interest": 146113.78,
+                "total_payment": 346113.78,
+                "method": "annuity_monthly"
+            },
+            "schedule": [
+                {"month":1,"installment":12258.91,"interest":6666.67,"principal":5592.24,"remaining":194407.76},
+                ...
+            ],
+            "ui_component": {...},
+            "csv_base64": "..."   # export="csv" ise yer alır
+            }
 
-    Hata (ör.):
-        {"error": "principal must be > 0"}
-        {"error": "only 'annuity' method is supported"}
+        Hata (ör.):
+            {"error": "principal must be > 0"}
+            {"error": "only 'annuity' method is supported"}
 
-    Notlar:
-        - Son ayda yuvarlama farkı kapatılır (kalan=0’a çekilir).
-        - Hesaplama deterministiktir; DB erişimi yoktur.
-        - CSV UTF-8, başlıklar: month,installment,interest,principal,remaining
-    """
+        Notlar:
+            - Son ayda yuvarlama farkı kapatılır (kalan=0’a çekilir).
+            - Hesaplama deterministiktir; DB erişimi yoktur.
+            - CSV UTF-8, başlıklar: month,installment,interest,principal,remaining
+        """
     return calc_tools.loan_amortization_schedule(
         principal=principal,
         rate=rate,

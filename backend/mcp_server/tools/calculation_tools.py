@@ -132,7 +132,7 @@ class CalculationTools:
                     installment_eff = installment
 
                 remaining = max(0.0, remaining - principal_part)
-                total_interest += interest
+                #total_interest += interest
 
                 rows.append({
                     "month": month,
@@ -143,7 +143,8 @@ class CalculationTools:
                 })
 
             total_payment = sum(r["installment"] for r in rows)
-
+            total_interest = total_payment - principal
+            
             data: Dict[str, Any] = {
                 "summary": {
                     "principal": self._round2(principal),
