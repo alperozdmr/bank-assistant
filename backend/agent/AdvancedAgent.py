@@ -410,6 +410,51 @@ class BankingAgent:
         except Exception:
             pass
 
+
+        # Özel Formatlama: confirm_transfer ve payment_receipt UI'ları
+        if isinstance(tool_output, dict) and tool_output.get("phase")=="precheck":  ##kullanıcıya özet + confirm_transfer UI
+            suggested= tool_output.get("suggested_client_ref") 
+            preview= tool_output.get("preview",{})
+            from_acc=preview.get("from_account")
+            to_acc=preview.get("to_account")
+            amt=preview.get("amount")
+            ccy=preview.get("currency","TRY")
+            
+
+            msg= (f"Hesap{from_acc} --> {to_acc} hesabına {amt} {ccy} trasfer etmek üzeresiniz."
+            "Onaylıyor musunuz?")
+
+            return{ "text": msg, "YANIT": msg, "ui_component": {
+                    "type":"confirm_transfer",
+                    "data": {
+                "suggested_client_ref": suggested,
+                "from_account": from_acc,
+                "to_account": to_acc,
+                "amount": amt,
+                "currency": ccy,
+                    },
+                },
+            }
+        if  isinstance(tool_output, dict) and tool_output.get("phase")=="commit":  ##kullanıcıya tamamlandı + transfer_receipt UI
+            txn=tool_output.get("txn",{})
+            receipt=tool_output.get("receipt",{})
+
+            msg=(f"Transfer başarıyla tamamlandı ✅\n"
+                 f"İşlem ID: {txn.get('payment_id','-')}\n"
+            f"Tutar: {txn.get('amount')} {txn.get('currency','TRY')}"
+        )
+            return {
+                "text": msg,
+                "YANIT": msg,
+                "ui_component": {
+                    "type":"payment_receipt",
+                    "data": {
+                        "txn": txn,
+                        "receipt": receipt,
+                    },
+                },
+            }
+
         if isinstance(tool_output, dict):
             ui = tool_output.get("ui_component")
             data = tool_output.get("data") if "data" in tool_output else tool_output
