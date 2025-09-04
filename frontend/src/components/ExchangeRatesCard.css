@@ -7,7 +7,7 @@
   margin: 8px 0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   transition: all 0.2s ease;
-  max-width: 800px;
+  max-width: 900px;
   width: 100%;
 }
 
@@ -52,9 +52,37 @@
 
 .rates-list {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 10px;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(2, auto);
+  gap: 12px;
   max-width: 100%;
+  max-height: 300px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 8px;
+  padding-bottom: 8px;
+  scroll-behavior: smooth;
+}
+
+/* Kaydırma çubuğu stilleri */
+.rates-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.rates-list::-webkit-scrollbar-track {
+  background: rgba(255, 193, 7, 0.2);
+  border-radius: 4px;
+}
+
+.rates-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 193, 7, 0.6);
+  border-radius: 4px;
+  border: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+.rates-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 193, 7, 0.8);
+  border-color: rgba(255, 193, 7, 0.5);
 }
 
 /* Tek kur için özel stiller */
@@ -79,12 +107,27 @@
 @media (max-width: 768px) {
   .rates-list {
     grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(2, auto);
+    gap: 10px;
+    max-height: 280px;
   }
 }
 
 @media (max-width: 600px) {
   .rates-list {
     grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(3, auto);
+    gap: 8px;
+    max-height: 320px;
+  }
+}
+
+@media (max-width: 480px) {
+  .rates-list {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(3, auto);
+    gap: 6px;
+    max-height: 300px;
   }
 }
 
@@ -226,6 +269,21 @@
   background: rgba(255, 255, 255, 0.1);
   color: #999;
   border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Koyu tema kaydırma çubuğu stilleri */
+.dark-theme .rates-list::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.dark-theme .rates-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.dark-theme .rates-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.6);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 /* Mobile responsiveness for exchange rates cards */

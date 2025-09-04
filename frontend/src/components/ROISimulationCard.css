@@ -1,0 +1,667 @@
+.roi-simulation-card {
+  background: linear-gradient(135deg, #f8f9ff 0%, #f0f7ff 100%);
+  border: 1px solid #e1e8ed;
+  border-radius: 16px;
+  padding: 20px;
+  margin: 8px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+  max-width: 600px;
+  width: 100%;
+}
+
+.roi-simulation-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+/* Header */
+.roi-simulation-card .roi-simulation-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(23, 137, 220, 0.1);
+}
+
+.roi-simulation-card .header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.roi-simulation-card .roi-simulation-card-icon {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #1789dc 0%, #58167d 100%);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+.roi-simulation-card .roi-simulation-card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0;
+}
+
+.roi-simulation-card .expand-button {
+  background: rgba(23, 137, 220, 0.1);
+  border: none;
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #1789dc;
+}
+
+.roi-simulation-card .expand-button:hover {
+  background: rgba(23, 137, 220, 0.2);
+  transform: scale(1.05);
+}
+
+.roi-simulation-card .chart-button {
+  background: rgba(16, 185, 129, 0.1);
+  border: none;
+  color: #10b981;
+  padding: 8px 12px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.roi-simulation-card .chart-button:hover {
+  background: rgba(16, 185, 129, 0.2);
+  transform: scale(1.05);
+}
+
+.roi-simulation-card .chart-button-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: #10b981;
+}
+
+
+
+/* Content */
+.roi-simulation-card .roi-simulation-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Portfolio Info */
+.roi-simulation-card .portfolio-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: white;
+  border: 1px solid #e1e8ed;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.roi-simulation-card .portfolio-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 8px;
+}
+
+.roi-simulation-card .simulation-details {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.roi-simulation-card .detail-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.roi-simulation-card .detail-item .label {
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
+}
+
+.roi-simulation-card .detail-item .value {
+  font-size: 14px;
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+/* Results Summary */
+.roi-simulation-card .results-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.roi-simulation-card .result-card {
+  padding: 12px;
+  border-radius: 8px;
+  text-align: center;
+  border: 1px solid #e1e8ed;
+  transition: all 0.2s ease;
+  background: white;
+}
+
+
+
+.roi-simulation-card .result-card.average {
+  border-color: #1789dc;
+}
+
+.roi-simulation-card .result-card.optimistic {
+  border-color: #10b981;
+}
+
+.roi-simulation-card .result-card.pessimistic {
+  border-color: #ef4444;
+}
+
+.roi-simulation-card .result-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.roi-simulation-card .result-label {
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #666;
+}
+
+.roi-simulation-card .result-amount {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: #2c3e50;
+}
+
+.roi-simulation-card .result-roi {
+  font-size: 12px;
+  font-weight: 500;
+  color: #1789dc;
+}
+
+/* ROI Chart Section */
+.roi-chart-section {
+  background: white;
+  border: 1px solid #e1e8ed;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.chart-header {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.chart-header h4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0 0 8px 0;
+}
+
+.chart-header p {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+}
+
+.chart-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+  width: 100%;
+  min-height: 200px;
+}
+
+.roi-chart {
+  border-radius: 8px;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  height: 100%;
+  max-height: 300px;
+}
+
+.chart-notes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.note {
+  font-size: 12px;
+  color: #666;
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* Detailed Analysis */
+.roi-simulation-card .detailed-analysis {
+  background: white;
+  border: 1px solid #e1e8ed;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.roi-simulation-card .analysis-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.roi-simulation-card .analysis-item:last-child {
+  border-bottom: none;
+}
+
+.roi-simulation-card .analysis-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #666;
+}
+
+.roi-simulation-card .analysis-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .roi-simulation-card {
+    max-width: 100%;
+    margin: 8px;
+    padding: 18px;
+  }
+  
+  .roi-simulation-card .simulation-details {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .roi-simulation-card .results-summary {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  
+  .roi-simulation-card .detailed-analysis {
+    padding: 12px;
+  }
+  
+  /* Tablet'te chart button text'i küçült */
+  .roi-simulation-card .chart-button-text {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 500px) {
+  .roi-simulation-card {
+    padding: 16px;
+    margin: 6px 0;
+    border-radius: 12px;
+  }
+  
+  .roi-simulation-card .portfolio-info {
+    padding: 12px;
+  }
+  
+  .roi-simulation-card .results-summary {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  
+  .roi-simulation-card .result-card {
+    padding: 12px;
+  }
+  
+  .roi-simulation-card .roi-chart-section {
+    padding: 12px;
+  }
+  
+  .roi-simulation-card .detailed-analysis {
+    padding: 12px;
+    gap: 8px;
+  }
+  
+  .roi-simulation-card .chart-modal-content {
+    width: 95%;
+    margin: 20px;
+  }
+  
+  .roi-simulation-card .chart-container-large {
+    min-height: 300px;
+  }
+  
+  .roi-simulation-card .chart-legend {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  /* Mobilde chart button text'i gizle */
+  .roi-simulation-card .chart-button-text {
+    display: none;
+  }
+  
+  /* Mobilde chart button'ı sadece ikon olarak göster */
+  .roi-simulation-card .chart-button {
+    padding: 8px;
+    min-width: 36px;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 400px) {
+  /* Çok küçük ekranlarda chart button'ı daha da kompakt yap */
+  .roi-simulation-card .chart-button {
+    padding: 6px;
+    min-width: 32px;
+  }
+  
+  .roi-simulation-card .chart-button svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+/* Dark theme for ROI simulation cards */
+.dark-theme .roi-simulation-card {
+  background: linear-gradient(135deg, #2a2a2a 0%, #1f1f1f 100%);
+  border-color: #444;
+  color: #e1e8ed;
+}
+
+.dark-theme .roi-simulation-card .roi-simulation-card-title {
+  color: #e1e8ed;
+}
+
+.dark-theme .roi-simulation-card .portfolio-info {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-theme .roi-simulation-card .portfolio-name {
+  color: #e1e8ed;
+}
+
+.dark-theme .roi-simulation-card .detail-item .label {
+  color: #999;
+}
+
+.dark-theme .roi-simulation-card .detail-item .value {
+  color: #e1e8ed;
+}
+
+.dark-theme .roi-simulation-card .result-card {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-theme .roi-simulation-card .result-card.average {
+  border-color: #1789dc;
+}
+
+.dark-theme .roi-simulation-card .result-card.optimistic {
+  border-color: #10b981;
+}
+
+.dark-theme .roi-simulation-card .result-card.pessimistic {
+  border-color: #ef4444;
+}
+
+.dark-theme .roi-simulation-card .result-label {
+  color: #999;
+}
+
+.dark-theme .roi-simulation-card .result-amount {
+  color: #e1e8ed;
+}
+
+.dark-theme .roi-simulation-card .result-roi {
+  color: #64b5f6;
+}
+
+.dark-theme .roi-simulation-card .roi-chart-section {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-theme .roi-simulation-card .chart-header h4 {
+  color: #e1e8ed;
+}
+
+.dark-theme .roi-simulation-card .chart-header p {
+  color: #999;
+}
+
+.dark-theme .roi-simulation-card .note {
+  color: #999;
+}
+
+.dark-theme .roi-simulation-card .detailed-analysis {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-theme .roi-simulation-card .analysis-item {
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-theme .roi-simulation-card .analysis-label {
+  color: #999;
+}
+
+.dark-theme .roi-simulation-card .analysis-value {
+  color: #e1e8ed;
+}
+
+.dark-theme .roi-simulation-card .chart-modal-content {
+  background: #1f2937;
+  border-color: #374151;
+}
+
+.dark-theme .roi-simulation-card .chart-modal-header {
+  background: linear-gradient(135deg, #1789dc 0%, #58167d 100%);
+}
+
+.dark-theme .roi-simulation-card .chart-legend {
+  color: #e1e8ed;
+}
+
+.dark-theme .roi-simulation-card .legend-item {
+  color: #e1e8ed;
+}
+
+/* Animation for chart expansion */
+.roi-chart-section {
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Hover effects for interactive elements */
+.result-card:hover .result-amount {
+  transform: scale(1.02);
+  transition: transform 0.2s ease;
+}
+
+.expand-button:active {
+  transform: scale(0.95);
+}
+
+
+
+/* Chart Modal Styles */
+.chart-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999;
+  backdrop-filter: blur(3px);
+  animation: modalFadeIn 0.2s ease-out;
+}
+
+.chart-modal-content {
+  background: #fff;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+.chart-modal-header {
+  background: linear-gradient(135deg, #1789dc 0%, #58167d 100%);
+  color: white;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.chart-modal-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.chart-modal-close-button {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.chart-modal-close-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.chart-modal-body {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  overflow-y: auto;
+}
+
+.chart-container-large {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  min-height: 400px;
+  margin-bottom: 1rem;
+}
+
+.roi-chart-large {
+  border-radius: 8px;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  height: 100%;
+  max-height: 400px;
+}
+
+.chart-legend {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #2c3e50;
+}
+
+.legend-color {
+  width: 20px;
+  height: 3px;
+  border-radius: 2px;
+}
+
+.legend-color.average {
+  background: #3b82f6;
+}
+
+.legend-color.optimistic {
+  background: #10b981;
+}
+
+.legend-color.pessimistic {
+  background: #ef4444;
+}
+
+/* Dark theme chart button */
+.dark-theme .roi-simulation-card .chart-button {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.dark-theme .roi-simulation-card .chart-button:hover {
+  background: rgba(16, 185, 129, 0.25);
+}
+
+.dark-theme .roi-simulation-card .chart-button-text {
+  color: #10b981;
+}
+
+/* Print styles */
+@media print {
+  .roi-simulation-card {
+    box-shadow: none;
+    border: 1px solid #000;
+  }
+}
+

@@ -16,7 +16,7 @@ LangGraph ReAct + MCP Banking Agent
 """
 
 from __future__ import annotations
-import os, re, json, logging
+import os, re, json, logging, asyncio
 from typing import Any, Dict, List, Optional, Tuple
 
 from langchain_openai import ChatOpenAI
@@ -63,6 +63,7 @@ class BankingAgent:
         self.model: Optional[ChatOpenAI] = None
         self.customer_id: Optional[int] = None
         self.session_id: Optional[str] = None
+        self.TOOL_TIMEOUT_SECONDS: float = 4.0
 
         self.system_prompt = (
             "You are InterChat, a secure banking assistant. Use tools; don't ask for secrets.\n"
@@ -86,7 +87,8 @@ class BankingAgent:
                 openai_api_key=HF_API_KEY,
                 temperature=0.2,
                 max_tokens=2048,
-                max_retries=3,
+                max_retries=2,
+                timeout=15,
             )
             self.client = MultiServerMCPClient({
                 "fortuna_banking": {"url": self.mcp_url, "transport": "sse"}
@@ -106,9 +108,7 @@ class BankingAgent:
         self.session_id = session_id
         self.last_user_text = user_message
 
-        # her çalıştırmada wrap'ı yenile (late-binding sabitleme)
-        self.tools_wrapped = self._wrap_tools_with_context(self.raw_tools)
-        self.agent = create_react_agent(model=self.model, tools=self.tools_wrapped)
+        # her çalıştırmada ajanı yeniden kurma; yalnızca last_user_text güncellenir
 
         log.info(json.dumps({"event":"chat_request","msg_masked":_mask(user_message),"customer_id":customer_id}))
 
@@ -170,8 +170,8 @@ class BankingAgent:
                 # Zaten müşteri alanı varsa veya tool customer kabul etmiyorsa doğrudan çağır
                 try:
                     if hasattr(_t, "ainvoke"):
-                        return await _t.ainvoke(payload)
-                    return _t.invoke(payload)
+                        return await asyncio.wait_for(_t.ainvoke(payload), timeout=self.TOOL_TIMEOUT_SECONDS)
+                    return await asyncio.wait_for(asyncio.to_thread(_t.invoke, payload), timeout=self.TOOL_TIMEOUT_SECONDS)
                 except Exception as ex:
                     return {"ok": False, "error": f"tool_failed:{_name}:{ex}", "data": None}
 
@@ -230,9 +230,9 @@ class BankingAgent:
             tried_payloads.append({"alias": None, "keys": list(payload.keys())})
             try:
                 if hasattr(target_tool, "ainvoke"):
-                    return await target_tool.ainvoke(payload)
+                    return await asyncio.wait_for(target_tool.ainvoke(payload), timeout=self.TOOL_TIMEOUT_SECONDS)
                 else:
-                    return target_tool.invoke(payload)
+                    return await asyncio.wait_for(asyncio.to_thread(target_tool.invoke, payload), timeout=self.TOOL_TIMEOUT_SECONDS)
             except Exception as e:
                 last_exc = e
         else:
@@ -245,9 +245,9 @@ class BankingAgent:
                 try:
                     # Tool'u doğrudan invoke et
                     if hasattr(target_tool, "ainvoke"):
-                        return await target_tool.ainvoke(payload)
+                        return await asyncio.wait_for(target_tool.ainvoke(payload), timeout=self.TOOL_TIMEOUT_SECONDS)
                     else:
-                        return target_tool.invoke(payload)
+                        return await asyncio.wait_for(asyncio.to_thread(target_tool.invoke, payload), timeout=self.TOOL_TIMEOUT_SECONDS)
                 except Exception as e:
                     msg = str(e).lower()
                     # sadece alias uyumsuzluğu ise sonraki alias'a geç
@@ -265,9 +265,9 @@ class BankingAgent:
                     tried_payloads.append({"alias": None, "keys": list(payload.keys())})
                     # Tool'u doğrudan invoke et
                     if hasattr(target_tool, "ainvoke"):
-                        return await target_tool.ainvoke(payload)
+                        return await asyncio.wait_for(target_tool.ainvoke(payload), timeout=self.TOOL_TIMEOUT_SECONDS)
                     else:
-                        return target_tool.invoke(payload)
+                        return await asyncio.wait_for(asyncio.to_thread(target_tool.invoke, payload), timeout=self.TOOL_TIMEOUT_SECONDS)
                 except Exception as e2:
                     last_exc = e2
 

@@ -134,7 +134,7 @@ const LoanAmortizationModal = ({ isOpen, onClose, onSubmit }) => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="rate">Yıllık Faiz Oranı (%) - Opsiyonel</label>
+            <label htmlFor="rate">Yıllık Faiz Oranı (%)</label>
             <input
               type="number"
               id="rate"
