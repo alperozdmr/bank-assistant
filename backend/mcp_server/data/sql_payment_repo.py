@@ -306,28 +306,12 @@ class SQLitePaymentRepository(SQLiteRepository):
         finally:
             con.close()
 
-    def _ensure_schema(self, con: sqlite3.Connection):
+    def ensure_card_limit_request_schema(self, con: sqlite3.Connection):
         """
-        Kart limit artış talebi oluşturur ve DB'ye 'received' statüsünde kaydeder.
+        'card_limit_requests' tablosunu garanti eder.
+        Eğer yoksa oluşturur.
         """
         cur = con.cursor()
-        # mevcut payments tablosu
-        cur.execute("""
-        CREATE TABLE IF NOT EXISTS payments (
-          payment_id TEXT PRIMARY KEY,
-          client_ref TEXT UNIQUE,
-          from_account INTEGER NOT NULL,
-          to_account INTEGER NOT NULL,
-          amount REAL NOT NULL,
-          currency TEXT NOT NULL,
-          fee REAL NOT NULL DEFAULT 0,
-          note TEXT,
-          status TEXT NOT NULL,
-          created_at TEXT NOT NULL,
-          posted_at TEXT,
-          balance_after REAL
-        )
-        """)
         # YENİ: kart limit artış talepleri
         cur.execute("""
         CREATE TABLE IF NOT EXISTS card_limit_requests (

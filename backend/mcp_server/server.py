@@ -691,7 +691,7 @@ def payment_request(
 
 @mcp.tool()
 @log_tool
-def payment_card_limit_increase_request(
+def card_limit_increase_request(
     card_id: int,
     customer_id: int,
     new_limit: float,
