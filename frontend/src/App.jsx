@@ -28,6 +28,7 @@ ChartJS.register(
 
 import BalanceCard from './components/BalanceCard'
 import ExchangeRatesCard from './components/ExchangeRatesCard'
+import FXConvertCard from './components/FXConvertCard'
 import InterestRatesCard from './components/InterestRatesCard'
 import FeesCard from './components/FeesCard'
 import ATMCard from './components/ATMCard'
@@ -1432,6 +1433,9 @@ function App() {
                       )}
                       {message.ui_component.type === 'atm_card' && (
                         <ATMCard cardData={message.ui_component} />
+                      )}
+                      {message.ui_component.type === 'fx_convert_card' && (
+                        <FXConvertCard cardData={message.ui_component} />
                       )}
                       {message.ui_component.type === 'card_info_card' && (
                         <CardInfoCard cardData={message.ui_component} />

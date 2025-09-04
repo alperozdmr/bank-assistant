@@ -192,6 +192,16 @@ class CalculationTools:
                 # Agent'ın yanıtı göstermesi için standart anahtarlar
                 "text": summary,
                 "YANIT": summary,
+                # Frontend FXConvertCard component için structured data
+                "ui_component": {
+                    "type": "fx_convert_card",
+                    "amount_from": self._round2(amount),
+                    "currency_from": from_currency.upper(),
+                    "amount_to": self._round2(converted_amount),
+                    "currency_to": to_currency.upper(),
+                    "rate": rate,
+                    "summary_text": summary
+                }
             }
 
         except Exception as e:
