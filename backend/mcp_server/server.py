@@ -563,28 +563,29 @@ def run_roi_simulation(portfolio_name: str, monthly_investment: float, years: in
     )
 
 
+
 @mcp.tool()
 @log_tool
-def list_portfolios() -> dict:
+def list_portfolios(portfolio_type: Optional[str] = None) -> dict:
     """
-    Lists all available investment portfolios with their names, risk levels, and asset allocations.
+    Lists available investment portfolios. Can be filtered by risk level/type.
+    If no type is specified, it returns all portfolios.
 
     When to use:
-    - This tool is perfect for answering user questions about what investment options are available.
-    - Use for queries like: "What are my portfolio options?", "Show me the available investment strategies",
-      "Which portfolios can I choose from?", or "List all portfolios".
-    - This should be used before running a simulation if the user doesn't know which portfolio to choose.
+    - Use when a user asks about available investment options.
+    - For general queries like: "What are my portfolio options?", "List all portfolios".
+    - For specific, filtered queries like: "Show me the low-risk portfolios", "List the 'growth' strategies",
+      or "dengeli portföyleri göster".
 
     Args:
-        None
+        portfolio_type (Optional[str]): The type of portfolio to filter by.
+                                        Accepts values like 'düşük', 'korumalı', 'orta', 'dengeli', 'yüksek', 'büyüme'.
+                                        This argument is case-insensitive.
 
     Returns:
-        A dictionary containing a list of all available portfolios.
-        Each portfolio in the list is a dictionary with 'portfoy_adi', 'risk_seviyesi',
-        and 'varlik_dagilimi' keys.
+        A dictionary containing a list of the requested portfolios.
     """
-    
-    return general_tools.list_available_portfolios()
+    return general_tools.list_available_portfolios(portfolio_type=portfolio_type)
 
 # ============ FX CONVERTER TOOL ==============#
 @mcp.tool()

@@ -786,14 +786,33 @@ class GeneralTools:
         base["ok"] = True
         return base
     
-    def list_available_portfolios(self) -> dict:
+    def list_available_portfolios(self, portfolio_type: Optional[str] = None) -> dict:
         """
-        Fetches all available investment portfolios and formats them for display.
+        Fetches investment portfolios. Can be filtered by type.
+        Maps user-friendly names like 'korumalı' to database values like 'Düşük'.
         """
-        portfolios_data = self.repo.get_all_portfolios()
+        # Kullanıcıdan gelebilecek farklı isimleri veritabanındaki standart değere eşleştiriyoruz.
+        risk_level_map = {
+            "düşük": "Düşük",
+            "korumalı": "Düşük",
+            "orta": "Orta",
+            "dengeli": "Orta",
+            "yüksek": "Yüksek",
+            "büyüme": "Yüksek",
+        }
+
+        db_risk_level = None
+        if portfolio_type:
+            # Gelen parametreyi küçük harfe çevirip haritada arıyoruz
+            db_risk_level = risk_level_map.get(portfolio_type.lower())
+
+        # Yeni ve esnek repo metodumuzu çağırıyoruz
+        portfolios_data = self.repo.get_portfolios(risk_level=db_risk_level)
 
         if not portfolios_data:
-            return {"error": "No investment portfolios found in the database."}
+            if db_risk_level:
+                return {"message": f"'{db_risk_level}' risk seviyesinde portföy bulunamadı."}
+            return {"error": "Sistemde kayıtlı portföy bulunamadı."}
         
         # Frontend'in beklediği UI şeması
         ui_component = {

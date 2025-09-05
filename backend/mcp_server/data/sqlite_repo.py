@@ -618,16 +618,28 @@ class SQLiteRepository:
             df = pd.read_sql_query(query, conn)
             return df
 
-    def get_all_portfolios(self) -> list[dict]:
+    def get_portfolios(self, risk_level: Optional[str] = None) -> list[dict]:
         """
-        Retrieves all available portfolio definitions from the 'portfolio_mixes' table.
+        Retrieves portfolio definitions from the 'portfolio_mixes' table.
+        If a risk_level is provided, it filters the results.
+        Otherwise, it returns all portfolios.
+
+        Args:
+            risk_level (Optional[str]): The risk level to filter by (e.g., 'Düşük', 'Orta', 'Yüksek').
 
         Returns:
-            A list of dictionaries, where each dictionary represents a portfolio
-            with its name, risk level, and asset allocation string.
+            A list of dictionaries, where each dictionary represents a portfolio.
         """
-        query = "SELECT portfoy_adi, risk_seviyesi, varlik_dagilimi FROM portfolio_mixes;"
+        base_query = "SELECT portfoy_adi, risk_seviyesi, varlik_dagilimi FROM portfolio_mixes"
+        params = []
+
+        if risk_level:
+            base_query += " WHERE risk_seviyesi = ?;"
+            params.append(risk_level)
+        else:
+            base_query += ";"
+
         with self._get_connection() as conn:
             cursor = conn.cursor()
-            results = cursor.execute(query).fetchall()
+            results = cursor.execute(base_query, params).fetchall()
             return [dict(row) for row in results]
