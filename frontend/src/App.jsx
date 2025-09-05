@@ -42,6 +42,7 @@ import AmortizationTableCard from './components/AmortizationTableCard'
 import LoanAmortizationModal from './components/LoanAmortizationModal'
 import ROISimulationCard from './components/ROISimulationCard'
 import ROISimulationModal from './components/ROISimulationModal'
+import SmartNotification from './components/SmartNotification'
 
 function App() {
   // Login state
@@ -75,6 +76,7 @@ function App() {
   const [showROISimulation, setShowROISimulation] = useState(false)
   const [showROIChart, setShowROIChart] = useState(false)
   const [roiChartData, setRoiChartData] = useState(null)
+  const [notifications, setNotifications] = useState([])
   const messagesEndRef = useRef(null)
 
   const scrollToBottom = () => {
@@ -89,6 +91,189 @@ function App() {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(amount)
+  }
+
+  // Akıllı bildirim fonksiyonları
+  const addNotification = (notification) => {
+    const id = Date.now() + Math.random()
+    const newNotification = {
+      id,
+      type: 'info',
+      duration: 6000,
+      autoClose: true,
+      ...notification
+    }
+    setNotifications(prev => [...prev, newNotification])
+  }
+
+  const removeNotification = (id) => {
+    setNotifications(prev => prev.filter(notif => notif.id !== id))
+  }
+
+  const handleNotificationAction = (action) => {
+    if (action === 'show_balance') {
+      handleQuickAction('balance')
+    } else if (action === 'show_transactions') {
+      handleQuickAction('transactions')
+    } else if (action === 'show_exchange') {
+      handleQuickAction('exchange')
+    } else if (action === 'show_interest') {
+      handleQuickAction('interest')
+    } else if (action === 'show_card') {
+      handleQuickAction('card')
+    } else if (action === 'show_atm') {
+      handleQuickAction('atm')
+    } else if (action === 'show_portfolios') {
+      handleQuickAction('portfolios')
+    } else if (action === 'roi_simulation') {
+      setShowROISimulation(true)
+    }
+  }
+
+  // Akıllı bildirim oluşturma fonksiyonları
+  const createSmartNotifications = () => {
+    const now = new Date()
+    const hour = now.getHours()
+    const day = now.getDay() // 0 = Pazar, 6 = Cumartesi
+
+    // Sabah erken (06:00-08:00)
+    if (hour >= 6 && hour < 8) {
+      addNotification({
+        type: 'info',
+        title: 'Günaydın! 🌅',
+        message: 'Yeni güne başlarken döviz kurlarını kontrol etmek ister misiniz?',
+        action: 'show_exchange',
+        actionText: 'Döviz Kurları'
+      })
+    }
+
+    // Sabah (08:00-10:00)
+    if (hour >= 8 && hour < 10) {
+      addNotification({
+        type: 'info',
+        title: 'Mutlu Sabahlar! ☀️',
+        message: 'Hesap bakiyenizi kontrol etmek için iyi bir zaman!',
+        action: 'show_balance',
+        actionText: 'Bakiyeyi Gör'
+      })
+    }
+
+    // Öğle öncesi (10:00-12:00)
+    if (hour >= 10 && hour < 12) {
+      addNotification({
+        type: 'info',
+        title: 'Öğleden Önce! 📈',
+        message: 'Faiz oranlarını kontrol etmek ister misiniz?',
+        action: 'show_interest',
+        actionText: 'Faiz Oranları'
+      })
+    }
+
+    // Öğle (12:00-14:00)
+    if (hour >= 12 && hour < 14) {
+      addNotification({
+        type: 'info',
+        title: 'Öğle Arası! 📊',
+        message: 'Günlük işlemlerinizi gözden geçirmek ister misiniz?',
+        action: 'show_transactions',
+        actionText: 'İşlem Geçmişi'
+      })
+    }
+
+    // Öğle sonrası (14:00-16:00)
+    if (hour >= 14 && hour < 16) {
+      addNotification({
+        type: 'info',
+        title: 'Öğleden Sonra! 💳',
+        message: 'Kart bilgilerinizi kontrol etmek ister misiniz?',
+        action: 'show_card',
+        actionText: 'Kart Bilgileri'
+      })
+    }
+
+    // İkindi (16:00-18:00)
+    if (hour >= 16 && hour < 18) {
+      addNotification({
+        type: 'info',
+        title: 'İkindi Vakti! 🏦',
+        message: 'Yakınınızdaki ATM ve şubeleri bulmak ister misiniz?',
+        action: 'show_atm',
+        actionText: 'ATM/Şube'
+      })
+    }
+
+    // Akşam (18:00-20:00)
+    if (hour >= 18 && hour < 20) {
+      addNotification({
+        type: 'info',
+        title: 'Akşam Kontrolü! 🌆',
+        message: 'Yatırım portföylerini değerlendirmek ister misiniz?',
+        action: 'show_portfolios',
+        actionText: 'Portföyler'
+      })
+    }
+
+    // Gece (20:00-22:00)
+    if (hour >= 20 && hour < 22) {
+      addNotification({
+        type: 'info',
+        title: 'Geceye Doğru! 🌙',
+        message: 'ROI simülasyonu ile yatırım planlarınızı değerlendirin.',
+        action: 'roi_simulation',
+        actionText: 'ROI Simülasyonu'
+      })
+    }
+
+    // Gece geç (22:00-24:00)
+    if (hour >= 22 && hour < 24) {
+      addNotification({
+        type: 'info',
+        title: 'Uyku Vakti! 🕐',
+        message: 'Uyumadan önce hesap hareketlerinizi incelemek ister misiniz?',
+        action: 'show_transactions',
+        actionText: 'İşlem Geçmişi'
+      })
+    }
+
+    // Gece yarısı (00:00-04:00)
+    if (hour >= 0 && hour < 4) {
+      addNotification({
+        type: 'info',
+        title: 'Gece Kuşu! 🌃',
+        message: 'Yeni gün için finansal hedeflerinizi belirlemeye ne dersiniz?',
+      })
+    }
+
+    // Sabah erken (04:00-06:00)
+    if (hour >= 4 && hour < 6) {
+      addNotification({
+        type: 'info',
+        title: 'Gün Doğmadan! 🌄',
+        message: 'Faiz oranlarını kontrol etmek ister misiniz?',
+        action: 'show_interest',
+        actionText: 'Faiz Oranları'
+      })
+    }
+
+    // Hafta sonu özel bildirimi
+    if (day === 0 || day === 6) {
+      addNotification({
+        type: 'warning',
+        title: 'Hafta Sonu! 💰',
+        message: 'Hafta sonu yatırım fırsatlarını değerlendirmek için portföy simülasyonu yapabilirsiniz.',
+        action: 'roi_simulation',
+        actionText: 'ROI Simülasyonu'
+      })
+    }
+
+    // Pazartesi motivasyon bildirimi
+    if (day === 1) {
+      addNotification({
+        type: 'success',
+        title: 'Haftaya Başlarken! 🚀',
+        message: 'Yeni hafta için finansal hedeflerinizi belirlemeye ne dersiniz?',
+      })
+    }
   }
 
   // Kullanıcı profilini yükle
@@ -490,6 +675,11 @@ function App() {
     setCurrentChatId(newChatId)
     setMessages([welcomeMessage])
     setShowQuickActions(true)
+
+    // Akıllı bildirimleri göster (kısa bir gecikme ile)
+    setTimeout(() => {
+      createSmartNotifications()
+    }, 1500)
   }
 
   const handleLogout = () => {
@@ -1606,7 +1796,7 @@ function App() {
                     </button>
                     <button className="quick-button" onClick={() => handleQuickAction('loan_amort')}>
                       <div className="quick-icon">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                           <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                           <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                           <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -2102,6 +2292,16 @@ function App() {
           </div>
         </div>
       )}
+
+      {/* Akıllı Bildirimler */}
+      {notifications.map((notification) => (
+        <SmartNotification
+          key={notification.id}
+          notification={notification}
+          onClose={removeNotification}
+          onAction={handleNotificationAction}
+        />
+      ))}
     </div>
   )
 }

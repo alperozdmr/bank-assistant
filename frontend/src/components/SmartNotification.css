@@ -1,0 +1,318 @@
+/* Smart Notification Styles */
+.notification-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 9999;
+  opacity: 0;
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+.smart-notification {
+  position: absolute;
+  right: 20px;
+  min-width: 320px;
+  max-width: 400px;
+  background: linear-gradient(135deg, #f8f9ff 0%, #f0f7ff 100%);
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e1e8ed;
+  z-index: 10001;
+  transform: translateX(100%);
+  opacity: 0;
+  transition: all 0.2s ease-out;
+  overflow: hidden;
+}
+
+.smart-notification.show {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.smart-notification.info {
+  background: linear-gradient(135deg, #f8f9ff 0%, #f0f7ff 100%);
+}
+
+.smart-notification.success {
+  background: linear-gradient(135deg, #f0fff4 0%, #ecfdf5 100%);
+}
+
+.smart-notification.warning {
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+}
+
+.smart-notification.error {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+}
+
+.notification-content {
+  display: flex;
+  align-items: flex-start;
+  padding: 20px;
+  gap: 12px;
+}
+
+.notification-icon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #1789dc 0%, #58167d 100%);
+  color: white;
+}
+
+.smart-notification.success .notification-icon {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+}
+
+.smart-notification.warning .notification-icon {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+}
+
+.smart-notification.error .notification-icon {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+}
+
+.smart-notification.info .notification-icon {
+  background: linear-gradient(135deg, #1789dc 0%, #58167d 100%);
+  color: white;
+}
+
+.notification-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.notification-title {
+  font-weight: 600;
+  font-size: 16px;
+  color: #2c3e50;
+  margin-bottom: 4px;
+  line-height: 1.4;
+  margin-top: 8px;
+}
+
+.notification-message {
+  font-size: 14px;
+  color: #666;
+  line-height: 1.4;
+}
+
+.notification-message-full {
+  font-size: 14px;
+  color: #666;
+  line-height: 1.4;
+  padding: 12px 16px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.notification-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.notification-action-container {
+  padding: 12px 16px 0 16px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.notification-action-btn {
+  background: linear-gradient(135deg, #1789dc 0%, #58167d 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(23, 137, 220, 0.2);
+  width: 100%;
+}
+
+.notification-action-btn:hover {
+  background: linear-gradient(135deg, #1473c4 0%, #4c1d95 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(23, 137, 220, 0.3);
+}
+
+.notification-close-btn {
+  background: none;
+  border: none;
+  color: #999;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+}
+
+.notification-close-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #666;
+}
+
+.notification-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.notification-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #1789dc, #58167d);
+  transition: width 0.05s linear;
+}
+
+.smart-notification.success .notification-progress-bar {
+  background: linear-gradient(90deg, #10b981, #059669);
+}
+
+.smart-notification.warning .notification-progress-bar {
+  background: linear-gradient(90deg, #f59e0b, #d97706);
+}
+
+.smart-notification.error .notification-progress-bar {
+  background: linear-gradient(90deg, #ef4444, #dc2626);
+}
+
+/* Dark theme support */
+.dark-theme .notification-overlay {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.dark-theme .smart-notification {
+  background: linear-gradient(135deg, #2a2a2a 0%, #1f1f1f 100%);
+  border-color: #444;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.dark-theme .smart-notification.info {
+  background: linear-gradient(135deg, #2a2a2a 0%, #1f1f1f 100%);
+}
+
+.dark-theme .smart-notification.success {
+  background: linear-gradient(135deg, #1a2e1a 0%, #0f1f0f 100%);
+}
+
+.dark-theme .smart-notification.warning {
+  background: linear-gradient(135deg, #2e2a1a 0%, #1f1f0f 100%);
+}
+
+.dark-theme .smart-notification.error {
+  background: linear-gradient(135deg, #2e1a1a 0%, #1f0f0f 100%);
+}
+
+.dark-theme .notification-title {
+  color: #e1e8ed;
+}
+
+.dark-theme .notification-message {
+  color: #999;
+}
+
+.dark-theme .notification-message-full {
+  color: #999;
+}
+
+.dark-theme .notification-close-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #e1e8ed;
+}
+
+.dark-theme .notification-progress {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Mobile responsive */
+@media (max-width: 480px) {
+  .smart-notification {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+    min-width: auto;
+    max-width: none;
+    border-radius: 12px;
+  }
+  
+  .notification-content {
+    padding: 16px;
+  }
+  
+  .notification-icon {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .notification-title {
+    font-size: 15px;
+  }
+  
+  .notification-message {
+    font-size: 13px;
+  }
+  
+  .notification-message-full {
+    font-size: 13px;
+    padding: 10px 12px;
+  }
+  
+  .notification-action-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+  
+  .notification-action-container {
+    padding: 10px 12px 0 12px;
+  }
+}
+
+/* Animation for multiple notifications */
+.smart-notification:nth-child(2) {
+  top: 30px; /* İkinci kart */
+}
+
+.smart-notification:nth-child(3) {
+  top: 100px; /* Üçüncü kart */
+}
+
+.smart-notification:nth-child(4) {
+  top: 170px; /* Dördüncü kart */
+}
+
+/* Hover effects */
+.smart-notification:hover {
+  transform: translateX(0) translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.dark-theme .smart-notification:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
