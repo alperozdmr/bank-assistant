@@ -50,7 +50,7 @@ except Exception as e:
 def _mask(s: str) -> str:
     if not isinstance(s, str):
         return s
-    s = re.sub(r'\bTR\d{20,26}\b', 'TR************', s, flags=re.IGNORECASE)
+    # IBAN'ı artık maskeleme: TR ile başlayan 20-26 haneli IBAN'ları olduğu gibi bırak
     s = re.sub(r'\b\d{11,}\b', '***', s)
     s = re.sub(r'[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}', '***@***', s)
     return s
@@ -374,7 +374,7 @@ class BankingAgent:
         print(f"tool_output type: {type(tool_output)}")
         print(f"tool_output: {tool_output}")
 
-        # Hata durumlarını kullanıcıya anlamlı ilet
+        # Hata durumlarını kullanıcıya ilet (ham hata mesajını göster)
         if isinstance(tool_output, dict) and tool_output.get("error"):
             raw_err = str(tool_output.get("error"))
             low = raw_err.lower()
@@ -383,7 +383,9 @@ class BankingAgent:
                 if key in low:
                     mapped = msg
                     break
-            msg = mapped or "İşlem gerçekleştirilemedi."
+            # İstek: terminaldeki hatayı kullanıcıya aynen yansıt
+            # Güvenlik için sanitize uygulanıyor; maskeleme _safe_return içinde yapılır
+            msg = raw_err or mapped or "İşlem gerçekleştirilemedi."
             # log’a ham hata ve eşleme notu
             log.error(json.dumps({
                 "event": "tool_error_mapped",
