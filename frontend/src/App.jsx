@@ -47,6 +47,7 @@ import PaymentTransferModal from './components/PaymentTransferModal'
 import PaymentReceiptCard from './components/PaymentReceiptCard'
 import SmartNotification from './components/SmartNotification'
 import UserGuide from './components/UserGuide'
+import VoiceInputButton from './components/VoiceInputButton'
 
 // PaymentConfirmationTrigger component - sonsuz render döngüsünü önlemek için
 const PaymentConfirmationTrigger = ({ uiComponent, setPaymentConfirmationData, setShowPaymentConfirmation, isNewMessage = false }) => {
@@ -98,6 +99,53 @@ function App() {
   const [searchResults, setSearchResults] = useState([])
   const [isSearching, setIsSearching] = useState(false)
   const [showSearchInput, setShowSearchInput] = useState(false)
+  
+  // Ses tanıma için state'ler
+  const [isListening, setIsListening] = useState(false)
+  
+  // Ses tanıma fonksiyonları
+  const [isTypingVoice, setIsTypingVoice] = useState(false);
+  const [voiceText, setVoiceText] = useState('');
+  
+  const handleVoiceTranscript = (transcript) => {
+    setInputMessage(transcript);
+    setVoiceText('');
+  };
+
+  const handleInterimTranscript = (transcript) => {
+    setVoiceText(transcript);
+    setIsTypingVoice(true);
+  };
+
+  const handleStartListening = () => {
+    setIsListening(true);
+    setIsTypingVoice(true);
+    setVoiceText('');
+  };
+
+  const handleStopListening = () => {
+    setIsListening(false);
+    setIsTypingVoice(false);
+    setVoiceText('');
+  };
+
+  // Kelime kelime yazma efekti
+  const typeWordsEffect = (text) => {
+    const words = text.split(' ');
+    let currentText = '';
+    let wordIndex = 0;
+
+    const typeNextWord = () => {
+      if (wordIndex < words.length) {
+        currentText += (wordIndex > 0 ? ' ' : '') + words[wordIndex];
+        setVoiceText(currentText);
+        wordIndex++;
+        setTimeout(typeNextWord, 200); // Her kelime arasında 200ms bekle
+      }
+    };
+
+    typeNextWord();
+  };
   const [showInterestCalculator, setShowInterestCalculator] = useState(false)
   const [showLoanAmortization, setShowLoanAmortization] = useState(false)
   const [showROISimulation, setShowROISimulation] = useState(false)
@@ -2372,13 +2420,34 @@ function App() {
                 <rect x="3" y="14" width="7" height="7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </button>
-            <textarea
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Mesajınızı yazın..."
-              rows="1"
-              className="message-input"
+            <div className="input-with-voice">
+              <textarea
+                value={isTypingVoice ? voiceText : inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder={isListening ? "Dinleniyor..." : "Mesajınızı yazın..."}
+                rows="1"
+                className={`message-input ${isListening ? 'listening' : ''} ${isTypingVoice ? 'voice-typing' : ''}`}
+                disabled={isListening}
+              />
+              {isListening && (
+                <div className="voice-animation">
+                  <div className="voice-wave">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </div>
+                </div>
+              )}
+            </div>
+            <VoiceInputButton
+              onTranscript={handleVoiceTranscript}
+              onInterimTranscript={handleInterimTranscript}
+              isListening={isListening}
+              onStartListening={handleStartListening}
+              onStopListening={handleStopListening}
             />
             <button
               onClick={handleSendMessage}

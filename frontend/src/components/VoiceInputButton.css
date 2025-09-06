@@ -1,0 +1,153 @@
+.voice-input-button {
+  width: 40px;
+  height: 40px;
+  background: #e9ecef;
+  border: 1px solid #dee2e6;
+  border-radius: 50%;
+  color: #6c757d;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.voice-input-button:hover {
+  background: #dee2e6;
+  color: #495057;
+  transform: scale(1.05);
+}
+
+.voice-input-button:active {
+  transform: scale(0.95);
+}
+
+.voice-input-button.listening {
+  background: #dc3545;
+  color: white;
+  border-color: #dc3545;
+  animation: pulse 1.5s infinite;
+}
+
+.voice-input-button.listening:hover {
+  background: #c82333;
+  border-color: #bd2130;
+}
+
+.voice-input-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.voice-input-button:disabled:hover {
+  background: #f8f9fa;
+  color: #6c757d;
+  transform: none;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+  }
+}
+
+.voice-error {
+  position: absolute;
+  bottom: -35px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #dc3545;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.voice-error::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-bottom: 4px solid #dc3545;
+}
+
+/* Dark theme support */
+.dark-theme .voice-input-button {
+  background: #495057;
+  border-color: #6c757d;
+  color: #adb5bd;
+}
+
+.dark-theme .voice-input-button:hover {
+  background: #6c757d;
+  color: #dee2e6;
+}
+
+.dark-theme .voice-input-button:disabled {
+  background: #495057;
+  color: #6c757d;
+}
+
+.dark-theme .voice-input-button:disabled:hover {
+  background: #495057;
+  color: #6c757d;
+}
+
+.dark-theme .voice-input-button.listening {
+  background: #dc3545;
+  color: white;
+  border-color: #dc3545;
+  animation: pulse 1.5s infinite;
+}
+
+.dark-theme .voice-input-button.listening:hover {
+  background: #c82333;
+  border-color: #bd2130;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .voice-input-button {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .voice-error {
+    font-size: 11px;
+    bottom: -30px;
+  }
+}
+
+@media (max-width: 480px) {
+  .voice-input-button {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .voice-input-button svg {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .voice-error {
+    font-size: 10px;
+    bottom: -25px;
+  }
+}
