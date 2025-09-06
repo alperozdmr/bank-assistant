@@ -14,6 +14,11 @@ const UserGuide = ({ isOpen, onClose }) => {
           
           <h4>Temel Özellikler</h4>
           <ul>
+            <li>Kullanıcı girişi</li>
+            <li>Açık/Koyu tema desteği</li>
+            <li>Sohbet geçmişi</li>
+            <li>Hızlı işlem butonları</li>
+            <li>Yapay zeka destekli işlemler</li>
             <li>Hesap bakiyesi sorgulama</li>
             <li>Para transferi işlemleri</li>
             <li>ATM/Şube arama</li>
