@@ -273,7 +273,7 @@ const UserGuide = ({ isOpen, onClose }) => {
             <li><strong>"Kart 123 bilgileri"</strong> - Belirli kartın detaylarını gösterir</li>
           </ul>
 
-          <h4>Kart Bilgileri</h4>
+          <h4>Kart Detayları</h4>
           <p>Her kartınız için şu bilgileri görebilirsiniz:</p>
           <ul>
             <li>Kart ID</li>
