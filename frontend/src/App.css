@@ -1190,6 +1190,10 @@ body {
     font-size: 13px;
   }
 
+  .header-actions {
+    gap: 8px;
+  }
+
   .messages-container {
     padding: 12px 20px 6px 20px;
     gap: 12px;
@@ -1355,6 +1359,10 @@ body {
     font-size: 12px;
   }
 
+  .header-actions {
+    gap: 6px;
+  }
+
   .theme-toggle-switch {
     width: 50px;
     height: 28px;
@@ -1365,14 +1373,9 @@ body {
     height: 32px;
   }
 
-  .logout-button {
-    width: 36px;
-    height: 36px;
-  }
-
   .user-guide-button {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     margin-right: 8px;
   }
 
