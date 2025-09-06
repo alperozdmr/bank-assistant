@@ -266,8 +266,6 @@ const UserGuide = ({ isOpen, onClose }) => {
       title: 'Kredi Kartı',
       content: (
         <div>
-          <h3>Kredi Kartı İşlemleri</h3>
-          
           <h4>Kart Bilgileri</h4>
           <p>Kredi kartı bilgilerinizi öğrenmek için:</p>
           <ul>
