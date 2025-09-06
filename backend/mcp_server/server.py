@@ -632,9 +632,9 @@ def payment_request(
     from_account: int,
     to_account: int,
     amount: float,
+    customer_id: int,
     currency: str = "TRY",
     note: str = "",
-    client_ref: str = "",
     confirm: bool = False,
 ):
     """
@@ -657,18 +657,17 @@ def payment_request(
     idempotent by `client_ref`. Reads `accounts`; writes `payments` (and optionally `txns`).
     """
     # 1) Her zaman precheck: güvenlik ağımız
-    pre = pay.precheck(from_account, to_account, amount, currency, note)
+    pre = pay.precheck(from_account, to_account, amount, currency, note, customer_id)
     if not pre.get("ok"):
         return [{"type": "json", "json": {"ok": False, "phase": "precheck", **pre}}]
 
     # 2) Kullanıcıdan onay istenecekse (dry-run cevabı)
     if not confirm:
-        suggested = client_ref #or str(uuid4())
         preview = {
             "ok": True,
             "phase": "precheck",
             "confirm_required": True,
-            "suggested_client_ref": suggested,
+            "suggested_client_ref": str(customer_id),  # customer_id'yi string olarak kullan
             "preview": {
                 "from_account": from_account,
                 "to_account": to_account,
@@ -679,14 +678,92 @@ def payment_request(
                 "limits": pre.get("limits", {}),
             },
             "message": (
-                "Özet hazır. Onaylıyorsanız confirm=True ve aynı client_ref ile tekrar çağırın."
+                f"{from_account} numaralı hesabınızdan --> {to_account} numaralı hesabınıza {amount} {currency} transfer etmek üzeresiniz. İşlem onay penceresi açılıyor..."
             ),
         }
         return [{"type": "json", "json": preview}]
 
     # 3) Onaylandı → create (idempotent)
-    ref = client_ref #or str(uuid4())
-    res = pay.create(ref, from_account, to_account, amount, currency, note)
+    res = pay.create(customer_id, from_account, to_account, amount, currency, note)
+    return [{"type": "json", "json": {"phase": "commit", **res}}]
+
+
+@mcp.tool()
+@log_tool
+def payment_request_by_type(
+    from_account_type: str,
+    to_account_type: str,
+    amount: float,
+    customer_id: int,
+    currency: str = "TRY",
+    note: str = "",
+    confirm: bool = False,
+) -> dict:
+    """
+    Account type ile para transferi (preview veya commit) - hesap numarası belirtmeye gerek yok.
+
+    Kullanıcı dostu account type'lar:
+    - "vadeli mevduat" veya "vadeli"
+    - "vadesiz mevduat" veya "vadesiz" 
+    - "maaş" veya "maaş hesabı"
+    - "yatırım" veya "yatırım hesabı"
+
+    Örnek kullanım:
+    - "1000 TL vadesizden maaş hesabıma gönder"
+    - "500 USD yatırım hesabımdan vadeli mevduata transfer et"
+    - "2000 TRY vadesiz mevduattan yatırım hesabıma transfer et"
+
+    Phases (via `confirm`):
+    - False → preview/dry-run: validate and return summary
+    - True  → commit: re-validate and post transfer atomically
+
+    Returns:
+    - Preview: { ok, phase:"precheck", suggested_client_ref, preview{...} }
+    - Commit:  { ok, phase:"commit", txn{...}, receipt{...} }
+    - Error:   { ok:false, error:<code>, message:<text> }
+    """
+    # 1) Account type'larından hesap numaralarını bul
+    from_result = pay.find_account_by_type(customer_id, from_account_type)
+    if not from_result.get("ok"):
+        return [{"type": "json", "json": {"ok": False, "phase": "precheck", **from_result}}]
+    
+    to_result = pay.find_account_by_type(customer_id, to_account_type)
+    if not to_result.get("ok"):
+        return [{"type": "json", "json": {"ok": False, "phase": "precheck", **to_result}}]
+    
+    from_account_id = from_result["account"]["account_id"]
+    to_account_id = to_result["account"]["account_id"]
+    
+    # 2) Normal payment işlemini gerçekleştir
+    # 1) Her zaman precheck: güvenlik ağımız
+    pre = pay.precheck(from_account_id, to_account_id, amount, currency, note, customer_id)
+    if not pre.get("ok"):
+        return [{"type": "json", "json": {"ok": False, "phase": "precheck", **pre}}]
+
+    # 2) Kullanıcıdan onay istenecekse (dry-run cevabı)
+    if not confirm:
+        preview = {
+            "ok": True,
+            "phase": "precheck",
+            "confirm_required": True,
+            "suggested_client_ref": str(customer_id),
+            "preview": {
+                "from_account": from_account_id,
+                "to_account": to_account_id,
+                "amount": pre["amount"],
+                "currency": pre["currency"],
+                "fee": pre["fee"],
+                "note": pre.get("note", ""),
+                "limits": pre.get("limits", {}),
+            },
+            "message": (
+                f"{from_account_id} numaralı hesabınızdan --> {to_account_id} numaralı hesabınıza {amount} {currency} transfer etmek üzeresiniz. İşlem onay penceresi açılıyor..."
+            ),
+        }
+        return [{"type": "json", "json": preview}]
+
+    # 3) Onaylandı → create (idempotent)
+    res = pay.create(customer_id, from_account_id, to_account_id, amount, currency, note)
     return [{"type": "json", "json": {"phase": "commit", **res}}]
 
 

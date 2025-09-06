@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, Fragment } from 'react'
+import { useState, useRef, useEffect, Fragment, useCallback } from 'react'
 import './App.css'
 import Login from './Login'
 import {
@@ -42,7 +42,33 @@ import AmortizationTableCard from './components/AmortizationTableCard'
 import LoanAmortizationModal from './components/LoanAmortizationModal'
 import ROISimulationCard from './components/ROISimulationCard'
 import ROISimulationModal from './components/ROISimulationModal'
+import PaymentConfirmationModal from './components/PaymentConfirmationModal'
+import PaymentTransferModal from './components/PaymentTransferModal'
+import PaymentReceiptCard from './components/PaymentReceiptCard'
 import SmartNotification from './components/SmartNotification'
+
+// PaymentConfirmationTrigger component - sonsuz render döngüsünü önlemek için
+const PaymentConfirmationTrigger = ({ uiComponent, setPaymentConfirmationData, setShowPaymentConfirmation, isNewMessage = false }) => {
+  useEffect(() => {
+    // Sadece yeni mesajlar için modal açılsın, eski mesajlar için açılmasın
+    if (uiComponent && uiComponent.data && isNewMessage) {
+      const data = uiComponent.data
+      setPaymentConfirmationData({
+        from_account: data.from_account,
+        to_account: data.to_account,
+        amount: data.amount,
+        currency: data.currency,
+        fee: data.fee,
+        note: data.note,
+        limits: data.limits,
+        customer_id: data.customer_id
+      })
+      setShowPaymentConfirmation(true)
+    }
+  }, [uiComponent, setPaymentConfirmationData, setShowPaymentConfirmation, isNewMessage])
+  
+  return null
+}
 
 function App() {
   // Login state
@@ -76,6 +102,9 @@ function App() {
   const [showROISimulation, setShowROISimulation] = useState(false)
   const [showROIChart, setShowROIChart] = useState(false)
   const [roiChartData, setRoiChartData] = useState(null)
+  const [showPaymentConfirmation, setShowPaymentConfirmation] = useState(false)
+  const [paymentConfirmationData, setPaymentConfirmationData] = useState(null)
+  const [showPaymentTransfer, setShowPaymentTransfer] = useState(false)
   const [notifications, setNotifications] = useState([])
   const messagesEndRef = useRef(null)
 
@@ -137,7 +166,7 @@ function App() {
     const day = now.getDay() // 0 = Pazar, 6 = Cumartesi
 
     // Sabah erken (06:00-08:00)
-    if (hour >= 6 && hour < 8) {
+    if (hour >= 6 && hour < 8 && day !== 0 && day !== 1 && day !== 6) {
       addNotification({
         type: 'info',
         title: 'Günaydın! 🌅',
@@ -148,7 +177,7 @@ function App() {
     }
 
     // Sabah (08:00-10:00)
-    if (hour >= 8 && hour < 10) {
+    if (hour >= 8 && hour < 10 && day !== 0 && day !== 1 && day !== 6) {
       addNotification({
         type: 'info',
         title: 'Mutlu Sabahlar! ☀️',
@@ -159,7 +188,7 @@ function App() {
     }
 
     // Öğle öncesi (10:00-12:00)
-    if (hour >= 10 && hour < 12) {
+    if (hour >= 10 && hour < 12 && day !== 0 && day !== 1 && day !== 6) {
       addNotification({
         type: 'info',
         title: 'Öğleden Önce! 📈',
@@ -170,7 +199,7 @@ function App() {
     }
 
     // Öğle (12:00-14:00)
-    if (hour >= 12 && hour < 14) {
+    if (hour >= 12 && hour < 14 && day !== 0 && day !== 1 && day !== 6) {
       addNotification({
         type: 'info',
         title: 'Öğle Arası! 📊',
@@ -181,7 +210,7 @@ function App() {
     }
 
     // Öğle sonrası (14:00-16:00)
-    if (hour >= 14 && hour < 16) {
+    if (hour >= 14 && hour < 16 && day !== 0 && day !== 1 && day !== 6) {
       addNotification({
         type: 'info',
         title: 'Öğleden Sonra! 💳',
@@ -192,7 +221,7 @@ function App() {
     }
 
     // İkindi (16:00-18:00)
-    if (hour >= 16 && hour < 18) {
+    if (hour >= 16 && hour < 18 && day !== 0 && day !== 1 && day !== 6) {
       addNotification({
         type: 'info',
         title: 'İkindi Vakti! 🏦',
@@ -203,7 +232,7 @@ function App() {
     }
 
     // Akşam (18:00-20:00)
-    if (hour >= 18 && hour < 20) {
+    if (hour >= 18 && hour < 20 && day !== 0 && day !== 1 && day !== 6) {
       addNotification({
         type: 'info',
         title: 'Akşam Kontrolü! 🌆',
@@ -214,7 +243,7 @@ function App() {
     }
 
     // Gece (20:00-22:00)
-    if (hour >= 20 && hour < 22) {
+    if (hour >= 20 && hour < 22 && day !== 0 && day !== 1 && day !== 6) {
       addNotification({
         type: 'info',
         title: 'Geceye Doğru! 🌙',
@@ -225,7 +254,7 @@ function App() {
     }
 
     // Gece geç (22:00-24:00)
-    if (hour >= 22 && hour < 24) {
+    if (hour >= 22 && hour < 24 && day !== 0 && day !== 1 && day !== 6) {
       addNotification({
         type: 'info',
         title: 'Uyku Vakti! 🕐',
@@ -236,7 +265,7 @@ function App() {
     }
 
     // Gece yarısı (00:00-04:00)
-    if (hour >= 0 && hour < 4) {
+    if (hour >= 0 && hour < 4 && day !== 0 && day !== 1 && day !== 6) {
       addNotification({
         type: 'info',
         title: 'Gece Kuşu! 🌃',
@@ -245,7 +274,7 @@ function App() {
     }
 
     // Sabah erken (04:00-06:00)
-    if (hour >= 4 && hour < 6) {
+    if (hour >= 4 && hour < 6 && day !== 0 && day !== 1 && day !== 6) {
       addNotification({
         type: 'info',
         title: 'Gün Doğmadan! 🌄',
@@ -258,7 +287,7 @@ function App() {
     // Hafta sonu özel bildirimi
     if (day === 0 || day === 6) {
       addNotification({
-        type: 'warning',
+        type: 'info',
         title: 'Hafta Sonu! 💰',
         message: 'Hafta sonu yatırım fırsatlarını değerlendirmek için portföy simülasyonu yapabilirsiniz.',
         action: 'roi_simulation',
@@ -269,7 +298,7 @@ function App() {
     // Pazartesi motivasyon bildirimi
     if (day === 1) {
       addNotification({
-        type: 'success',
+        type: 'info',
         title: 'Haftaya Başlarken! 🚀',
         message: 'Yeni hafta için finansal hedeflerinizi belirlemeye ne dersiniz?',
       })
@@ -803,9 +832,35 @@ function App() {
       const data = await response.json()
       console.log('Chat response data:', data)
 
+      // Check if this is a payment confirmation request
+      let botMessageText = data.response
+      let shouldShowPaymentModal = false
+      let paymentData = null
+      
+      // Check ui_component first (new structure)
+      if (data.ui_component && data.ui_component.type === 'payment_confirmation') {
+        paymentData = data.ui_component.data
+        shouldShowPaymentModal = true
+        console.log('Payment confirmation detected via ui_component, showing modal.')
+      }
+      // Fallback to old tool_output structure
+      else if (data.tool_output && data.tool_output.data && data.tool_output.data.value && data.tool_output.data.value[0] && data.tool_output.data.value[0].json) {
+        const toolData = data.tool_output.data.value[0].json
+        if (toolData.ok && toolData.confirm_required && toolData.preview) {
+          paymentData = {
+            ...toolData.preview,
+            customer_id: parseInt(toolData.suggested_client_ref) || 1
+          }
+          shouldShowPaymentModal = true
+          // Override bot message text to show the precheck message
+          botMessageText = toolData.message || "Lütfen işlemi onaylayın."
+          console.log('Payment confirmation detected via tool_output, showing modal. Bot message text:', botMessageText)
+        }
+      }
+
       const botMessage = {
         id: messages.length + 2,
-        text: data.response, // FastAPI'den gelen cevap
+        text: botMessageText, // Use the potentially overridden text
         sender: 'bot',
         timestamp: new Date(data.timestamp),
         ui_component: data.ui_component // UI component data'sı varsa ekle
@@ -813,6 +868,14 @@ function App() {
 
       finalMessages = [...updatedMessages, botMessage]
       setMessages(finalMessages)
+      
+      // Bot mesajı eklendikten sonra 2 saniye bekleyip modal aç
+      if (shouldShowPaymentModal && paymentData) {
+        setPaymentConfirmationData(paymentData)
+        setTimeout(() => {
+          setShowPaymentConfirmation(true)
+        }, 3000)
+      }
 
       // Backend'den chat sessions'ları yeniden yükle (güncel liste için)
       if (data.chat_id) {
@@ -862,10 +925,21 @@ function App() {
   }
 
   const handleInterestCalculatorSubmit = async (formData) => {
+    // Bileşik sıklığı Türkçe'ye çevir
+    const compoundingMap = {
+      'annual': 'yıllık',
+      'semiannual': '6 aylık',
+      'quarterly': '3 aylık',
+      'monthly': 'aylık',
+      'weekly': 'haftalık',
+      'daily': 'günlük',
+      'continuous': 'sürekli'
+    }
+    
     // Form verilerini backend'e gönder
     const userMessage = {
       id: messages.length + 1,
-      text: `Faiz hesaplaması yapmak istiyorum. ${formData.type === 'deposit' ? 'Mevduat' : 'Kredi'} hesaplaması: Anapara ${formData.principal} ${formData.currency}, Vade ${formData.term} ${formData.term_unit === 'years' ? 'yıl' : 'ay'}, Bileşik ${formData.compounding}${formData.rate ? `, Faiz oranı %${formData.rate}` : ''}`,
+      text: `Faiz hesaplaması yapmak istiyorum. ${formData.type === 'deposit' ? 'Mevduat' : 'Kredi'} hesaplaması: Anapara ${formData.principal} ${formData.currency}, Vade ${formData.term} ${formData.term_unit === 'years' ? 'yıl' : 'ay'}, Bileşik ${compoundingMap[formData.compounding]}${formData.rate ? `, Faiz oranı %${formData.rate}` : ''}`,
       sender: 'user',
       timestamp: new Date()
     }
@@ -931,9 +1005,28 @@ function App() {
 
       const data = await response.json()
 
+      // Check if this is a payment confirmation request
+      let botMessageText = data.response
+      let shouldShowPaymentModal = false
+      let paymentData = null
+      
+      if (data.tool_output && data.tool_output.data && data.tool_output.data.value && data.tool_output.data.value[0] && data.tool_output.data.value[0].json) {
+        const toolData = data.tool_output.data.value[0].json
+        if (toolData.ok && toolData.confirm_required && toolData.preview) {
+          paymentData = {
+            ...toolData.preview,
+            customer_id: parseInt(toolData.suggested_client_ref) || 1
+          }
+          shouldShowPaymentModal = true
+          // Override bot message text to show the precheck message
+          botMessageText = toolData.message || "Lütfen işlemi onaylayın."
+          console.log('Payment confirmation detected via tool_output, showing modal. Bot message text:', botMessageText)
+        }
+      }
+
       const botMessage = {
         id: messages.length + 2,
-        text: data.response,
+        text: botMessageText, // Use the potentially overridden text
         sender: 'bot',
         timestamp: new Date(data.timestamp),
         ui_component: data.ui_component
@@ -941,6 +1034,14 @@ function App() {
 
       finalMessages = [...updatedMessages, botMessage]
       setMessages(finalMessages)
+      
+      // Bot mesajı eklendikten sonra 2 saniye bekleyip modal aç
+      if (shouldShowPaymentModal && paymentData) {
+        setPaymentConfirmationData(paymentData)
+        setTimeout(() => {
+          setShowPaymentConfirmation(true)
+        }, 3000)
+      }
 
       // Backend'den chat sessions'ları yeniden yükle
       if (data.chat_id) {
@@ -1025,15 +1126,44 @@ function App() {
         })
       })
       const data = await response.json()
+      // Check if this is a payment confirmation request
+      let botMessageText = data.response
+      let shouldShowPaymentModal = false
+      let paymentData = null
+      
+      if (data.tool_output && data.tool_output.data && data.tool_output.data.value && data.tool_output.data.value[0] && data.tool_output.data.value[0].json) {
+        const toolData = data.tool_output.data.value[0].json
+        if (toolData.ok && toolData.confirm_required && toolData.preview) {
+          paymentData = {
+            ...toolData.preview,
+            customer_id: parseInt(toolData.suggested_client_ref) || 1
+          }
+          shouldShowPaymentModal = true
+          // Override bot message text to show the precheck message
+          botMessageText = toolData.message || "Lütfen işlemi onaylayın."
+          console.log('Payment confirmation detected, showing modal. Bot message text:', botMessageText)
+        }
+      }
+
       const botMessage = {
         id: messages.length + 2,
-        text: data.response,
+        text: botMessageText, // Use the potentially overridden text
         sender: 'bot',
         timestamp: new Date(data.timestamp),
         ui_component: data.ui_component
       }
+
       finalMessages = [...updatedMessages, botMessage]
       setMessages(finalMessages)
+      
+      // Bot mesajı eklendikten sonra 2 saniye bekleyip modal aç
+      if (shouldShowPaymentModal && paymentData) {
+        setPaymentConfirmationData(paymentData)
+        setTimeout(() => {
+          setShowPaymentConfirmation(true)
+        }, 3000)
+      }
+      
       if (data.chat_id) {
         loadChatSessions()
       }
@@ -1056,6 +1186,81 @@ function App() {
   const handleROIChartShow = (data) => {
     setRoiChartData(data)
     setShowROIChart(true)
+  }
+
+  const handlePaymentConfirmation = async (paymentData) => {
+    try {
+      const noteText = paymentData.note ? `, note="${paymentData.note}"` : ''
+      const userMessage = `Transferi onaylıyorum.`
+      
+      // Add user message to chat first
+      const userMessageObj = {
+        id: messages.length + 1,
+        text: userMessage,
+        sender: 'user',
+        timestamp: new Date()
+      }
+      
+      const messagesWithUser = [...messages, userMessageObj]
+      setMessages(messagesWithUser)
+      
+      // Call the payment tool with confirm=true
+      const apiMessage = `Transfer onayı: ${paymentData.from_account} numaralı hesabımdan ${paymentData.to_account} numaralı hesabıma ${paymentData.amount} ${paymentData.currency} gönder${noteText}. confirm=True, customer_id=${paymentData.customer_id}`
+      
+      const response = await fetch('http://127.0.0.1:8000/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${userInfo.token}` },
+        body: JSON.stringify({
+          message: apiMessage,
+          user_id: userInfo.userId,
+          chat_id: currentChatId
+        })
+      })
+      
+      const data = await response.json()
+      
+      // Add the bot's confirmation response to chat
+      const confirmationMessage = {
+        id: messagesWithUser.length + 1,
+        text: data.response,
+        sender: 'bot',
+        timestamp: new Date(data.timestamp),
+        ui_component: data.ui_component
+      }
+      
+      const updatedMessages = [...messagesWithUser, confirmationMessage]
+      setMessages(updatedMessages)
+      
+      // Update chat history
+      setChatHistory(prev => ({
+        ...prev,
+        [currentChatId]: { ...prev[currentChatId], messages: updatedMessages, updatedAt: new Date() }
+      }))
+      setChatList(prev => prev.map(chat => (
+        chat.id === currentChatId ? { ...chat, updatedAt: new Date() } : chat
+      )).sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)))
+      
+      // Close the modal
+      setShowPaymentConfirmation(false)
+      setPaymentConfirmationData(null)
+      
+      // Show success notification
+      addNotification({
+        type: 'success',
+        title: 'Transfer Başarılı',
+        message: 'Transfer işleminiz başarıyla tamamlandı.',
+        duration: 5000
+      })
+      
+    } catch (error) {
+      console.error('Payment confirmation error:', error)
+      addNotification({
+        type: 'error',
+        title: 'Transfer Hatası',
+        message: 'Transfer işlemi sırasında bir hata oluştu.',
+        duration: 5000
+      })
+    }
   }
 
   const handleLoanAmortizationSubmit = async ({ principal, term, rate, currency }) => {
@@ -1103,15 +1308,155 @@ function App() {
         })
       })
       const data = await response.json()
+      // Check if this is a payment confirmation request
+      let botMessageText = data.response
+      let shouldShowPaymentModal = false
+      let paymentData = null
+      
+      if (data.tool_output && data.tool_output.data && data.tool_output.data.value && data.tool_output.data.value[0] && data.tool_output.data.value[0].json) {
+        const toolData = data.tool_output.data.value[0].json
+        if (toolData.ok && toolData.confirm_required && toolData.preview) {
+          paymentData = {
+            ...toolData.preview,
+            customer_id: parseInt(toolData.suggested_client_ref) || 1
+          }
+          shouldShowPaymentModal = true
+          // Override bot message text to show the precheck message
+          botMessageText = toolData.message || "Lütfen işlemi onaylayın."
+          console.log('Payment confirmation detected, showing modal. Bot message text:', botMessageText)
+        }
+      }
+
       const botMessage = {
         id: messages.length + 2,
-        text: data.response,
+        text: botMessageText, // Use the potentially overridden text
         sender: 'bot',
         timestamp: new Date(data.timestamp),
         ui_component: data.ui_component
       }
+
       finalMessages = [...updatedMessages, botMessage]
       setMessages(finalMessages)
+      
+      // Bot mesajı eklendikten sonra 2 saniye bekleyip modal aç
+      if (shouldShowPaymentModal && paymentData) {
+        setPaymentConfirmationData(paymentData)
+        setTimeout(() => {
+          setShowPaymentConfirmation(true)
+        }, 3000)
+      }
+      
+      if (data.chat_id) {
+        loadChatSessions()
+      }
+    } catch (err) {
+      finalMessages = [...updatedMessages, { id: messages.length + 2, text: '⚠️ Bot cevap veremedi.', sender: 'bot', timestamp: new Date() }]
+      setMessages(finalMessages)
+    } finally {
+      setIsTyping(false)
+    }
+
+    setChatHistory(prev => ({
+      ...prev,
+      [currentChatId]: { ...prev[currentChatId], messages: finalMessages, updatedAt: new Date() }
+    }))
+    setChatList(prev => prev.map(chat => (
+      chat.id === currentChatId ? { ...chat, updatedAt: new Date() } : chat
+    )).sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)))
+  }
+
+  const handlePaymentTransferSubmit = async ({ from_account, to_account, amount, currency, note, from_account_name, to_account_name }) => {
+    const noteText = note ? `, Not: ${note}` : ''
+    const userMessage = {
+      id: messages.length + 1,
+      text: `${from_account} numaralı hesabımdan ${to_account} numaralı hesabıma ${amount} ${currency} para göndermek istiyorum${noteText}`,
+      sender: 'user',
+      timestamp: new Date()
+    }
+
+    const updatedMessages = [...messages, userMessage]
+    setMessages(updatedMessages)
+    setShowQuickActions(false)
+
+    if (messages.length === 1) {
+      updateChatTitle(currentChatId, userMessage.text.length > 30 ? userMessage.text.substring(0, 30) + '...' : userMessage.text)
+      setChatHistory(prev => ({
+        ...prev,
+        [currentChatId]: { ...prev[currentChatId], isNew: false }
+      }))
+      setChatList(prev => prev.map(chat => (
+        chat.id === currentChatId ? { ...chat, isNew: false } : chat
+      )))
+    }
+
+    setChatHistory(prev => ({
+      ...prev,
+      [currentChatId]: { ...prev[currentChatId], messages: updatedMessages, updatedAt: new Date() }
+    }))
+    setChatList(prev => prev.map(chat => (
+      chat.id === currentChatId ? { ...chat, updatedAt: new Date() } : chat
+    )).sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)))
+
+    setIsTyping(true)
+    let finalMessages = updatedMessages
+    try {
+      const response = await fetch('http://127.0.0.1:8000/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${userInfo.token}` },
+        body: JSON.stringify({
+          message: userMessage.text,
+          user_id: userInfo.userId,
+          chat_id: currentChatId
+        })
+      })
+      const data = await response.json()
+      console.log('Payment transfer response data:', data) // Debug için eklendi
+      
+      // Check if this is a payment confirmation request
+      let botMessageText = data.response
+      let shouldShowPaymentModal = false
+      let paymentData = null
+      
+      // Check ui_component first (new structure)
+      if (data.ui_component && data.ui_component.type === 'payment_confirmation') {
+        paymentData = data.ui_component.data
+        shouldShowPaymentModal = true
+        console.log('Payment confirmation detected via ui_component, showing modal.')
+      }
+      // Fallback to old tool_output structure
+      else if (data.tool_output && data.tool_output.data && data.tool_output.data.value && data.tool_output.data.value[0] && data.tool_output.data.value[0].json) {
+        const toolData = data.tool_output.data.value[0].json
+        if (toolData.ok && toolData.confirm_required && toolData.preview) {
+          paymentData = {
+            ...toolData.preview,
+            customer_id: parseInt(toolData.suggested_client_ref) || 1
+          }
+          shouldShowPaymentModal = true
+          // Override bot message text to show the precheck message
+          botMessageText = toolData.message || "Lütfen işlemi onaylayın."
+          console.log('Payment confirmation detected via tool_output, showing modal. Bot message text:', botMessageText)
+        }
+      }
+
+      const botMessage = {
+        id: messages.length + 2,
+        text: botMessageText, // Use the potentially overridden text
+        sender: 'bot',
+        timestamp: new Date(data.timestamp),
+        ui_component: data.ui_component
+      }
+
+      finalMessages = [...updatedMessages, botMessage]
+      setMessages(finalMessages)
+      
+      // Bot mesajı eklendikten sonra 2 saniye bekleyip modal aç
+      if (shouldShowPaymentModal && paymentData) {
+        setPaymentConfirmationData(paymentData)
+        setTimeout(() => {
+          setShowPaymentConfirmation(true)
+        }, 3000)
+      }
+      
       if (data.chat_id) {
         loadChatSessions()
       }
@@ -1144,6 +1489,11 @@ function App() {
     }
     if (actionKey === 'roi_simulation') {
       setShowROISimulation(true)
+      setShowQuickActionsModal(false)
+      return
+    }
+    if (actionKey === 'payment_transfer') {
+      setShowPaymentTransfer(true)
       setShowQuickActionsModal(false)
       return
     }
@@ -1253,6 +1603,15 @@ function App() {
         ui_component: data.ui_component // UI component data'sı varsa ekle
       }
 
+      // Check if this is a payment confirmation request
+      if (data.tool_output && data.tool_output.ok && data.tool_output.confirm_required && data.tool_output.preview) {
+        setPaymentConfirmationData({
+          ...data.tool_output.preview,
+          client_ref: data.tool_output.suggested_client_ref
+        })
+        setShowPaymentConfirmation(true)
+      }
+
       finalMessages = [...updatedMessages, botMessage]
       setMessages(finalMessages)
 
@@ -1293,6 +1652,137 @@ function App() {
         ? { ...chat, updatedAt: new Date() }
         : chat
     ).sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)))
+  }
+
+  // PDF indirme fonksiyonu
+  const handleDownloadPDF = async (receipt, event) => {
+    try {
+      // jsPDF ve html2canvas import et
+      const { default: jsPDF } = await import('jspdf')
+      const { default: html2canvas } = await import('html2canvas')
+
+      // Tıklanan butonun parent elementini bul (spesifik makbuz kartı)
+      let paymentReceiptCard = null
+      
+      if (event) {
+        const clickedButton = event.target?.closest('.download-pdf-button')
+        if (clickedButton) {
+          paymentReceiptCard = clickedButton.closest('.payment-receipt-card')
+        }
+      }
+      
+      // Eğer event ile bulunamazsa, receipt hash'ine göre bul
+      if (!paymentReceiptCard && receipt?.hash) {
+        const allReceiptCards = document.querySelectorAll('.payment-receipt-card')
+        for (const card of allReceiptCards) {
+          const hashElement = card.querySelector('.receipt-hash .value')
+          if (hashElement && hashElement.textContent.includes(receipt.hash)) {
+            paymentReceiptCard = card
+            break
+          }
+        }
+      }
+      
+      // Hala bulunamazsa ilk kartı al (fallback)
+      if (!paymentReceiptCard) {
+        paymentReceiptCard = document.querySelector('.payment-receipt-card')
+      }
+      
+      if (!paymentReceiptCard) {
+        console.error('Payment receipt card bulunamadı')
+        return
+      }
+
+      // Koyu mod kontrolü
+      const isDark = isDarkTheme
+      const bgColor = isDark ? '#1a1a1a' : 'white'
+      const textColor = isDark ? '#ffffff' : '#333333'
+      const cardBgColor = isDark ? '#2d2d2d' : 'white'
+      const borderColor = isDark ? '#404040' : '#e9ecef'
+      const footerBgColor = isDark ? '#2d2d2d' : '#f8f9fa'
+      const secondaryTextColor = isDark ? '#b0b0b0' : '#6c757d'
+      const sectionTextColor = isDark ? '#e0e0e0' : '#495057'
+
+      // Geçici bir div oluştur ve içeriği kopyala
+      const tempDiv = document.createElement('div')
+      tempDiv.style.position = 'absolute'
+      tempDiv.style.left = '-9999px'
+      tempDiv.style.top = '-9999px'
+      tempDiv.style.width = '800px'
+      tempDiv.style.backgroundColor = bgColor
+      tempDiv.style.padding = '20px'
+      tempDiv.style.fontFamily = 'Arial, sans-serif'
+      
+      // PDF için özel HTML template
+      const pdfContent = `
+        <div style="max-width: 800px; margin: 0 auto; background: ${bgColor}; padding: 20px; font-family: Arial, sans-serif; color: ${textColor};">
+          <div style="background: linear-gradient(135deg, #1789dc 0%, #58167d 100%); color: white; padding: 30px; text-align: center; margin-bottom: 20px; border: 1px solid ${borderColor}; border-radius: 8px;">
+            <div style="display: flex; align-items: center; justify-content: center;">
+              <img src="/logo.jpg" alt="InterChat Logo" style="width: 60px; height: 60px; border-radius: 50%; margin-right: 15px; border: 3px solid white;" />
+              <h1 style="margin: 0; font-size: 28px; font-weight: 700; color: white;">InterChat</h1>
+            </div>
+          </div>
+          
+          <div style="padding: 20px; background: ${cardBgColor}; border: 1px solid ${borderColor}; border-radius: 8px;">
+            ${paymentReceiptCard.innerHTML}
+          </div>
+          
+          <div style="background: ${footerBgColor}; padding: 20px; text-align: center; border-top: 1px solid ${borderColor}; margin-top: 20px; border-radius: 8px;">
+            <div style="font-family: 'Courier New', monospace; font-size: 12px; color: ${secondaryTextColor};">
+              <span style="font-weight: 500;">Makbuz Hash: </span>
+              <span style="font-weight: 600; color: ${sectionTextColor};">${receipt.hash || 'N/A'}</span>
+            </div>
+            <p style="margin: 10px 0 0 0; font-size: 12px; color: ${secondaryTextColor};">
+              Bu makbuz elektronik ortamda oluşturulmuştur ve imza gerektirmez.
+            </p>
+          </div>
+        </div>
+      `
+      
+      tempDiv.innerHTML = pdfContent
+      document.body.appendChild(tempDiv)
+
+      // Div'in boyutlarını al (kaldırmadan önce)
+      const divWidth = tempDiv.offsetWidth
+      const divHeight = tempDiv.offsetHeight
+
+      // Canvas oluştur
+      const canvas = await html2canvas(tempDiv, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        width: divWidth,
+        height: divHeight
+      })
+
+      // Geçici div'i kaldır
+      document.body.removeChild(tempDiv)
+
+      // PDF oluştur - div boyutuna göre dinamik
+      const imgData = canvas.toDataURL('image/png')
+      
+      // PDF boyutlarını div boyutuna göre hesapla (mm cinsinden)
+      const pdfWidth = 210 // A4 genişliği sabit
+      const pdfHeight = (divHeight * pdfWidth) / divWidth // Oranı koruyarak yükseklik hesapla
+      
+      // PDF oluştur - özel boyutlarla
+      const pdf = new jsPDF({
+        orientation: pdfHeight > pdfWidth ? 'portrait' : 'landscape',
+        unit: 'mm',
+        format: [pdfWidth, pdfHeight]
+      })
+      
+      // Görüntüyü PDF'e ekle - tam boyutta
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight)
+
+      // PDF'i indir
+      const fileName = `transfer_makbuzu_${receipt.hash || Date.now()}.pdf`
+      pdf.save(fileName)
+
+    } catch (error) {
+      console.error('PDF indirme hatası:', error)
+      alert('PDF indirme sırasında bir hata oluştu. Lütfen tekrar deneyin.')
+    }
   }
 
   // Arama fonksiyonu
@@ -1603,7 +2093,7 @@ function App() {
               >
                 <div className="message-content">
                   {/* Text varsa göster */}
-                  {message.text && message.text.trim() && !(message.sender === 'bot' && message.ui_component) && (
+                  {message.text && message.text.trim() && !(message.sender === 'bot' && message.ui_component && message.ui_component.type !== 'payment_confirmation') && (
                     <div className="message-text">{message.text}</div>
                   )}
                   {/* UI component varsa göster */}
@@ -1663,6 +2153,12 @@ function App() {
                       {message.ui_component.type === 'roi_simulation_card' && (
                         <ROISimulationCard cardData={message.ui_component} onShowChart={handleROIChartShow} />
                       )}
+                      {message.ui_component.type === 'payment_receipt' && (
+                        <PaymentReceiptCard 
+                          cardData={message.ui_component} 
+                          onDownloadPDF={handleDownloadPDF}
+                        />
+                      )}
                     </div>
                   )}
                   <div className="message-time">{formatTime(message.timestamp)}</div>
@@ -1690,6 +2186,17 @@ function App() {
                       </div>
                       <span>Hesap Bakiyesi</span>
                     </button>
+                                         <button className="quick-button" onClick={() => handleQuickAction('payment_transfer')}>
+                       <div className="quick-icon">
+                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                           {/* Money Transfer Icon - Left and Right Arrows */}
+                           <path d="M3 12H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                           <path d="M8 7L3 12L8 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                           <path d="M16 7L21 12L16 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                         </svg>
+                       </div>
+                       <span>Para Transferi</span>
+                     </button>
                     <button className="quick-button" onClick={() => handleQuickAction('atm')}>
                       <div className="quick-icon">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1816,7 +2323,7 @@ function App() {
                           <path d="M8 17v-3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
                       </div>
-                      <span>ROI Simülasyonu</span>
+                      <span>Yatırım Simülasyonu</span>
                     </button>
                   </div>
                 </div>
@@ -1909,6 +2416,20 @@ function App() {
                   <div className="modal-quick-text">
                     <span className="modal-quick-title">Hesap Bakiyesi</span>
                     <span className="modal-quick-desc">Güncel bakiye bilgilerinizi görün.</span>
+                  </div>
+                </button>
+                <button className="modal-quick-button" onClick={() => handleQuickAction('payment_transfer')}>
+                  <div className="modal-quick-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      {/* Money Transfer Icon - Left and Right Arrows */}
+                      <path d="M3 12H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M8 7L3 12L8 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M16 7L21 12L16 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                  <div className="modal-quick-text">
+                    <span className="modal-quick-title">Para Transferi</span>
+                    <span className="modal-quick-desc">Hesaplarınız arasında para transferi yapın.</span>
                   </div>
                 </button>
                 <button className="modal-quick-button" onClick={() => handleQuickAction('atm')}>
@@ -2063,7 +2584,7 @@ function App() {
                     </svg>
                   </div>
                   <div className="modal-quick-text">
-                    <span className="modal-quick-title">ROI Simülasyonu</span>
+                    <span className="modal-quick-title">Yatırım Simülasyonu</span>
                     <span className="modal-quick-desc">Yatırım getiri simülasyonu yapın.</span>
                   </div>
                 </button>
@@ -2153,6 +2674,25 @@ function App() {
         isOpen={showROISimulation}
         onClose={() => setShowROISimulation(false)}
         onSubmit={handleROISimulationSubmit}
+      />
+
+      {/* Payment Confirmation Modal */}
+      <PaymentConfirmationModal
+        isOpen={showPaymentConfirmation}
+        onClose={() => {
+          setShowPaymentConfirmation(false)
+          setPaymentConfirmationData(null)
+        }}
+        onConfirm={handlePaymentConfirmation}
+        paymentData={paymentConfirmationData}
+      />
+
+      {/* Payment Transfer Modal */}
+      <PaymentTransferModal
+        isOpen={showPaymentTransfer}
+        onClose={() => setShowPaymentTransfer(false)}
+        onSubmit={handlePaymentTransferSubmit}
+        userInfo={userInfo}
       />
 
       {/* ROI Chart Modal */}

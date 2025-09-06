@@ -1,0 +1,372 @@
+/* Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  backdrop-filter: blur(3px);
+  animation: modalFadeIn 0.2s ease-out;
+}
+
+.payment-transfer-modal {
+  background: #fff;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+/* Modal Header */
+.payment-transfer-modal .modal-header {
+  background: linear-gradient(135deg, #1789dc 0%, #58167d 100%);
+  color: white;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.payment-transfer-modal .modal-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.payment-transfer-modal .modal-close-button {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.payment-transfer-modal .modal-close-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Form Groups */
+.payment-transfer-modal .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+}
+
+.payment-transfer-modal .form-group label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.payment-transfer-modal .form-select,
+.payment-transfer-modal .form-group input,
+.payment-transfer-modal .form-group textarea {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid #e1e8ed;
+  background: #f8f9fa;
+  color: #2c3e50;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border 0.2s, box-shadow 0.2s, background 0.2s;
+}
+
+.payment-transfer-modal .form-select:focus,
+.payment-transfer-modal .form-group input:focus,
+.payment-transfer-modal .form-group textarea:focus {
+  border-color: #1789dc;
+  box-shadow: 0 0 0 2px rgba(23, 137, 220, 0.2);
+  background: #ffffff;
+}
+
+.payment-transfer-modal .form-select.error,
+.payment-transfer-modal .form-group input.error,
+.payment-transfer-modal .form-group textarea.error {
+  border-color: #dc3545 !important;
+}
+
+.payment-transfer-modal .help-text {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.payment-transfer-modal .error-message {
+  font-size: 0.8rem;
+  color: #dc3545;
+}
+
+.payment-transfer-modal .loading-text {
+  font-size: 0.8rem;
+  color: #666;
+  font-style: italic;
+}
+
+/* Balance Info Box */
+.balance-info {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border: 1px solid #0ea5e9;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.balance-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  color: #0369a1;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.balance-header svg {
+  color: #0ea5e9;
+  flex-shrink: 0;
+}
+
+.balance-content {
+  color: #0c4a6e;
+}
+
+.balance-content p {
+  margin: 8px 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.balance-content p:first-child {
+  margin-top: 0;
+}
+
+.balance-content p:last-child {
+  margin-bottom: 0;
+}
+
+.balance-content strong {
+  color: #dc2626;
+}
+
+/* Form Actions */
+.payment-transfer-modal .form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.payment-transfer-modal .modal-cancel-button,
+.payment-transfer-modal .modal-confirm-button {
+  padding: 0.6rem 1.2rem;
+  border-radius: 12px;
+  border: none;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.payment-transfer-modal .modal-cancel-button {
+  background: #e1e8ed;
+  color: #333;
+}
+
+.payment-transfer-modal .modal-cancel-button:hover {
+  background: #e1e8ed;
+  color: #2c3e50;
+  transform: translateY(-1px);
+}
+
+.payment-transfer-modal .modal-confirm-button {
+  background: linear-gradient(135deg, #1789dc 0%, #58167d 100%);
+  color: #fff;
+}
+
+.payment-transfer-modal .modal-confirm-button:hover {
+  background: linear-gradient(135deg, #1478c7 0%, #4a0f6a 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(23, 137, 220, 0.3);
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+  .payment-transfer-modal {
+    width: 100%;
+    max-width: 400px;
+    margin: 20px;
+  }
+  
+  .payment-transfer-modal .form-actions {
+    flex-direction: column;
+  }
+  
+  .payment-transfer-modal .modal-cancel-button,
+  .payment-transfer-modal .modal-confirm-button {
+    width: 100%;
+  }
+  
+  .balance-info {
+    padding: 16px;
+  }
+  
+  .balance-content p {
+    font-size: 13px;
+  }
+}
+
+/* Dark mode support */
+.dark-theme .payment-transfer-modal .form-group label {
+  color: #e1e8ed;
+}
+
+.dark-theme .payment-transfer-modal .form-select,
+.dark-theme .payment-transfer-modal .form-group input,
+.dark-theme .payment-transfer-modal .form-group textarea {
+  background: #3a3a3a;
+  color: #ffffff;
+  border-color: #555;
+}
+
+.dark-theme .payment-transfer-modal .form-select:focus,
+.dark-theme .payment-transfer-modal .form-group input:focus,
+.dark-theme .payment-transfer-modal .form-group textarea:focus {
+  border-color: #1789dc;
+  box-shadow: 0 0 0 2px rgba(23, 137, 220, 0.2);
+}
+
+.dark-theme .payment-transfer-modal .help-text {
+  color: #bbbbbb;
+}
+
+.dark-theme .payment-transfer-modal .loading-text {
+  color: #bbbbbb;
+}
+
+.dark-theme .balance-info {
+  background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+  border-color: #0ea5e9;
+}
+
+.dark-theme .balance-header {
+  color: #93c5fd;
+}
+
+.dark-theme .balance-header svg {
+  color: #60a5fa;
+}
+
+.dark-theme .balance-content {
+  color: #dbeafe;
+}
+
+.dark-theme .balance-content p {
+  color: #dbeafe;
+}
+
+.dark-theme .balance-content strong {
+  color: #dc2626;
+}
+
+.dark-theme .payment-transfer-modal .modal-cancel-button {
+  background: #374151;
+  color: #f9fafb;
+  border-color: #6b7280;
+}
+
+.dark-theme .payment-transfer-modal .modal-cancel-button:hover {
+  background: #4b5563;
+  border-color: #9ca3af;
+}
+
+/* Animation for modal content */
+.payment-transfer-modal .modal-body {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Focus states for accessibility */
+.payment-transfer-modal .form-select:focus,
+.payment-transfer-modal .form-group input:focus,
+.payment-transfer-modal .form-group textarea:focus {
+  outline: 2px solid #1789dc;
+  outline-offset: 2px;
+}
+
+.payment-transfer-modal .modal-cancel-button:focus,
+.payment-transfer-modal .modal-confirm-button:focus {
+  outline: 2px solid #1789dc;
+  outline-offset: 2px;
+}
+
+/* Disabled state styling */
+.payment-transfer-modal .form-select:disabled {
+  background: #f8f9fa;
+  color: #6c757d;
+  cursor: not-allowed;
+}
+
+/* Loading state for account select */
+.payment-transfer-modal .form-select:disabled + .loading-text {
+  color: #6c757d;
+  font-style: italic;
+}
+
+/* Textarea specific styling */
+.payment-transfer-modal .form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
+}
+
+/* Select dropdown styling - browser default arrow kullanılıyor */
+.payment-transfer-modal .form-select {
+  padding-right: 0.75rem;
+}

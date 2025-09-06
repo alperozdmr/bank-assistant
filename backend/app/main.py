@@ -23,6 +23,9 @@ from chat.chat_history import (
     update_session_updated_at_sync,
 )
 from agent.AdvancedAgent import agent_handle_message_async
+from mcp_server.tools.general_tools import GeneralTools
+from mcp_server.data.sqlite_repo import SQLiteRepository
+from config_local import DB_PATH
 
 app = FastAPI(title="InterChat API", description="InterChat- Modül 1", version="1.0.0")
 
@@ -193,3 +196,25 @@ async def chat_endpoint(request: ChatRequest, current_user: int = Depends(get_cu
         ui_component=ui_component,
         chat_id=request.chat_id,
     )
+
+# Accounts endpoint
+@app.get("/accounts")
+async def get_user_accounts(current_user: int = Depends(get_current_user)):
+    """
+    Kullanıcının hesaplarını döndürür.
+    """
+    try:
+        repo = SQLiteRepository(DB_PATH)
+        general_tools = GeneralTools(repo)
+        result = general_tools.get_accounts(current_user)
+        
+        if "error" in result:
+            return {"error": result["error"]}
+        
+        return result
+    except Exception as e:
+        log.error("accounts_fetch_error", extra={
+            "error": str(e),
+            "user_id": current_user
+        })
+        return {"error": "Hesaplar alınırken bir hata oluştu"}

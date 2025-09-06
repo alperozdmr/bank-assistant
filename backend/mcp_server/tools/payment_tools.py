@@ -14,6 +14,23 @@ def today_str() -> str:
 def _is_active(v): return str(v).strip().lower() in ("active","aktif")
 def _is_external(v): return str(v).strip().lower() in ("external","harici")
 
+def _map_account_type_to_db(account_type: str) -> str:
+    """
+    Kullanıcı dostu account type'ları veritabanı değerlerine çevirir.
+    Veritabanında Türkçe değerler: vadeli mevduat, vadesiz mevduat, maaş, yatırım
+    """
+    mapping = {
+        "vadeli": "vadeli mevduat",
+        "vadeli mevduat": "vadeli mevduat",
+        "vadesiz mevduat": "vadesiz mevduat", 
+        "vadesiz": "vadesiz mevduat",
+        "maaş": "maaş",
+        "maaş hesabı": "maaş",
+        "yatırım": "yatırım",
+        "yatırım hesabı": "yatırım"
+    }
+    return mapping.get(account_type.lower().strip(), account_type)
+
 class PaymentService:
     def __init__(self, repo):
       self.repo = repo
@@ -23,6 +40,38 @@ class PaymentService:
         # payments tablosu var mı kontrol
         with self.repo._conn() if hasattr(self.repo, "_conn") else None:
             pass  # repo _conn yoksa da sorun değil; _ensure_schema operatif olarak insert aşamasında çağrılır
+
+    def find_account_by_type(self, customer_id: int, account_type: str) -> Dict[str, Any]:
+        """
+        Müşterinin belirtilen account type'ına sahip hesabını bulur.
+        """
+        try:
+            # Account type'ı veritabanı formatına çevir
+            db_account_type = _map_account_type_to_db(account_type)
+            
+            # Müşterinin tüm hesaplarını al
+            accounts = self.repo.get_accounts_by_customer(customer_id)
+            if not accounts:
+                return {"ok": False, "error": "no_accounts_found", "message": "Hesap bulunamadı."}
+            
+            # Account type'a göre filtrele
+            matching_accounts = []
+            for acc in accounts:
+                if acc.get("account_type", "").lower() == db_account_type.lower():
+                    matching_accounts.append(acc)
+            
+            if not matching_accounts:
+                return {"ok": False, "error": "account_type_not_found", 
+                       "message": f"{account_type} tipinde hesap bulunamadı."}
+            
+            if len(matching_accounts) > 1:
+                return {"ok": False, "error": "multiple_accounts_found",
+                       "message": f"Birden fazla {account_type} hesabınız var. Lütfen hesap numarası belirtin."}
+            
+            return {"ok": True, "account": matching_accounts[0]}
+            
+        except Exception as e:
+            return {"ok": False, "error": "find_account_error", "message": f"Hesap bulunurken hata: {str(e)}"}
 
     # def precheck(self, from_account: int, to_account: int, amount: float,
     #              currency: str | None, note: str | None) -> Dict[str, Any]:
@@ -70,7 +119,7 @@ class PaymentService:
     #         "limits": {"per_txn": PER_TXN_LIMIT, "daily": DAILY_LIMIT, "used_today": used_today}
     #     }
     def precheck(self, from_account: int, to_account: int, amount: float,
-                  currency: str | None, note: str | None) -> Dict[str, Any]:
+                  currency: str | None, note: str | None, customer_id: int = None) -> Dict[str, Any]:
         if amount is None or amount <= 0:
             return {"ok": False, "error": "invalid_amount", "message": "Tutar geçersiz."}
         if amount > PER_TXN_LIMIT:
@@ -84,6 +133,10 @@ class PaymentService:
             return {"ok": False, "error": "from_account_not_found", "message": "Kaynak hesap bulunamadı."}
         if not acc_to:
             return {"ok": False, "error": "to_account_not_found", "message": "Hedef hesap bulunamadı."}
+
+        # Gönderici hesabın kullanıcıya ait olup olmadığını kontrol et
+        if customer_id is not None and acc_from.get("customer_id") != customer_id:
+            return {"ok": False, "error": "from_account_not_owned", "message": "Bu hesap size ait değil."}
 
         if not _is_active(acc_from["status"]):
             return {"ok": False, "error": "from_account_inactive", "message": "Kaynak hesap aktif değil."}
@@ -114,36 +167,22 @@ class PaymentService:
                 "amount": round(amount,2), "currency": ccy, "fee": fee, "note": note or "",
                 "limits": {"per_txn": PER_TXN_LIMIT, "daily": DAILY_LIMIT, "used_today": used_today}}
     
-    def create(self, client_ref: str, from_account: int, to_account: int, amount: float,
+    def create(self, customer_id: int, from_account: int, to_account: int, amount: float,
                currency: str | None, note: str | None) -> Dict[str, Any]:
-        # idempotency
-        if client_ref:
-            prev = self.repo.find_by_client_ref(client_ref)
-            if prev:
-                return {
-                    "ok": True,
-                    "idempotent": True,
-                    "txn": prev,
-                    "receipt": {
-                        "pdf": {"filename": f"receipt_{prev['payment_id']}.pdf"},
-                        "hash": prev["payment_id"]
-                    }
-                }
-
-        pre = self.precheck(from_account, to_account, amount, currency, note)
+        # Her transfer için yeni işlem yapılır (idempotency kaldırıldı)
+        pre = self.precheck(from_account, to_account, amount, currency, note, customer_id)
         if not pre.get("ok"):
             return pre
 
         try:
             txn = self.repo.insert_payment_posted(
-                client_ref=client_ref or "",
+                customer_id=customer_id,
                 from_account=from_account,
                 to_account=to_account,
                 amount=float(pre["amount"]),
                 currency=pre["currency"],
                 fee=float(pre["fee"]),
-                note=pre.get("note") or "",
-                balance_after=0.0  # repo dolduruyor
+                note=pre.get("note") or ""
             )
             return {
                 "ok": True,

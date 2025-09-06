@@ -101,7 +101,7 @@ class BankingAgent:
             "get_exchange_rates", "get_interest_rates", "get_fee", "get_all_fees",
             "branch_atm_search", "transactions_list", "loan_amortization_schedule",
             "interest_compute", "run_roi_simulation", "list_portfolios", "fx_convert",
-            "payment_request"
+            "payment_request", "payment_request_by_type"
         }
 
     # ---------- lifecycle ----------
@@ -375,8 +375,30 @@ class BankingAgent:
         print(f"tool_output: {tool_output}")
 
         # Hata durumlarını kullanıcıya ilet (ham hata mesajını göster)
-        if isinstance(tool_output, dict) and tool_output.get("error"):
-            raw_err = str(tool_output.get("error"))
+        error_data = None
+        if isinstance(tool_output, dict):
+            # Direkt hata kontrolü
+            if tool_output.get("error"):
+                error_data = tool_output
+            # MCP nested yapı kontrolü
+            elif (tool_output.get("ok") and 
+                  tool_output.get("data") and 
+                  tool_output["data"].get("value") and 
+                  len(tool_output["data"]["value"]) > 0 and
+                  tool_output["data"]["value"][0].get("json")):
+                nested_json = tool_output["data"]["value"][0]["json"]
+                if nested_json.get("error"):
+                    error_data = nested_json
+        
+        if error_data:
+            # Önce tool output'tan gelen message field'ını kontrol et
+            tool_message = error_data.get("message")
+            if tool_message:
+                # Tool'dan gelen mesajı direkt kullan
+                return self._safe_return(str(tool_message), None)
+            
+            # Message yoksa error field'ını kullan
+            raw_err = str(error_data.get("error"))
             low = raw_err.lower()
             mapped = None
             for key, msg in self.ERROR_MAP.items():
@@ -386,7 +408,7 @@ class BankingAgent:
             # İstek: terminaldeki hatayı kullanıcıya aynen yansıt
             # Güvenlik için sanitize uygulanıyor; maskeleme _safe_return içinde yapılır
             msg = raw_err or mapped or "İşlem gerçekleştirilemedi."
-            # log’a ham hata ve eşleme notu
+            # log'a ham hata ve eşleme notu
             log.error(json.dumps({
                 "event": "tool_error_mapped",
                 "raw_error": raw_err,
@@ -413,33 +435,70 @@ class BankingAgent:
             pass
 
 
-        # Özel Formatlama: confirm_transfer ve payment_receipt UI'ları
-        if isinstance(tool_output, dict) and tool_output.get("phase")=="precheck":  ##kullanıcıya özet + confirm_transfer UI
-            suggested= tool_output.get("suggested_client_ref") 
-            preview= tool_output.get("preview",{})
+        # Özel Formatlama: payment_confirmation ve payment_receipt UI'ları
+        # MCP tool output yapısını kontrol et: data.value[0].json içinde phase var
+        payment_data = None
+        if isinstance(tool_output, dict):
+            # Direkt phase kontrolü - sadece başarılı precheck'ler için
+            if tool_output.get("phase") == "precheck" and tool_output.get("ok") == True:
+                payment_data = tool_output
+            # MCP nested yapı kontrolü
+            elif (tool_output.get("ok") and 
+                  tool_output.get("data") and 
+                  tool_output["data"].get("value") and 
+                  len(tool_output["data"]["value"]) > 0 and
+                  tool_output["data"]["value"][0].get("json")):
+                nested_json = tool_output["data"]["value"][0]["json"]
+                if nested_json.get("phase") == "precheck" and nested_json.get("ok") == True:
+                    payment_data = nested_json
+        
+        if payment_data:  ##kullanıcıya özet + payment_confirmation UI
+            suggested= payment_data.get("suggested_client_ref") 
+            preview= payment_data.get("preview",{})
             from_acc=preview.get("from_account")
             to_acc=preview.get("to_account")
             amt=preview.get("amount")
             ccy=preview.get("currency","TRY")
-            
+            fee=preview.get("fee", 0)
+            note=preview.get("note", "")
+            limits=preview.get("limits", {})
 
-            msg= (f"Hesap{from_acc} --> {to_acc} hesabına {amt} {ccy} trasfer etmek üzeresiniz."
-            "Onaylıyor musunuz?")
+            msg= (f"{from_acc} numaralı hesabınızdan --> {to_acc} numaralı hesabınıza {amt} {ccy} transfer etmek üzeresiniz. "
+            "İşlem onay penceresi açılıyor...")
 
             return{ "text": msg, "YANIT": msg, "ui_component": {
-                    "type":"confirm_transfer",
+                    "type":"payment_confirmation",
                     "data": {
-                "suggested_client_ref": suggested,
+                "customer_id": self.customer_id or 1,  # Agent'ın customer_id'sini kullan
                 "from_account": from_acc,
                 "to_account": to_acc,
                 "amount": amt,
                 "currency": ccy,
+                "fee": fee,
+                "note": note,
+                "limits": limits,
                     },
                 },
             }
-        if  isinstance(tool_output, dict) and tool_output.get("phase")=="commit":  ##kullanıcıya tamamlandı + transfer_receipt UI
-            txn=tool_output.get("txn",{})
-            receipt=tool_output.get("receipt",{})
+        # Commit phase kontrolü - nested yapı için
+        commit_data = None
+        if isinstance(tool_output, dict):
+            # Direkt phase kontrolü - sadece başarılı commit'ler için
+            if tool_output.get("phase") == "commit" and tool_output.get("ok") == True:
+                commit_data = tool_output
+            # MCP nested yapı kontrolü
+            elif (tool_output.get("ok") and 
+                  tool_output.get("data") and 
+                  tool_output["data"].get("value") and 
+                  len(tool_output["data"]["value"]) > 0 and
+                  tool_output["data"]["value"][0].get("json")):
+                nested_json = tool_output["data"]["value"][0]["json"]
+                if nested_json.get("phase") == "commit" and nested_json.get("ok") == True:
+                    commit_data = nested_json
+        
+        if commit_data:  ##kullanıcıya tamamlandı + transfer_receipt UI
+            txn=commit_data.get("txn",{})
+            receipt=commit_data.get("receipt",{})
 
             msg=(f"Transfer başarıyla tamamlandı ✅\n"
                  f"İşlem ID: {txn.get('payment_id','-')}\n"

@@ -174,7 +174,7 @@ class SQLitePaymentRepository(SQLiteRepository):
         cur.execute("""
         CREATE TABLE IF NOT EXISTS payments (
           payment_id TEXT PRIMARY KEY,
-          client_ref TEXT UNIQUE,
+          customer_id INTEGER NOT NULL,
           from_account INTEGER NOT NULL,
           to_account INTEGER NOT NULL,
           amount REAL NOT NULL,
@@ -184,7 +184,8 @@ class SQLitePaymentRepository(SQLiteRepository):
           status TEXT NOT NULL,              -- draft|pending|posted|failed|canceled
           created_at TEXT NOT NULL,
           posted_at TEXT,
-          balance_after REAL
+          from_balance_after REAL,
+          to_balance_after REAL
         )
         """)
 
@@ -224,19 +225,18 @@ class SQLitePaymentRepository(SQLiteRepository):
         finally:
             con.close()
 
-    def find_by_client_ref(self, client_ref: str):
+    def find_by_customer_id(self, customer_id: int):
         con = self._connect()
         try:
             cur = con.cursor()
-            cur.execute("SELECT * FROM payments WHERE client_ref=?", (client_ref,))
+            cur.execute("SELECT * FROM payments WHERE customer_id=?", (customer_id,))
             r = cur.fetchone()
             return dict(r) if r else None
         finally:
             con.close()
 
-    def insert_payment_posted(self, client_ref: str, from_account: int, to_account: int,
-                              amount: float, currency: str, fee: float, note: str,
-                              balance_after: float) -> dict:
+    def insert_payment_posted(self, customer_id: int, from_account: int, to_account: int,
+                              amount: float, currency: str, fee: float, note: str) -> dict:
         """
         Tek transaction içinde: bakiyeleri güncelle + payments'a 'posted' kayıt ekle
         + varsa txns tablosuna 2 satır.
@@ -261,15 +261,17 @@ class SQLitePaymentRepository(SQLiteRepository):
             cur.execute("UPDATE accounts SET balance = balance - ? WHERE account_id=?", (amount + fee, from_account))
             cur.execute("UPDATE accounts SET balance = balance + ? WHERE account_id=?", (amount, to_account))
 
-            # güncel bakiye
+            # güncel bakiyeler
             cur.execute("SELECT balance FROM accounts WHERE account_id=?", (from_account,))
-            bal_after = float(cur.fetchone()[0])
+            from_bal_after = float(cur.fetchone()[0])
+            cur.execute("SELECT balance FROM accounts WHERE account_id=?", (to_account,))
+            to_bal_after = float(cur.fetchone()[0])
 
             # payments kaydı
             cur.execute("""
-              INSERT INTO payments(payment_id, client_ref, from_account, to_account, amount, currency, fee, note, status, created_at, posted_at, balance_after)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'posted', ?, ?, ?)
-            """, (payment_id, client_ref, from_account, to_account, amount, currency, fee, note, now, now, bal_after))
+              INSERT INTO payments(payment_id, customer_id, from_account, to_account, amount, currency, fee, note, status, created_at, posted_at, from_balance_after, to_balance_after)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'posted', ?, ?, ?, ?)
+            """, (payment_id, customer_id, from_account, to_account, amount, currency, fee, note, now, now, from_bal_after, to_bal_after))
 
             # opsiyonel txns
             try:
@@ -287,7 +289,7 @@ class SQLitePaymentRepository(SQLiteRepository):
             cur.execute("COMMIT")
             return {
                 "payment_id": payment_id,
-                "client_ref": client_ref,
+                "customer_id": customer_id,
                 "from_account": from_account,
                 "to_account": to_account,
                 "amount": amount,
@@ -297,7 +299,8 @@ class SQLitePaymentRepository(SQLiteRepository):
                 "status": "posted",
                 "created_at": now,
                 "posted_at": now,
-                "balance_after": bal_after
+                "from_balance_after": from_bal_after,
+                "to_balance_after": to_bal_after
             }
         except Exception:
             try: cur.execute("ROLLBACK")
