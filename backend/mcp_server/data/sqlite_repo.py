@@ -59,20 +59,39 @@ class SQLiteRepository:
         finally:
             con.close()
 
-    def get_accounts_by_customer(self, customer_id: int) -> List[Dict[str, Any]]:
+    def get_accounts_by_customer(self, customer_id: int, account_type: str = None) -> List[Dict[str, Any]]:
+        """
+        Müşteriye ait hesapları getirir. İsteğe bağlı olarak hesap türüne göre filtreleme yapabilir.
+        
+        Args:
+            customer_id (int): Müşteri ID'si
+            account_type (str, optional): Hesap türü filtresi (vadeli mevduat, vadesiz mevduat, maaş, yatırım)
+        """
         con = sqlite3.connect(self.db_path)
         con.row_factory = sqlite3.Row
         try:
             cur = con.cursor()
-            cur.execute(
-                """
-                SELECT account_id, customer_id, account_number, account_type, balance, currency, created_at, status
-                FROM accounts
-                WHERE customer_id = ?
-                ORDER BY account_id
-                """,
-                (customer_id,),
-            )
+            
+            if account_type:
+                cur.execute(
+                    """
+                    SELECT account_id, customer_id, account_number, account_type, balance, currency, created_at, status
+                    FROM accounts
+                    WHERE customer_id = ? AND account_type = ?
+                    ORDER BY account_id
+                    """,
+                    (customer_id, account_type),
+                )
+            else:
+                cur.execute(
+                    """
+                    SELECT account_id, customer_id, account_number, account_type, balance, currency, created_at, status
+                    FROM accounts
+                    WHERE customer_id = ?
+                    ORDER BY account_id
+                    """,
+                    (customer_id,),
+                )
             rows = cur.fetchall()
 
             out: List[Dict[str, Any]] = []
@@ -103,6 +122,7 @@ class SQLiteRepository:
                 """
                 SELECT
                     c.card_id,
+                    c.card_number,
                     c.credit_limit,
                     c.current_debt,
                     c.statement_day,
@@ -128,6 +148,7 @@ class SQLiteRepository:
                 """
                 SELECT
                     c.card_id,
+                    c.card_number,
                     c.credit_limit,
                     c.current_debt,
                     c.statement_day,

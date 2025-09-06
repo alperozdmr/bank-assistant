@@ -85,6 +85,43 @@ def get_accounts(customer_id: int) -> dict:
 
 @mcp.tool()
 @log_tool
+def get_balance_by_account_type(customer_id: int, account_type: str) -> dict:
+    """
+    Retrieves balance information for a specific account type (e.g., "maaş hesabımın bakiyesi").
+
+    This tool allows users to query their account balance by account type instead of account ID.
+    It's particularly useful when users ask questions like "maaş hesabımın bakiyesi ne?" or
+    "vadeli mevduat hesabımın bakiyesi".
+
+    Parameters:
+        customer_id (int): The unique identifier for the customer.
+        account_type (str): Account type to search for. Supported types:
+            - "vadeli mevduat" (term deposit)
+            - "vadesiz mevduat" (demand deposit)
+            - "maaş" (salary account)
+            - "yatırım" (investment account)
+
+    Returns:
+        Account record containing:
+        - account_id (int) and customer_id (int)
+        - account_number (str) and account_type (str)
+        - balance (float) and balance_formatted (str)
+        - currency (str) and status (str)
+        - created_at (ISO-8601 string)
+        - ui_component (dict): Frontend BalanceCard component data
+        If the account type is not found or invalid, returns:
+        - error (str) with an explanatory message
+
+    Examples:
+        - "maaş hesabımın bakiyesi" → account_type="maaş"
+        - "vadeli mevduat hesabımın bakiyesi" → account_type="vadeli mevduat"
+        - "yatırım hesabımın bakiyesi" → account_type="yatırım"
+    """
+    return general_tools.get_balance_by_account_type(customer_id, account_type)
+
+
+@mcp.tool()
+@log_tool
 def get_card_info(card_id: int, customer_id: int) -> dict:
     """
     Fetches a financial summary for a credit card, including its limit, current debt, statement date, and due date,

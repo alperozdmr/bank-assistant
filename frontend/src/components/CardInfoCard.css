@@ -83,6 +83,11 @@
   gap: 16px;
 }
 
+/* Kart ID için tam genişlik */
+.card-info-item.full-width {
+  grid-column: 1 / -1;
+}
+
 .card-info-item {
   display: flex;
   flex-direction: column;

@@ -662,6 +662,26 @@ body {
   transform: scale(1.05);
 }
 
+.user-guide-button {
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  margin-left: 8px;
+}
+
+.user-guide-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+}
+
 .toggle-slider {
   position: relative;
   width: 100%;
@@ -1348,6 +1368,12 @@ body {
   .logout-button {
     width: 36px;
     height: 36px;
+  }
+
+  .user-guide-button {
+    width: 36px;
+    height: 36px;
+    margin-right: 8px;
   }
 
   .toggle-slider::before {

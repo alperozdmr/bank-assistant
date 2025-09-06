@@ -97,7 +97,7 @@ class BankingAgent:
 
         # İzinli tool adları. Kendi ortamına göre güncelle
         self.ALLOWED_TOOLS = {
-            "get_balance", "get_accounts", "get_card_info", "list_customer_cards",
+            "get_balance", "get_accounts", "get_balance_by_account_type", "get_card_info", "list_customer_cards",
             "get_exchange_rates", "get_interest_rates", "get_fee", "get_all_fees",
             "branch_atm_search", "transactions_list", "loan_amortization_schedule",
             "interest_compute", "run_roi_simulation", "list_portfolios", "fx_convert",

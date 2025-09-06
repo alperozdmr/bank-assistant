@@ -59,7 +59,7 @@ const ROISimulationCard = ({ cardData, onShowChart }) => {
                 <path d="M13 17V5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 <path d="M8 17v-3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
-              <span className="chart-button-text">Büyüme Eğrisi Grafiğini Aç</span>
+              <span className="chart-button-text">Yatırım Getirisi Grafiğini Aç</span>
             </button>
           </div>
         </div>

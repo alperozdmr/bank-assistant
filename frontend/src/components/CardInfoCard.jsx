@@ -2,6 +2,9 @@ import './CardInfoCard.css'
 
 const CardInfoCard = ({ cardData }) => {
   if (!cardData || cardData.type !== 'card_info_card') return null
+  
+  // Debug: Kart verilerini konsola yazdır
+  console.log('CardInfoCard - cardData:', cardData)
 
   const formatCurrency = (amount) => {
     return `${parseFloat(amount).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TRY`
@@ -36,9 +39,13 @@ const CardInfoCard = ({ cardData }) => {
               <div className="card-info-card multiple" key={c.card_id}>
                 <div className="card-info-card-content">
                   <div className="card-info-grid">
+                    <div className="card-info-item full-width">
+                      <div className="card-info-label">Kart ID</div>
+                      <div className="card-info-value">#{c.card_id}</div>
+                    </div>
                     <div className="card-info-item">
                       <div className="card-info-label">Kart No</div>
-                      <div className="card-info-value">#{c.card_id}</div>
+                      <div className="card-info-value">{c.card_number || `#${c.card_id}`}</div>
                     </div>
                     <div className="card-info-item">
                       <div className="card-info-label">Kredi Limiti</div>
@@ -97,9 +104,13 @@ const CardInfoCard = ({ cardData }) => {
       </div>
       <div className="card-info-card-content">
         <div className="card-info-grid">
+          <div className="card-info-item full-width">
+            <div className="card-info-label">Kart ID</div>
+            <div className="card-info-value">#{cardData.card_id}</div>
+          </div>
           <div className="card-info-item">
             <div className="card-info-label">Kart No</div>
-            <div className="card-info-value">#{cardData.card_id}</div>
+            <div className="card-info-value">{cardData.card_number || `#${cardData.card_id}`}</div>
           </div>
           <div className="card-info-item">
             <div className="card-info-label">Kredi Limiti</div>

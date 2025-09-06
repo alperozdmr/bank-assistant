@@ -22,6 +22,114 @@ class GeneralTools:
 
     def __init__(self, repo):
         self.repo = repo
+    
+    @staticmethod
+    def mask_card_number(card_number: str) -> str:
+        """
+        Kart numarasını güvenli bir şekilde maskeler.
+        İlk 4 ve son 4 rakamı gösterir, kalanları yıldız ile değiştirir.
+        
+        Args:
+            card_number (str): Kart numarası (örn: "7575457589041837")
+            
+        Returns:
+            str: Maskelenmiş kart numarası (örn: "7575********1837")
+        """
+        if not card_number or len(card_number) < 8:
+            return "****"
+        
+        # İlk 4 ve son 4 rakamı al
+        first_four = card_number[:4]
+        last_four = card_number[-4:]
+        
+        # Ortadaki rakamları yıldız ile değiştir
+        middle_length = len(card_number) - 8
+        masked_middle = "*" * middle_length
+        
+        return f"{first_four}{masked_middle}{last_four}"
+    
+    def get_balance_by_account_type(self, customer_id: int, account_type: str) -> Dict[str, Any]:
+        """
+        Hesap türüne göre bakiye sorgulama. Örnek: "maaş hesabımın bakiyesi"
+        
+        Args:
+            customer_id (int): Müşteri ID'si
+            account_type (str): Hesap türü (vadeli mevduat, vadesiz mevduat, maaş, yatırım)
+            
+        Returns:
+            Dict containing account details or error message
+        """
+        if customer_id is None or account_type is None:
+            return {"error": "parametre eksik: customer_id ve account_type verin"}
+        
+        try:
+            cust_id = int(customer_id)
+        except (TypeError, ValueError):
+            return {"error": "customer_id geçersiz (int olmalı)"}
+        
+        # Hesap türü eşleştirmesi - case insensitive mapping
+        account_type_mapping = {
+            "Vadeli Mevduat": ["vadeli mevduat", "vadeli"],
+            "Vadesiz Mevduat": ["vadesiz mevduat", "vadesiz"],
+            "Maaş": ["maaş", "maas"],
+            "Yatırım": ["yatırım", "yatirim"]
+        }
+        
+        # Gelen hesap türünü normalize et
+        input_type = account_type.lower().strip()
+        normalized_type = None
+        
+        # Mapping'de ara - case insensitive
+        for db_type, aliases in account_type_mapping.items():
+            if input_type in [alias.lower() for alias in aliases]:
+                normalized_type = db_type
+                break
+        
+        if not normalized_type:
+            return {"error": f"Geçersiz hesap türü: {account_type}. Desteklenen türler: vadeli mevduat, vadesiz mevduat, maaş, yatırım"}
+        
+        # Hesap türüne göre hesapları getir
+        accounts = self.repo.get_accounts_by_customer(cust_id, normalized_type)
+        
+        if not accounts:
+            # Debug: Tüm hesapları kontrol et
+            all_accounts = self.repo.get_accounts_by_customer(cust_id)
+            available_types = [acc["account_type"] for acc in all_accounts] if all_accounts else []
+            return {
+                "error": f"{normalized_type} hesabınız bulunamadı. Mevcut hesap türleri: {', '.join(available_types)}"
+            }
+        
+        # İlk hesabı döndür (genellikle bir türde tek hesap olur)
+        account = accounts[0]
+        
+        # Format currency for display
+        balance_formatted = f"{float(account['balance']):,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+        
+        return {
+            "account_id": account["account_id"],
+            "customer_id": account["customer_id"],
+            "account_number": account["account_number"],
+            "account_type": account["account_type"],
+            "balance": account["balance"],
+            "balance_formatted": balance_formatted,
+            "currency": account["currency"],
+            "status": account["status"],
+            "created_at": account["created_at"],
+            "ui_component": {
+                "type": "balance_card",
+                "card_type": "single_account",
+                "account_id": account["account_id"],
+                "account_number": account["account_number"],
+                "account_type": account["account_type"],
+                "balance": account["balance"],
+                "balance_formatted": balance_formatted,
+                "currency": account["currency"],
+                "status": account["status"]
+            }
+        }
+    
+    def __init__(self, repo):
+        self.repo = repo
         # TCMB servisini veritabanı yolu ile başlat
         if hasattr(repo, 'db_path'):
             self.tcmb_service = TCMBService(db_path=repo.db_path)
@@ -258,9 +366,13 @@ class GeneralTools:
             limit_formatted = f"{float(c['credit_limit']):,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
             borc_formatted = f"{float(c['current_debt']):,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
             available_formatted = f"{float(c['credit_limit'] - c['current_debt']):,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+            
+            # Mask card number for security
+            masked_card_number = self.mask_card_number(c.get('card_number', ''))
 
             return {
                 "card_id": c["card_id"],
+                "card_number": masked_card_number,
                 "credit_limit": c["credit_limit"],
                 "current_debt": c["current_debt"],
                 "statement_day": c["statement_day"],
@@ -282,6 +394,7 @@ class GeneralTools:
                 "cards": [
                     {
                         "card_id": card["card_id"],
+                        "card_number": card["card_number"],
                         "limit": card["credit_limit"],
                         "borc": card["current_debt"],
                         "kesim_tarihi": card["statement_day"],
@@ -322,8 +435,12 @@ class GeneralTools:
         borc_formatted = f"{float(card_data['current_debt']):,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
         available_formatted = f"{float(card_data['credit_limit'] - card_data['current_debt']):,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
+        # Mask card number for security
+        masked_card_number = self.mask_card_number(card_data.get('card_number', ''))
+
         return {
             "card_id": card_data["card_id"],
+            "card_number": masked_card_number,
             "limit": card_data["credit_limit"],
             "borc": card_data["current_debt"],
             "kesim_tarihi": card_data["statement_day"],
@@ -332,6 +449,7 @@ class GeneralTools:
             "ui_component": {
                 "type": "card_info_card",
                 "card_id": card_data["card_id"],
+                "card_number": masked_card_number,
                 "limit": card_data["credit_limit"],
                 "borc": card_data["current_debt"],
                 "kesim_tarihi": card_data["statement_day"],
