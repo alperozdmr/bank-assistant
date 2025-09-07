@@ -46,8 +46,8 @@ const UserGuide = ({ isOpen, onClose }) => {
           <h4>Bakiye Sorgulama</h4>
           <p>Hesap bakiyenizi öğrenmek için şu komutları kullanabilirsiniz:</p>
           <ul>
-            <li><strong>"Tüm hesapllarımın bakiyesi"</strong> - Tüm hesaplarınızın bakiyesini gösterir</li>
-            <li><strong>"Hesap 123 bakiyesi"</strong> - Belirli bir hesabın bakiyesini gösterir</li>
+            <li><strong>"Tüm hesaplarımın bakiyesi"</strong> - Tüm hesaplarınızın bakiyesini gösterir</li>
+            <li><strong>"Hesap 123 bakiyesi"</strong> - Belirtilen hesabın bakiyesini gösterir</li>
             <li><strong>"Vadeli hesabımın bakiyesi"</strong> - Hesap türüne göre bakiye sorgulama</li>
           </ul>
 
@@ -76,6 +76,7 @@ const UserGuide = ({ isOpen, onClose }) => {
       title: 'Para Transferi',
       content: (
         <div>
+          <p><strong>NOT:</strong> Henüz yalnızca kullanıcının kendi hesapları arasında para transfer işlemi desteklenmektedir.</p>
           <h4>Transfer Yapma</h4>
           <p>Para transferi yapmak için şu adımları izleyin:</p>
           <ol>
@@ -145,7 +146,6 @@ const UserGuide = ({ isOpen, onClose }) => {
           <p>Güncel döviz kurlarını öğrenmek için:</p>
           <ul>
             <li><strong>"Döviz kurları"</strong> - Tüm kurları gösterir</li>
-            <li><strong>"USD kuru"</strong> - Belirli para biriminin kurunu gösterir</li>
           </ul>
 
           <h4>Döviz Çevirme</h4>
@@ -158,27 +158,27 @@ const UserGuide = ({ isOpen, onClose }) => {
 
           <h4>Desteklenen Para Birimleri</h4>
           <ul>
-            <li>USD (Amerikan Doları)</li>
-            <li>EUR (Euro)</li>
-            <li>GBP (İngiliz Sterlini)</li>
-            <li>JPY (Japon Yeni)</li>
-            <li>CHF (İsviçre Frangı)</li>
-            <li>CAD (Kanada Doları)</li>
-            <li>AUD (Avustralya Doları)</li>
-            <li>CNY (Çin Yuanı)</li>
-            <li>RUB (Rus Rublesi)</li>
-            <li>SAR (Suudi Arabistan Riyali)</li>
-            <li>AED (BAE Dirhemi)</li>
-            <li>KWD (Kuveyt Dinarı)</li>
-            <li>NOK (Norveç Kronu)</li>
-            <li>SEK (İsveç Kronu)</li>
-            <li>DKK (Danimarka Kronu)</li>
-            <li>BGN (Bulgar Levası)</li>
-            <li>RON (Rumen Leyi)</li>
-            <li>PKR (Pakistan Rupisi)</li>
-            <li>QAR (Katar Riyali)</li>
-            <li>KRW (Güney Kore Wonu)</li>
-            <li>AZN (Azerbaycan Yeni Manatı)</li>
+            <li><strong>USD</strong> (Amerikan Doları)</li>
+            <li><strong>EUR</strong> (Euro)</li>
+            <li><strong>GBP</strong> (İngiliz Sterlini)</li>
+            <li><strong>JPY</strong> (Japon Yeni)</li>
+            <li><strong>CHF</strong> (İsviçre Frangı)</li>
+            <li><strong>CAD</strong> (Kanada Doları)</li>
+            <li><strong>AUD</strong> (Avustralya Doları)</li>
+            <li><strong>CNY</strong> (Çin Yuanı)</li>
+            <li><strong>RUB</strong> (Rus Rublesi)</li>
+            <li><strong>SAR</strong> (Suudi Arabistan Riyali)</li>
+            <li><strong>AED</strong> (BAE Dirhemi)</li>
+            <li><strong>KWD</strong> (Kuveyt Dinarı)</li>
+            <li><strong>NOK</strong> (Norveç Kronu)</li>
+            <li><strong>SEK</strong> (İsveç Kronu)</li>
+            <li><strong>DKK</strong> (Danimarka Kronu)</li>
+            <li><strong>BGN</strong> (Bulgar Levası)</li>
+            <li><strong>RON</strong> (Rumen Leyi)</li>
+            <li><strong>PKR</strong> (Pakistan Rupisi)</li>
+            <li><strong>QAR</strong> (Katar Riyali)</li>
+            <li><strong>KRW</strong> (Güney Kore Wonu)</li>
+            <li><strong>AZN</strong> (Azerbaycan Yeni Manatı)</li>
           </ul>
 
           <h4>Kur Güncellemeleri</h4>
@@ -370,7 +370,7 @@ const UserGuide = ({ isOpen, onClose }) => {
           </ul>
 
           <h4>Simülasyon Aracı</h4>
-          <p>Simülasyonaracında şu parametreleri girebilirsiniz:</p>
+          <p>Simülasyon aracında şu parametreleri girebilirsiniz:</p>
           <ul>
             <li><strong>Portföy:</strong> Korumalı/Dengeli/Büyüme</li>
             <li><strong>Aylık Yatırım:</strong> Aylık yatırım miktarı</li>
@@ -433,7 +433,7 @@ const UserGuide = ({ isOpen, onClose }) => {
           <h4>Teknik Sorular</h4>
           <div className="faq-item">
             <strong>S: InterChat çalışmıyor, ne yapmalıyım?</strong>
-            <p>C: Sayfayı yenileyin veya tarayıcınızı yeniden başlatın. Sorun devam ederse müşteri hizmetlerimizle iletişime geçin.</p>
+            <p>C: Sayfayı yenileyin veya tarayıcınızı yeniden başlatın. Sorun devam ederse tarafımızla iletişime geçin.</p>
           </div>
 
           <div className="faq-item">
@@ -444,19 +444,17 @@ const UserGuide = ({ isOpen, onClose }) => {
       )
     },
     gelistirici: {
-      title: 'Geliştirici Ekip',
+      title: 'Hakkımızda',
       content: (
         <div>
-          <p>InterChat, <strong>InternTech - Takım 2</strong> tarafından geliştirilmiştir.</p>
-          
           <div className="faq-item">
             <strong>Proje Ekibi</strong>
-            <p>InternTech Takım 2</p>
+            <p>InternTech - Takım 2</p>
           </div>
 
           <div className="faq-item">
             <strong>Teknoloji</strong>
-            <p>Modern web teknolojileri ve yapay zeka entegrasyonu ile geliştirilmiştir.</p>
+            <p>Modern web, backend teknolojileri ve yapay zeka entegrasyonu ile geliştirilmiştir.</p>
           </div>
 
           <div className="faq-item">

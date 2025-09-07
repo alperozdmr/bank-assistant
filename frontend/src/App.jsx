@@ -206,8 +206,44 @@ function App() {
       handleQuickAction('portfolios')
     } else if (action === 'roi_simulation') {
       setShowROISimulation(true)
+    } else if (action === 'go_login') {
+      // 401 sonrası giriş sayfasına yönlendir
+      setIsLoggedIn(false)
+      setUserInfo(null)
+      setMessages([])
+      setCurrentChatId(null)
+      setChatList([])
+      // Bildirimleri kapat
+      setNotifications([])
     }
   }
+
+  // Global 401 yakalayıcı: Tüm fetch çağrılarında 401 olursa uyarı göster
+  useEffect(() => {
+    const originalFetch = window.fetch
+    window.fetch = async (...args) => {
+      try {
+        const response = await originalFetch(...args)
+        if (response && response.status === 401) {
+          addNotification({
+            type: 'error',
+            title: 'Oturumunuz sona erdi',
+            message: 'Devam etmek için lütfen yeniden giriş yapın.',
+            action: 'go_login',
+            actionText: 'Giriş yap',
+            autoClose: false
+          })
+        }
+        return response
+      } catch (e) {
+        // Ağ hataları için varsayılan davranış
+        throw e
+      }
+    }
+    return () => {
+      window.fetch = originalFetch
+    }
+  }, [])
 
   // Akıllı bildirim oluşturma fonksiyonları
   const createSmartNotifications = () => {
@@ -342,15 +378,6 @@ function App() {
         message: 'Hafta sonu yatırım fırsatlarını değerlendirmek için portföy simülasyonu yapabilirsiniz.',
         action: 'roi_simulation',
         actionText: 'ROI Simülasyonu'
-      })
-    }
-
-    // Pazartesi motivasyon bildirimi
-    if (day === 1) {
-      addNotification({
-        type: 'info',
-        title: 'Haftaya Başlarken! 🚀',
-        message: 'Yeni hafta için finansal hedeflerinizi belirlemeye ne dersiniz?',
       })
     }
   }
@@ -550,14 +577,14 @@ function App() {
   useEffect(() => {
     if (currentChatId && userInfo?.userId) {
       // Eğer chat history'de yoksa backend'den yükle
-      if (!chatHistory[currentChatId] || chatHistory[currentChatId].isNew) {
-        if (!chatHistory[currentChatId]?.isNew) {
-          loadChatMessages(currentChatId)
-        }
-      } else {
+      if (!chatHistory[currentChatId]) {
+        loadChatMessages(currentChatId)
+      } else if (!chatHistory[currentChatId].isNew) {
+        // Eski sohbet ise mesajları yükle
         setMessages(chatHistory[currentChatId].messages || [])
-        setShowQuickActions(chatHistory[currentChatId].messages?.length <= 1)
+        setShowQuickActions((chatHistory[currentChatId].messages || []).length <= 1)
       }
+      // Yeni sohbet (isNew: true) ise hiçbir şey yapma, switchToChat zaten halletti
     }
   }, [currentChatId, userInfo])
 
@@ -662,6 +689,23 @@ function App() {
   const switchToChat = (chatId) => {
     setCurrentChatId(chatId)
     setShowSidebar(false)
+    
+    // Eğer bu sohbet history'de varsa mesajları hemen yükle
+    if (chatHistory[chatId]) {
+      if (chatHistory[chatId].isNew) {
+        // Yeni sohbet ise karşılama mesajını göster
+        setMessages(chatHistory[chatId].messages || [])
+        setShowQuickActions(true)
+      } else {
+        // Eski sohbet ise mesajları yükle
+        setMessages(chatHistory[chatId].messages || [])
+        setShowQuickActions((chatHistory[chatId].messages || []).length <= 1)
+      }
+    } else {
+      // History'de yoksa mesajları temizle
+      setMessages([])
+      setShowQuickActions(true)
+    }
   }
 
   // Arama sonucuna tıklandığında o mesaja git

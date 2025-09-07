@@ -99,7 +99,7 @@ class BankingAgent:
         self.ALLOWED_TOOLS = {
             "get_balance", "get_accounts", "get_balance_by_account_type", "get_card_info", "list_customer_cards",
             "get_exchange_rates", "get_interest_rates", "get_fee", "get_all_fees",
-            "branch_atm_search", "transactions_list", "loan_amortization_schedule",
+            "branch_atm_search", "transactions_list", "transactions_list_by_type", "loan_amortization_schedule",
             "interest_compute", "run_roi_simulation", "list_portfolios", "fx_convert",
             "payment_request", "payment_request_by_type"
         }

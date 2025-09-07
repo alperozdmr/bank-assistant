@@ -279,8 +279,18 @@ class SQLiteRepository:
             )
             rows = cur.fetchall()
 
-            def cf(s: Optional[str]) -> str:
-                return (s or "").casefold()
+            def normalize_tr(s: Optional[str]) -> str:
+                """Türkçe karakterleri normalize eder"""
+                if not s:
+                    return ""
+                # Türkçe karakterleri normalize et
+                s = s.replace("İ", "i").replace("I", "i")
+                s = s.replace("Ğ", "g").replace("Ğ", "g")
+                s = s.replace("Ü", "u").replace("Ü", "u")
+                s = s.replace("Ş", "s").replace("Ş", "s")
+                s = s.replace("Ö", "o").replace("Ö", "o")
+                s = s.replace("Ç", "c").replace("Ç", "c")
+                return s.lower().strip()
 
             # Python tarafında Unicode-aware eşleştirme
             out: List[Dict[str, Any]] = []
@@ -288,16 +298,24 @@ class SQLiteRepository:
                 city_db = str(r["city"])
                 dist_db = str(r["district"]) if r["district"] is not None else None
 
-                if cf(city_db) != cf(city_q):
+                # Normalize edilmiş karşılaştırma
+                if normalize_tr(city_db) != normalize_tr(city_q):
                     continue
-                if dist_q is not None and cf(dist_db) != cf(dist_q):
+                if dist_q is not None and normalize_tr(dist_db) != normalize_tr(dist_q):
                     continue
 
                 # tür filtresi (opsiyonel)
                 kind_db = str(r["kind"]).upper() if r["kind"] is not None else ""
                 if kind:
-                    k = kind.strip().casefold()
-                    want = "ATM" if k == "atm" else ("BRANCH" if k in ("branch", "şube", "sube") else None)
+                    k = kind.strip().lower()
+                    # Türkçe karakterleri normalize et
+                    k = k.replace("ş", "s").replace("ü", "u")
+                    want = None
+                    if k == "atm":
+                        want = "ATM"
+                    elif k in ("branch", "sube", "şube"):
+                        want = "BRANCH"
+                    
                     if want and kind_db != want:
                         continue
 

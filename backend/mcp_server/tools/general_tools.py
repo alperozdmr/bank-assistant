@@ -669,8 +669,22 @@ class GeneralTools:
                 return token
             t = token.strip()
             # Sondaki "'da/'de/'ta/'te" veya direkt bitişik "da/de/ta/te" eklerini kaldır
-            t = re.sub(r"(?:'|’)?\s*(?:d[ea]|t[ea])$", "", t, flags=re.IGNORECASE)
+            t = re.sub(r"(?:'|')?\s*(?:d[ea]|t[ea])$", "", t, flags=re.IGNORECASE)
             return t.strip()
+        
+        # Türkçe karakterleri normalize etme fonksiyonu
+        def _normalize_tr(s: Optional[str]) -> str:
+            """Türkçe karakterleri normalize eder"""
+            if not s:
+                return ""
+            # Türkçe karakterleri normalize et
+            s = s.replace("İ", "i").replace("I", "i")
+            s = s.replace("Ğ", "g").replace("Ğ", "g")
+            s = s.replace("Ü", "u").replace("Ü", "u")
+            s = s.replace("Ş", "s").replace("Ş", "s")
+            s = s.replace("Ö", "o").replace("Ö", "o")
+            s = s.replace("Ç", "c").replace("Ç", "c")
+            return s.lower().strip()
 
         city = _strip_tr_locative(city)
         district = _strip_tr_locative(district)
@@ -678,7 +692,18 @@ class GeneralTools:
             return {"ok": False, "error": "Lütfen şehir belirtin.", "data": {"query": {"city": city, "district": district}}}
 
         # Biraz fazla satır al, sonra mesafeye göre kırp
-        rows = self.repo.find_branch_atm(city=city, district=district, limit=max(limit, 5)*2, kind=type)
+        # type parametresini doğru formata çevir
+        kind_param = None
+        if type:
+            t = type.strip().lower()
+            # Türkçe karakterleri normalize et
+            t = t.replace("ş", "s").replace("ü", "u")
+            if t == "atm":
+                kind_param = "ATM"
+            elif t in ("branch", "sube", "şube"):
+                kind_param = "BRANCH"
+        
+        rows = self.repo.find_branch_atm(city=city, district=district, limit=max(limit, 5)*2, kind=kind_param)
 
         if not rows:
             # Eksakt eşleşme yoksa: önce kullanıcıya yakın sonuç isteğini soran mesaj dön
@@ -708,10 +733,12 @@ class GeneralTools:
 
                 want_kind = None
                 if type:
-                    k = type.strip().casefold()
+                    k = type.strip().lower()
+                    # Türkçe karakterleri normalize et
+                    k = k.replace("ş", "s").replace("ü", "u")
                     if k == "atm":
                         want_kind = "atm"
-                    elif k in ("branch", "şube", "sube"):
+                    elif k in ("branch", "sube", "şube"):
                         want_kind = "branch"
 
                 def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:

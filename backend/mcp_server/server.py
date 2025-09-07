@@ -122,6 +122,140 @@ def get_balance_by_account_type(customer_id: int, account_type: str) -> dict:
 
 @mcp.tool()
 @log_tool
+def transactions_list_by_type(
+    customer_id: int,
+    account_type: str,
+    from_date: str | None = None,
+    to_date: str | None = None,
+    limit: int = 50,
+) -> dict:
+    """
+    Hesap tipine göre TEK adımda işlem geçmişini döndürür.
+
+    Parametreler:
+      - customer_id (int): Müşteri kimliği
+      - account_type (str): "vadeli mevduat" | "vadesiz mevduat" | "maaş" | "yatırım"
+      - from_date/to_date (str|None): ISO benzeri tarih aralığı
+      - limit (int): döndürülecek işlem sayısı (1..500)
+    """
+    # 1) Hesabı bulun
+    found = pay.find_account_by_type(customer_id, account_type)
+    if not isinstance(found, dict) or not found.get("ok"):
+        return {"ok": False, **(found or {"error": "find_account_failed"})}
+
+    acc = found.get("account") or {}
+    acc_id = acc.get("account_id")
+    if not acc_id:
+        return {"ok": False, "error": "account_not_found"}
+
+    # 2) transactions_list mantığı (müşteri doğrulaması + tarih/limit temizliği)
+    try:
+        acc_id = int(acc_id)
+        req_cust_id = int(customer_id)
+    except Exception:
+        return {"ok": False, "error": "invalid_parameters"}
+
+    acc_row = repo.get_account(acc_id)
+    if not acc_row:
+        return {"ok": False, "error": f"Hesap bulunamadı: {acc_id}"}
+    owner_cust_id = int(acc_row.get("customer_id"))
+    if owner_cust_id != req_cust_id:
+        return {"ok": False, "error": "forbidden", "status_code": 403}
+
+    try:
+        lim = int(limit)
+    except Exception:
+        lim = 50
+    if lim <= 0:
+        lim = 50
+    if lim > 500:
+        lim = 500
+
+    f = from_date.strip() if isinstance(from_date, str) and from_date.strip() else None
+    t = to_date.strip() if isinstance(to_date, str) and to_date.strip() else None
+    if f is None and t is None:
+        f, t = "1970-01-01 00:00:00", "9999-12-31 23:59:59"
+    elif f is None:
+        f = "1970-01-01 00:00:00"
+    elif t is None:
+        t = "9999-12-31 23:59:59"
+
+    try:
+        from datetime import datetime
+        def _parse_dt(s: str):
+            try:
+                return datetime.fromisoformat(s)
+            except Exception:
+                return None
+        df = _parse_dt(f) if isinstance(f, str) else None
+        dt = _parse_dt(t) if isinstance(t, str) else None
+        if df and dt and df > dt:
+            f, t = t, f
+    except Exception:
+        pass
+
+    try:
+        rows = repo.list_transactions(
+            account_id=acc_id,
+            customer_id=req_cust_id,
+            from_date=f,
+            to_date=t,
+            limit=lim,
+        )
+    except Exception as e:
+        return {"ok": False, "error": f"okuma hatası: {e}"}
+
+    try:
+        snap = repo.save_transaction_snapshot(
+            account_id=acc_id,
+            from_date=f,
+            to_date=t,
+            limit=lim,
+            transactions=rows,
+        )
+    except Exception as e:
+        snap = {"error": f"snapshot yazılamadı: {e}", "saved": 0}
+
+    def _fmt_amount(val):
+        try:
+            v = float(val)
+        except Exception:
+            return str(val)
+        return f"{v:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+
+    items = []
+    for r in rows:
+        amt = r.get("amount")
+        items.append({
+            "id": r.get("txn_id") or r.get("id"),
+            "datetime": r.get("txn_date") or r.get("date"),
+            "amount": amt,
+            "amount_formatted": _fmt_amount(amt) if amt is not None else None,
+            "currency": r.get("currency") or "TRY",
+            "type": r.get("txn_type") or r.get("type"),
+            "description": r.get("description"),
+            "balance_after": r.get("balance_after"),
+            "account_id": r.get("account_id") or acc_id,
+        })
+
+    return {
+        "ok": True,
+        "account_id": acc_id,
+        "range": {"from": f, "to": t},
+        "limit": lim,
+        "count": len(rows),
+        "snapshot": snap,
+        "transactions": rows,
+        "ui_component": {
+            "type": "transactions_list",
+            "account_id": acc_id,
+            "items": items,
+        },
+    }
+
+
+@mcp.tool()
+@log_tool
 def get_card_info(card_id: int, customer_id: int) -> dict:
     """
     Fetches a financial summary for a credit card, including its limit, current debt, statement date, and due date,
